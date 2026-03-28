@@ -1,0 +1,186 @@
+<Application x:Class="WpfDerivClientVB.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="Dashboard/AdminDashboard.xaml">
+    <Application.Resources>
+
+        <!-- ═══════════════════════════════════════════════
+             COLOR TOKENS  (DESIGN.md  "Obsidian Lens")
+        ═══════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="BgBase"           Color="#131313"/>
+        <SolidColorBrush x:Key="SurfaceLow"       Color="#1C1B1B"/>
+        <SolidColorBrush x:Key="SurfaceHigh"      Color="#2A2A2A"/>
+        <SolidColorBrush x:Key="SurfaceLowest"    Color="#0E0E0E"/>
+        <SolidColorBrush x:Key="SurfaceVariant"   Color="#353534"/>
+        <SolidColorBrush x:Key="Primary"          Color="#D0F2FF"/>
+        <SolidColorBrush x:Key="PrimaryFixed"     Color="#4CD6FB"/>
+        <SolidColorBrush x:Key="PrimaryContainer" Color="#72DEFF"/>
+        <SolidColorBrush x:Key="OnSurface"        Color="#E5E2E1"/>
+        <SolidColorBrush x:Key="OnSurfaceVariant" Color="#BAC9CC"/>
+        <SolidColorBrush x:Key="Error"            Color="#FFB4AB"/>
+        <SolidColorBrush x:Key="OutlineVariant"   Color="#3B494C"/>
+        <SolidColorBrush x:Key="SidebarBg"        Color="#0A0A0A"/>
+
+        <!-- Gradiente primario para botones CTA -->
+        <LinearGradientBrush x:Key="PrimaryGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#D0F2FF" Offset="0"/>
+            <GradientStop Color="#72DEFF" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- ESTILOS GLOBALES -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource OnSurface}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+        </Style>
+
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource OnSurfaceVariant}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="ValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource OnSurface}"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="CyanValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryFixed}"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="NavItem" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#7A8A8D"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1A2A2A"/>
+                                <Setter Property="Foreground" Value="#BAC9CC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NavItemActive" TargetType="Button" BasedOn="{StaticResource NavItem}">
+            <Setter Property="Background" Value="#0D2A30"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryFixed}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#4CD6FB" Opacity="0.6"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>0,0,0,0</Border.BorderThickness>
+                            <Grid>
+                                <Border Width="3" HorizontalAlignment="Left" CornerRadius="3"
+                                        Background="{StaticResource PrimaryFixed}" Margin="-14,0,0,0"/>
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MetricCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceLow}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="20,18"/>
+        </Style>
+
+        <Style x:Key="AgentCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceLow}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <Style x:Key="LogEntry" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#7A8A8D"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryGradient}"/>
+            <Setter Property="Foreground" Value="#0A1E27"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GhostBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="{StaticResource OnSurface}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StatusDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="7"/>
+            <Setter Property="Height" Value="7"/>
+            <Setter Property="Fill" Value="{StaticResource PrimaryFixed}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="TagBadge" TargetType="Border">
+            <Setter Property="Background" Value="#0D2A30"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+    
+    </Application.Resources>
+</Application>
+

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Trading AI Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #0a0e17;
+            color: #e0e6ed;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: #1a1f2e;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: #131722;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #2a2e39;
+            justify-content: space-between;
+        }
+
+        .pair-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pair-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .price-display {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .current-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00d4aa;
+        }
+
+        .price-change {
+            font-size: 14px;
+            color: #00d4aa;
+            background: rgba(0, 212, 170, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .timeframe-selector {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tf-btn {
+            background: #1e222d;
+            border: 1px solid #2a2e39;
+            color: #868ea0;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .tf-btn:hover, .tf-btn.active {
+            background: #2a2e39;
+            color: #fff;
+        }
+
+        /* Main Chart Area */
+        .chart-container {
+            position: relative;
+            background: #131722;
+            overflow: hidden;
+        }
+
+        #chartCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .chart-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(19, 23, 34, 0.9);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #2a2e39;
+            font-size: 11px;
+            pointer-events: none;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 2px 0;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        /* Sidebar Agent */
+        .sidebar {
+            background: #131722;
+            border-left: 1px solid #2a2e39;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .agent-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1f2e 0%, #131722 100%);
+            border-bottom: 1px solid #2a2e39;
+        }
+
+        .agent-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #868ea0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d4aa;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .decision-card {
+            margin: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .decision-card.BUY {
+            background: rgba(0, 212, 170, 0.1);
+            border-color: #00d4aa;
+        }
+
+        .decision-card.SELL {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: #ff4757;
+        }
+
+        .decision-card.HOLD {
+            background: rgba(134, 142, 160, 0.1);
+            border-color: #868ea0;
+        }
+
+        .decision-label {
+            font-size: 12px;
+            color: #868ea0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .decision-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .BUY .decision-value { color: #00d4aa; }
+        .SELL .decision-value { color: #ff4757; }
+        .HOLD .decision-value { color: #868ea0; }
+
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .BUY .confidence-fill { background: #00d4aa; }
+        .SELL .confidence-fill { background: #ff4757; }
+        .HOLD .confidence-fill { background: #868ea0; }
+
+        .indicators-section {
+            padding: 20px;
+            border-top: 1px solid #2a2e39;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: #868ea0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .indicator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #1a1f2e;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #2a2e39;
+            transition: transform 0.2s;
+        }
+
+        .indicator-item:hover {
+            transform: translateX(-2px);
+            border-color: #3a3e49;
+        }
+
+        .indicator-name {
+            font-size: 12px;
+            color: #868ea0;
+        }
+
+        .indicator-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .indicator-value.bullish { color: #00d4aa; }
+        .indicator-value.bearish { color: #ff4757; }
+
+        .signal-log {
+            padding: 20px;
+            border-top: 1px solid #2a2e39;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            font-size: 11px;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            border-left: 3px solid;
+            background: #1a1f2e;
+        }
+
+        .log-item.buy { border-left-color: #00d4aa; }
+        .log-item.sell { border-left-color: #ff4757; }
+        .log-item.info { border-left-color: #868ea0; }
+
+        .log-time {
+            color: #868ea0;
+            margin-right: 8px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(19, 23, 34, 0.95);
+            border: 1px solid #2a2e39;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 2px 0;
+        }
+
+        .tooltip-label { color: #868ea0; }
+        .tooltip-value { color: #fff; font-weight: 600; }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="pair-info">
+                <div class="pair-name">BTC/USD</div>
+                <div class="price-display">
+                    <div class="current-price" id="currentPrice">$90,566.00</div>
+                    <div class="price-change" id="priceChange">+2.45%</div>
+                </div>
+            </div>
+            <div class="timeframe-selector">
+                <button class="tf-btn">1m</button>
+                <button class="tf-btn">5m</button>
+                <button class="tf-btn active">15m</button>
+                <button class="tf-btn">1h</button>
+                <button class="tf-btn">4h</button>
+                <button class="tf-btn">1d</button>
+            </div>
+        </header>
+
+        <div class="chart-container">
+            <canvas id="chartCanvas"></canvas>
+            <div class="chart-overlay">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2962FF"></div>
+                    <span>SMA 20</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF6D00"></div>
+                    <span>SMA 50</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00d4aa"></div>
+                    <span>Volumen</span>
+                </div>
+            </div>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+
+        <aside class="sidebar">
+            <div class="agent-header">
+                <div class="agent-title">Agente IA Pro</div>
+                <div class="agent-status">
+                    <div class="status-dot"></div>
+                    <span>Analizando mercado...</span>
+                </div>
+            </div>
+
+            <div class="decision-card HOLD" id="decisionCard">
+                <div class="decision-label">Decisión del Agente</div>
+                <div class="decision-value" id="decisionText">NEUTRO</div>
+                <div style="font-size: 11px; color: #868ea0; margin-top: 5px;">
+                    Confianza: <span id="confidenceText">65%</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceBar" style="width: 65%"></div>
+                </div>
+            </div>
+
+            <div class="indicators-section">
+                <div class="section-title">
+                    <span>Indicadores Técnicos</span>
+                    <span style="font-size: 10px; color: #00d4aa;">● Live</span>
+                </div>
+                
+                <div class="indicator-item">
+                    <span class="indicator-name">RSI (14)</span>
+                    <span class="indicator-value" id="rsiValue">62.45</span>
+                </div>
+                
+                <div class="indicator-item">
+                    <span class="indicator-name">MACD</span>
+                    <span class="indicator-value bullish" id="macdValue">+125.30</span>
+                </div>
+                
+                <div class="indicator-item">
+                    <span class="indicator-name">SMA 20/50</span>
+                    <span class="indicator-value" id="smaValue">Bullish Cross</span>
+                </div>
+                
+                <div class="indicator-item">
+                    <span class="indicator-name">Volumen (24h)</span>
+                    <span class="indicator-value" id="volumeValue">$28.4B</span>
+                </div>
+                
+                <div class="indicator-item">
+                    <span class="indicator-name">Soporte/Resistencia</span>
+                    <span class="indicator-value" id="srValue">$89,200 / $91,500</span>
+                </div>
+            </div>
+
+            <div class="signal-log" id="signalLog">
+                <div class="section-title">Historial de Señales</div>
+                <!-- Logs will be inserted here -->
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            candleCount: 80,
+            candleWidth: 8,
+            candleGap: 2,
+            padding: 40,
+            colors: {
+                bull: '#00d4aa',
+                bear: '#ff4757',
+                wick: '#868ea0',
+                grid: '#1a1f2e',
+                crosshair: '#2a2e39',
+                sma20: '#2962FF',
+                sma50: '#FF6D00'
+            }
+        };
+
+        // State
+        let candles = [];
+        let sma20 = [];
+        let sma50 = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let currentPrice = 90566;
+        
+        // Canvas setup
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+        const tooltip = document.getElementById('tooltip');
+
+        // Resize canvas
+        function resize() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth * window.devicePixelRatio;
+            canvas.height = container.clientHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            canvas.style.width = container.clientWidth + 'px';
+            canvas.style.height = container.clientHeight + 'px';
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Generate initial data
+        function generateCandles() {
+            let price = 89000;
+            const now = new Date();
+            
+            for (let i = 0; i < CONFIG.candleCount; i++) {
+                const volatility = price * 0.002;
+                const trend = Math.sin(i / 10) * 100;
+                
+                const open = price + (Math.random() - 0.5) * volatility;
+                const close = open + (Math.random() - 0.5) * volatility + trend * 0.1;
+                const high = Math.max(open, close) + Math.random() * volatility * 0.5;
+                const low = Math.min(open, close) - Math.random() * volatility * 0.5;
+                const volume = Math.random() * 1000000 + 500000;
+                
+                candles.push({
+                    time: new Date(now.getTime() - (CONFIG.candleCount - i) * 15 * 60000),
+                    open, high, low, close, volume,
+                    bullish: close >= open
+                });
+                
+                price = close;
+            }
+            
+            calculateSMA();
+        }
+
+        function calculateSMA() {
+            sma20 = calculateSMAPeriod(candles, 20);
+            sma50 = calculateSMAPeriod(candles, 50);
+        }
+
+        function calculateSMAPeriod(data, period) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    result.push(null);
+                    continue;
+                }
+                let sum = 0;
+                for (let j = 0; j < period; j++) {
+                    sum += data[i - j].close;
+                }
+                result.push(sum / period);
+            }
+            return result;
+        }
+
+        // Drawing functions
+        function getPriceRange() {
+            let min = Infinity, max = -Infinity;
+            candles.forEach(c => {
+                min = Math.min(min, c.low);
+                max = Math.max(max, c.high);
+            });
+            const padding = (max - min) * 0.1;
+            return { min: min - padding, max: max + padding };
+        }
+
+        function priceToY(price, height, range) {
+            const chartHeight = height - CONFIG.padding * 2;
+            return CONFIG.padding + chartHeight - ((price - range.min) / (range.max - range.min)) * chartHeight;
+        }
+
+        function drawGrid(width, height, range) {
+            ctx.strokeStyle = CONFIG.colors.grid;
+            ctx.lineWidth = 1;
+            
+            // Horizontal lines
+            const steps = 8;
+            for (let i = 0; i <= steps; i++) {
+                const y = CONFIG.padding + (height - CONFIG.padding * 2) * i / steps;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+                
+                // Price labels
+                const price = range.max - (range.max - range.min) * i / steps;
+                ctx.fillStyle = '#868ea0';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText('$' + price.toFixed(2), width - 10, y - 5);
+            }
+        }
+
+        function drawCandles(width, height, range) {
+            const totalWidth = CONFIG.candleWidth + CONFIG.candleGap;
+            const startX = (width - candles.length * totalWidth) / 2;
+            
+            candles.forEach((candle, i) => {
+                const x = startX + i * totalWidth;
+                const yOpen = priceToY(candle.open, height, range);
+                const yClose = priceToY(candle.close, height, range);
+                const yHigh = priceToY(candle.high, height, range);
+                const yLow = priceToY(candle.low, height, range);
+                
+                // Wick
+                ctx.strokeStyle = CONFIG.colors.wick;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x + CONFIG.candleWidth / 2, yHigh);
+                ctx.lineTo(x + CONFIG.candleWidth / 2, yLow);
+                ctx.stroke();
+                
+                // Body
+                ctx.fillStyle = candle.bullish ? CONFIG.colors.bull : CONFIG.colors.bear;
+                const bodyTop = Math.min(yOpen, yClose);
+                const bodyHeight = Math.abs(yClose - yOpen) || 1;
+                ctx.fillRect(x, bodyTop, CONFIG.candleWidth, bodyHeight);
+                
+                // Volume bars at bottom
+                const volHeight = (candle.volume / 2000000) * 30;
+                ctx.fillStyle = candle.bullish ? 
+                    'rgba(0, 212, 170, 0.3)' : 'rgba(255, 71, 87, 0.3)';
+                ctx.fillRect(x, height - 40 - volHeight, CONFIG.candleWidth, volHeight);
+            });
+        }
+
+        function drawSMA(data, color, width, height, range) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const totalWidth = CONFIG.candleWidth + CONFIG.candleGap;
+            const startX = (width - candles.length * totalWidth) / 2;
+            let started = false;
+            
+            data.forEach((value, i) => {
+                if (value === null) return;
+                const x = startX + i * totalWidth + CONFIG.candleWidth / 2;
+                const y = priceToY(value, height, range);
+                
+                if (!started) {
+                    ctx.moveTo(x, y);
+                    started = true;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+
+        function drawCrosshair(width, height, range) {
+            if (mouseX === 0 && mouseY === 0) return;
+            
+            ctx.strokeStyle = CONFIG.colors.crosshair;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            // Vertical line
+            ctx.beginPath();
+            ctx.moveTo(mouseX, 0);
+            ctx.lineTo(mouseX, height);
+            ctx.stroke();
+            
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(0, mouseY);
+            ctx.lineTo(width, mouseY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Current price label
+            const price = range.min + (range.max - range.min) * (height - CONFIG.padding - mouseY) / (height - CONFIG.padding * 2);
+            ctx.fillStyle = '#2a2e39';
+            ctx.fillRect(width - 70, mouseY - 12, 60, 20);
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'right';
+            ctx.fillText('$' + price.toFixed(2), width - 10, mouseY + 3);
+        }
+
+        function render() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            const range = getPriceRange();
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawGrid(width, height, range);
+            drawCandles(width, height, range);
+            drawSMA(sma20, CONFIG.colors.sma20, width, height, range);
+            drawSMA(sma50, CONFIG.colors.sma50, width, height, range);
+            drawCrosshair(width, height, range);
+        }
+
+        // Agent Logic
+        class TradingAgent {
+            constructor() {
+                this.lastDecision = 'HOLD';
+                this.confidence = 65;
+                this.logs = [];
+            }
+
+            analyze() {
+                const lastCandle = candles[candles.length - 1];
+                const prevCandle = candles[candles.length - 2];
+                const currentSMA20 = sma20[sma20.length - 1];
+                const currentSMA50 = sma50[sma50.length - 1];
+                const prevSMA20 = sma20[sma20.length - 5];
+                const prevSMA50 = sma50[sma50.length - 5];
+                
+                // RSI calculation (simplified)
+                let gains = 0, losses = 0;
+                for (let i = candles.length - 14; i < candles.length; i++) {
+                    const change = candles[i].close - candles[i].open;
+                    if (change > 0) gains += change;
+                    else losses -= change;
+                }
+                const rs = gains / (losses || 1);
+                const rsi = 100 - (100 / (1 + rs));
+                
+                // MACD (simplified)
+                const macd = currentSMA20 - currentSMA50;
+                
+                // Decision logic
+                let decision = 'HOLD';
+                let reasons = [];
+                let score = 0;
+                
+                // Trend analysis
+                if (currentSMA20 > currentSMA50 && prevSMA20 <= prevSMA50) {
+                    score += 30;
+                    reasons.push('Golden Cross detectado');
+                } else if (currentSMA20 < currentSMA50 && prevSMA20 >= prevSMA50) {
+                    score -= 30;
+                    reasons.push('Death Cross detectado');
+                } else if (currentSMA20 > currentSMA50) {
+                    score += 15;
+                } else {
+                    score -= 15;
+                }
+                
+                // RSI analysis
+                if (rsi < 30) {
+                    score += 25;
+                    reasons.push('RSI en sobreventa');
+                } else if (rsi > 70) {
+                    score -= 25;
+                    reasons.push('RSI en sobrecompra');
+                } else if (rsi > 50) {
+                    score += 10;
+                }
+                
+                // Volume analysis
+                const avgVolume = candles.slice(-20).reduce((a, b) => a + b.volume, 0) / 20;
+                if (lastCandle.volume > avgVolume * 1.5) {
+                    if (lastCandle.bullish) {
+                        score += 20;
+                        reasons.push('Volumen comprador anormal');
+                    } else {
+                        score -= 20;
+                        reasons.push('Volumen vendedor anormal');
+                    }
+                }
+                
+                // Price action
+                if (lastCandle.close > lastCandle.open && lastCandle.low > prevCandle.low) {
+                    score += 10;
+                }
+                
+                // Determine decision
+                if (score > 30) decision = 'BUY';
+                else if (score < -30) decision = 'SELL';
+                
+                this.confidence = Math.min(Math.abs(score) + 50, 95);
+                
+                // Update UI if decision changed
+                if (decision !== this.lastDecision) {
+                    this.updateUI(decision, reasons);
+                    this.addLog(decision, reasons[0] || 'Análisis técnico');
+                    this.lastDecision = decision;
+                }
+                
+                // Update indicators
+                this.updateIndicators(rsi, macd, currentSMA20 > currentSMA50);
+            }
+
+            updateUI(decision, reasons) {
+                const card = document.getElementById('decisionCard');
+                const text = document.getElementById('decisionText');
+                const confText = document.getElementById('confidenceText');
+                const confBar = document.getElementById('confidenceBar');
+                
+                card.className = 'decision-card ' + decision;
+                text.textContent = decision === 'BUY' ? 'COMPRAR' : decision === 'SELL' ? 'VENDER' : 'NEUTRO';
+                confText.textContent = this.confidence + '%';
+                confBar.style.width = this.confidence + '%';
+            }
+
+            updateIndicators(rsi, macd, smaBullish) {
+                document.getElementById('rsiValue').textContent = rsi.toFixed(2);
+                document.getElementById('rsiValue').className = 'indicator-value ' + (rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : '');
+                
+                document.getElementById('macdValue').textContent = (macd > 0 ? '+' : '') + macd.toFixed(2);
+                document.getElementById('macdValue').className = 'indicator-value ' + (macd > 0 ? 'bullish' : 'bearish');
+                
+                document.getElementById('smaValue').textContent = smaBullish ? 'Tendencia Alcista' : 'Tendencia Bajista';
+                document.getElementById('smaValue').className = 'indicator-value ' + (smaBullish ? 'bullish' : 'bearish');
+            }
+
+            addLog(decision, reason) {
+                const log = document.getElementById('signalLog');
+                const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                const div = document.createElement('div');
+                div.className = `log-item ${decision.toLowerCase()}`;
+                div.innerHTML = `<span class="log-time">${time}</span> ${reason}`;
+                log.insertBefore(div, log.children[1]);
+                
+                if (log.children.length > 10) {
+                    log.removeChild(log.lastChild);
+                }
+            }
+        }
+
+        const agent = new TradingAgent();
+
+        // Event listeners
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            // Show tooltip
+            const width = canvas.width / window.devicePixelRatio;
+            const totalWidth = CONFIG.candleWidth + CONFIG.candleGap;
+            const startX = (width - candles.length * totalWidth) / 2;
+            const index = Math.floor((mouseX - startX) / totalWidth);
+            
+            if (index >= 0 && index < candles.length) {
+                const c = candles[index];
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.clientX + 10) + 'px';
+                tooltip.style.top = (e.clientY + 10) + 'px';
+                tooltip.innerHTML = `
+                    <div class="tooltip-row"><span class="tooltip-label">Fecha:</span><span class="tooltip-value">${c.time.toLocaleTimeString()}</span></div>
+                    <div class="tooltip-row"><span class="tooltip-label">Open:</span><span class="tooltip-value">$${c.open.toFixed(2)}</span></div>
+                    <div class="tooltip-row"><span class="tooltip-label">High:</span><span class="tooltip-value">$${c.high.toFixed(2)}</span></div>
+                    <div class="tooltip-row"><span class="tooltip-label">Low:</span><span class="tooltip-value">$${c.low.toFixed(2)}</span></div>
+                    <div class="tooltip-row"><span class="tooltip-label">Close:</span><span class="tooltip-value" style="color: ${c.bullish ? '#00d4aa' : '#ff4757'}">$${c.close.toFixed(2)}</span></div>
+                    <div class="tooltip-row"><span class="tooltip-label">Vol:</span><span class="tooltip-value">${(c.volume/1000).toFixed(1)}K</span></div>
+                `;
+            }
+            
+            render();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = 0;
+            mouseY = 0;
+            tooltip.style.display = 'none';
+            render();
+        });
+
+        // Real-time simulation
+        function addNewCandle() {
+            const last = candles[candles.length - 1];
+            const volatility = last.close * 0.001;
+            
+            const change = (Math.random() - 0.5) * volatility;
+            const close = last.close + change;
+            const open = last.close;
+            const high = Math.max(open, close) + Math.random() * volatility * 0.3;
+            const low = Math.min(open, close) - Math.random() * volatility * 0.3;
+            const volume = Math.random() * 1000000 + 300000;
+            
+            candles.shift();
+            candles.push({
+                time: new Date(),
+                open, high, low, close, volume,
+                bullish: close >= open
+            });
+            
+            currentPrice = close;
+            document.getElementById('currentPrice').textContent = '$' + close.toFixed(2);
+            
+            const change24h = ((close - 88000) / 88000 * 100);
+            const changeEl = document.getElementById('priceChange');
+            changeEl.textContent = (change24h >= 0 ? '+' : '') + change24h.toFixed(2) + '%';
+            changeEl.style.color = change24h >= 0 ? '#00d4aa' : '#ff4757';
+            changeEl.style.background = change24h >= 0 ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)';
+            
+            calculateSMA();
+            agent.analyze();
+            render();
+        }
+
+        // Initialize
+        generateCandles();
+        agent.analyze();
+        render();
+
+        // Update loop
+        setInterval(addNewCandle, 2000);
+        setInterval(() => agent.analyze(), 5000);
+
+        // Timeframe buttons
+        document.querySelectorAll('.tf-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

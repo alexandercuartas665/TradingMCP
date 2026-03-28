@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian AI Trading - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;600;800&amp;family=Inter:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed": "#d1e6f0",
+              "secondary": "#b4cad6",
+              "primary-fixed": "#b3ebff",
+              "on-tertiary-fixed": "#0a1e26",
+              "surface": "#131313",
+              "primary-fixed-dim": "#4cd6fb",
+              "on-secondary-fixed-variant": "#354a53",
+              "on-surface-variant": "#bac9cc",
+              "surface-variant": "#353534",
+              "on-secondary-fixed": "#071e27",
+              "surface-container-low": "#1c1b1b",
+              "on-error-container": "#ffdad6",
+              "inverse-primary": "#00677d",
+              "primary-container": "#72deff",
+              "surface-tint": "#4cd6fb",
+              "on-primary": "#003642",
+              "surface-container-high": "#2a2a2a",
+              "on-primary-container": "#006176",
+              "outline-variant": "#3b494c",
+              "secondary-fixed": "#cfe6f2",
+              "surface-bright": "#393939",
+              "surface-container-highest": "#353534",
+              "tertiary-container": "#bfd4de",
+              "on-surface": "#e5e2e1",
+              "on-primary-fixed-variant": "#004e5f",
+              "surface-container": "#201f1f",
+              "on-background": "#e5e2e1",
+              "error-container": "#93000a",
+              "tertiary": "#dbf0fb",
+              "surface-dim": "#131313",
+              "on-primary-fixed": "#001f27",
+              "on-secondary-container": "#a6bcc7",
+              "on-error": "#690005",
+              "inverse-surface": "#e5e2e1",
+              "inverse-on-surface": "#313030",
+              "secondary-container": "#374c56",
+              "surface-container-lowest": "#0e0e0e",
+              "primary": "#d0f2ff",
+              "background": "#131313",
+              "on-tertiary": "#20333b",
+              "tertiary-fixed-dim": "#b5cad4",
+              "outline": "#849396",
+              "on-tertiary-container": "#495c65",
+              "secondary-fixed-dim": "#b4cad6",
+              "on-tertiary-fixed-variant": "#374952",
+              "on-secondary": "#1e333c",
+              "error": "#ffb4ab"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(53, 53, 52, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-text {
+            text-shadow: 0 0 15px rgba(76, 214, 251, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+<!-- Ambient Background Elements -->
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+<!-- Main Container -->
+<main class="w-full max-w-[440px] z-10">
+<!-- Brand Header -->
+<div class="flex flex-col items-center mb-10">
+<div class="w-16 h-16 bg-surface-container-high rounded-xl flex items-center justify-center mb-4 border border-outline-variant/20 shadow-2xl shadow-black/60">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="terminal">terminal</span>
+</div>
+<h1 class="font-headline font-extrabold text-2xl tracking-tighter text-on-surface">
+                Obsidian AI Trading
+            </h1>
+</div>
+<!-- Login Card -->
+<div class="glass-card rounded-xl p-8 border border-outline-variant/15 shadow-2xl">
+<div class="mb-8 text-center">
+<h2 class="font-headline text-xl font-semibold text-on-surface mb-2">
+                    Acceso al Terminal Principal
+                </h2>
+<p class="text-on-surface-variant font-label text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim animate-pulse"></span>
+                    IA Activa y lista para la ejecución
+                </p>
+</div>
+<!-- Form -->
+<form class="space-y-6" onsubmit="return false;">
+<div class="space-y-1.5">
+<label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant ml-1" for="email">
+                        Email de Operador
+                    </label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-sm text-outline" data-icon="alternate_email">alternate_email</span>
+</div>
+<input class="w-full bg-surface-container-highest border-none rounded-lg py-3 pl-10 pr-4 text-on-surface placeholder:text-outline/50 focus:ring-1 focus:ring-primary/30 transition-all text-sm" id="email" placeholder="operador@obsidian.ai" type="email"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant ml-1" for="password">
+                        Clave de Encriptación
+                    </label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-sm text-outline" data-icon="lock_open">lock_open</span>
+</div>
+<input class="w-full bg-surface-container-highest border-none rounded-lg py-3 pl-10 pr-4 text-on-surface placeholder:text-outline/50 focus:ring-1 focus:ring-primary/30 transition-all text-sm" id="password" placeholder="••••••••" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between py-1">
+<label class="flex items-center gap-2 cursor-pointer group">
+<div class="relative flex items-center">
+<input class="peer appearance-none w-4 h-4 rounded border border-outline-variant bg-surface-container-high checked:bg-primary-fixed-dim checked:border-primary-fixed-dim transition-all" type="checkbox"/>
+<span class="material-symbols-outlined absolute text-[12px] text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check">check</span>
+</div>
+<span class="text-xs text-on-surface-variant font-medium group-hover:text-on-surface transition-colors">Recordarme</span>
+</label>
+<a class="text-xs text-primary/80 hover:text-primary transition-colors font-medium" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<button class="w-full py-4 rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-sm tracking-wide shadow-lg shadow-primary/10 active:scale-[0.98] transition-all hover:brightness-110">
+                    Iniciar Sesión
+                </button>
+</form>
+<!-- Security Badge -->
+<div class="mt-8 pt-6 border-t border-outline-variant/10 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg" data-icon="verified_user">verified_user</span>
+<span class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/80">
+                    Encriptación AES-256 Activa
+                </span>
+</div>
+</div>
+<!-- External Image/Context Illustration -->
+<div class="mt-8 flex justify-center">
+<img alt="Obsidian Data visualization" class="w-full h-12 object-cover rounded-full opacity-20 grayscale hover:grayscale-0 hover:opacity-40 transition-all duration-700 border border-outline-variant/10" data-alt="abstract digital visualization of complex data networks with glowing cyan nodes and dark obsidian structures in a futuristic space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACaKITzJVqfsBgz9P2Z_pR3W0L9AfWZI9ethxWErnSSsmaZMbJdfiMEmL4SJkwGjUH3yQtROtvNzO5N0eSX3FM8HlIxfIacBFM7qxB2CDFSHGhZz0OEhxVjq0XE1xIKvjuEttUwhc0gEP3Tht7IATuABwTHuMy_YSDIdOaiBNmMqnJM8aRYmoNPkbEaUIOD12wmoYC00b5M8Wu7SKuhEwuV4K_7mGqe9fGDtrT3_LqaJPnV4yJhnkrEkFXxo0Sjp-H5JSoRR3SHoY"/>
+</div>
+<!-- Footer System Status -->
+<footer class="mt-12 w-full">
+<div class="flex justify-between items-center px-2">
+<div class="flex gap-6">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim shadow-[0_0_8px_rgba(76,214,251,0.6)]"></span>
+<span class="text-[10px] font-label uppercase tracking-tighter text-outline">Deriv Connection</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim shadow-[0_0_8px_rgba(76,214,251,0.6)]"></span>
+<span class="text-[10px] font-label uppercase tracking-tighter text-outline">Postgres DB</span>
+</div>
+</div>
+<div class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40">
+                    v4.2.0-core
+                </div>
+</div>
+</footer>
+</main>
+</body></html>

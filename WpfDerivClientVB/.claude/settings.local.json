@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(ls \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\obj\\\\Debug\\\\net48\\\\Dashboard\\\\controls\"\" 2>/dev/null && ls \"C:DesarrolloIATraidingWpfDerivClientVBobjDebugnet48Dashboard\"\")",
+      "Bash(find C:DesarrolloIATraidingWpfDerivClientVBobj -name *wpftmp*)",
+      "Bash(find C:/Users/acuartas/AppData/Local/Temp -name *AdminSidebar*.g.vb)",
+      "Bash(find C:/Users/acuartas/AppData/Local/Temp -name *wpftmp* -newer C:DesarrolloIATraidingWpfDerivClientVBDashboardcontrolsAdminSidebar.xaml)",
+      "Bash(dotnet clean:*)",
+      "Bash(find C:DesarrolloIATraidingWpfDerivClientVB -name *dv1dfkww* -o -name *wpftmp*vbproj)",
+      "Bash(find C:DesarrolloIATraidingWpfDerivClientVB -name WpfDerivClientVB_*_wpftmp.vbproj)",
+      "Bash(find C:DesarrolloIATraidingWpfDerivClientVB -name *.vbproj ! -name *_*)",
+      "Bash(powershell -Command \"[System.Reflection.Assembly]::LoadFile\\(''C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\obj\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe''\\).GetTypes\\(\\) | Where-Object { $_.Name -like ''*Admin*'' -or $_.Name -like ''*Sidebar*'' } | Select-Object FullName\")",
+      "Bash(powershell -Command \"try { $asm = [System.Reflection.Assembly]::LoadFrom\\(''C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\obj\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe''\\); $asm.GetTypes\\(\\) | Where-Object { $_.Name -like ''*Admin*'' -or $_.Name -like ''*Sidebar*'' } | Select-Object FullName } catch { Write-Host $_.Exception.Message }\")",
+      "Bash(ildasm /text C:DesarrolloIATraidingWpfDerivClientVBobjDebugnet48WpfDerivClientVB.exe)"
+    ]
+  }
+}

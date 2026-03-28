@@ -1,0 +1,110 @@
+<UserControl x:Class="AdminSidebar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="780" d:DesignWidth="220"
+             Background="AntiqueWhite">
+
+    <Border Background="{DynamicResource SidebarBg}">
+        <DockPanel>
+
+            <!-- Logo -->
+            <StackPanel DockPanel.Dock="Top" Margin="20,24,20,24">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="30" Height="30" CornerRadius="6" Background="{DynamicResource PrimaryFixed}"
+                            VerticalAlignment="Center" Margin="0,0,10,0">
+                        <TextBlock Text="⬡" FontSize="14" Foreground="#001F27"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Obsidian Admin" FontSize="15" FontWeight="Bold"
+                                   Foreground="{DynamicResource Primary}"/>
+                        <TextBlock Text="TRADING SYSTEMS" FontSize="9" FontWeight="SemiBold"
+                                   Foreground="#3B4A4D"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- New Strategy CTA -->
+            <Border DockPanel.Dock="Top" Margin="14,0,14,20">
+                <Button Style="{DynamicResource PrimaryBtn}" Content="+ Nueva Estrategia"
+                        HorizontalAlignment="Stretch"/>
+            </Border>
+
+            <!-- Nav Items -->
+            <StackPanel DockPanel.Dock="Top" Margin="8,0,8,0">
+                <Button x:Name="btnNavDashboard" Style="{DynamicResource NavItemActive}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⬛" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"
+                                   Foreground="{DynamicResource PrimaryFixed}"/>
+                        <TextBlock Text="Dashboard" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryFixed}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnNavUsers" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="👤" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Usuarios" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnNavAccounts" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💼" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Cuentas" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnNavPlatforms" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔗" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Plataformas" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnNavMonitoring" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📊" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Monitoreo" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnNavSettings" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚙" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Configuración" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Footer usuario -->
+            <StackPanel DockPanel.Dock="Bottom" Margin="14,0,14,20">
+                <Button Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🚪" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Cerrar Sesión" FontSize="12" Foreground="#5A6A6D"/>
+                    </StackPanel>
+                </Button>
+                <Separator Background="#1C1B1B" Margin="4,6"/>
+                <StackPanel Orientation="Horizontal" Margin="4,8,0,0">
+                    <Border Width="32" Height="32" CornerRadius="16"
+                            Background="{DynamicResource SurfaceHigh}" Margin="0,0,10,0">
+                        <TextBlock Text="AS" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryFixed}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Alex Sterling" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource OnSurface}"/>
+                        <TextBlock Text="Lead System Admin" FontSize="10" Foreground="#3B4A4D"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <Grid/><!-- spacer -->
+        </DockPanel>
+    </Border>
+</UserControl>

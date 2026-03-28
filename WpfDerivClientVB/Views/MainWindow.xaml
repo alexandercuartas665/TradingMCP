@@ -1,0 +1,263 @@
+<Window x:Class="WpfDerivClientVB.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Deriv Trading - Live Streaming" Height="620" Width="960"
+        Background="#1E1E2E">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4,3"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#89B4FA"/>
+            <Setter Property="Foreground" Value="#1E1E2E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="Button" x:Key="DangerBtn">
+            <Setter Property="Background" Value="#F38BA8"/>
+            <Setter Property="Foreground" Value="#1E1E2E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="Button" x:Key="SuccessBtn">
+            <Setter Property="Background" Value="#A6E3A1"/>
+            <Setter Property="Foreground" Value="#1E1E2E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#181825"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="RowBackground" Value="#1E1E2E"/>
+            <Setter Property="AlternatingRowBackground" Value="#181825"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="ColumnHeaderHeight" Value="28"/>
+        </Style>
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="Padding" Value="14,6"/>
+        </Style>
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="#1E1E2E"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="DatePicker">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+        </Style>
+        <Style TargetType="ProgressBar">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#89B4FA"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="16"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Barra superior de controles de streaming -->
+        <Border Grid.Row="0" Background="#181825" CornerRadius="6" Padding="10,8" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Simbolo:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <TextBox x:Name="txtSymbol" Text="R_100" Width="100" Margin="0,0,12,0" VerticalContentAlignment="Center"/>
+
+                <TextBlock Text="Temporalidad:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox x:Name="cmbTimeframe" Width="70" Margin="0,0,12,0" SelectedIndex="0">
+                    <ComboBoxItem Content="1m"/>
+                    <ComboBoxItem Content="5m"/>
+                    <ComboBoxItem Content="15m"/>
+                    <ComboBoxItem Content="1h"/>
+                    <ComboBoxItem Content="1d"/>
+                </ComboBox>
+
+                <Button x:Name="btnConnect" Content="▶  Iniciar Streaming" Width="145" Click="btnConnect_Click" Margin="0,0,8,0"/>
+                <Button x:Name="btnDisconnect" Content="⏹  Detener" Width="100" IsEnabled="False"
+                        Style="{StaticResource DangerBtn}" Click="btnDisconnect_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Tabs principales -->
+        <TabControl Grid.Row="1" x:Name="tabMain">
+
+            <!-- TAB 1: Tabla de datos -->
+            <TabItem Header="📊  Tabla de Velas">
+                <DataGrid x:Name="gridCandles" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Hora (Local)" Binding="{Binding OpenTime}" Width="155"/>
+                        <DataGridTextColumn Header="Open" Binding="{Binding OpenPrice, StringFormat=\{0:F5\}}" Width="105"/>
+                        <DataGridTextColumn Header="High" Binding="{Binding High, StringFormat=\{0:F5\}}" Width="105"/>
+                        <DataGridTextColumn Header="Low" Binding="{Binding Low, StringFormat=\{0:F5\}}" Width="105"/>
+                        <DataGridTextColumn Header="Close" Binding="{Binding ClosePrice, StringFormat=\{0:F5\}}" Width="105"/>
+                        <DataGridTextColumn Header="Estado" Binding="{Binding Status}" Width="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <!-- TAB 2: Grafico de velas -->
+            <TabItem Header="📈  Grafico" x:Name="tabChart">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Canvas x:Name="chartHost" Grid.Row="0" Background="#1E1E2E"
+                            SizeChanged="ChartHost_SizeChanged"/>
+
+                    <Expander Grid.Row="1" Header=" ⚙ Configuracion de Colores" IsExpanded="False"
+                              Background="#181825" Foreground="#CDD6F4" BorderBrush="#45475A" Margin="0,4,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,8,10,8">
+                            <Label Content="Alcista:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="txtBullColor" Width="90" Margin="4,0,12,0" VerticalContentAlignment="Center"
+                                     TextChanged="ColorTextBox_Changed"/>
+
+                            <Label Content="Bajista:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="txtBearColor" Width="90" Margin="4,0,12,0" VerticalContentAlignment="Center"
+                                     TextChanged="ColorTextBox_Changed"/>
+
+                            <Label Content="Mechas:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="txtWickColor" Width="90" Margin="4,0,12,0" VerticalContentAlignment="Center"
+                                     TextChanged="ColorTextBox_Changed"/>
+
+                            <Label Content="Fondo:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="txtBgColor" Width="90" Margin="4,0,12,0" VerticalContentAlignment="Center"
+                                     TextChanged="ColorTextBox_Changed"/>
+
+                            <Button Content="💾 Guardar" Click="btnSaveColors_Click" Width="120" Margin="0,0,12,0"/>
+
+                            <Border x:Name="previewBull" Width="18" Height="18" Margin="4,0,4,0" CornerRadius="3"/>
+                            <Border x:Name="previewBear" Width="18" Height="18" Margin="2,0,4,0" CornerRadius="3"/>
+                            <Border x:Name="previewWick" Width="18" Height="18" Margin="2,0,0,0" CornerRadius="3"/>
+                        </StackPanel>
+                    </Expander>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 3: Descarga Historica -->
+            <TabItem Header="⬇  Descarga Historica">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Controles de descarga -->
+                    <Border Grid.Row="0" Background="#181825" CornerRadius="6" Padding="10,8" Margin="0,0,0,8">
+                        <WrapPanel>
+                            <Label Content="Simbolo:"/>
+                            <TextBox x:Name="txtHistSymbol" Width="100" Margin="2,0,12,0" VerticalContentAlignment="Center"/>
+
+                            <Label Content="Temporalidad:"/>
+                            <ComboBox x:Name="cmbHistTimeframe" Width="70" Margin="2,0,12,0" SelectedIndex="0">
+                                <ComboBoxItem Content="1m"/>
+                                <ComboBoxItem Content="5m"/>
+                                <ComboBoxItem Content="15m"/>
+                                <ComboBoxItem Content="1h"/>
+                                <ComboBoxItem Content="4h"/>
+                                <ComboBoxItem Content="1d"/>
+                            </ComboBox>
+
+                            <Label Content="Desde:"/>
+                            <DatePicker x:Name="dpDesde" Width="125" Margin="2,0,12,0" VerticalAlignment="Center"/>
+
+                            <Label Content="Hasta:"/>
+                            <DatePicker x:Name="dpHasta" Width="125" Margin="2,0,16,0" VerticalAlignment="Center"/>
+
+                            <Button x:Name="btnDescargar" Content="⬇  Descargar Historial"
+                                    Style="{StaticResource SuccessBtn}" Width="165"
+                                    Click="btnDescargar_Click" Margin="0,0,8,0"/>
+                            <Button x:Name="btnDetenerDescarga" Content="⏹  Detener"
+                                    Style="{StaticResource DangerBtn}" Width="100"
+                                    IsEnabled="False" Click="btnDetenerDescarga_Click" Margin="0,0,16,0"/>
+
+                            <!-- Separador visual -->
+                            <Separator Width="2" Height="28" Background="#45475A" Margin="0,0,16,0"/>
+
+                            <!-- Seccion de indicadores -->
+                            <Label Content="Período MA:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="txtMaPeriod" Text="20" Width="45" Margin="2,0,8,0"
+                                     VerticalContentAlignment="Center" ToolTip="Periodo de la media movil (ej: 20)"/>
+                            <Button x:Name="btnCalcularIndicadores" Content="🔬  Calcular Indicadores"
+                                    Width="185" Click="btnCalcularIndicadores_Click" ToolTip="Calcula SMA, EMA y WMA sobre los datos en la BD"/>
+                        </WrapPanel>
+                    </Border>
+
+                    <!-- Info de capacidad -->
+                    <Border Grid.Row="1" Background="#181825" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <TextBlock Foreground="#A6ADC8" FontSize="11">
+                            <Run FontWeight="Bold" Foreground="#89B4FA">Capacidad Deriv: </Run>
+                            <Run>1m ≈ 16h por pagina | 5m ≈ 3.5 dias | 1h ≈ 42 dias | 1d ≈ 2.7 anos — por pagina de 1.000 velas. Se paginan automaticamente.</Run>
+                        </TextBlock>
+                    </Border>
+
+                    <!-- Progreso -->
+                    <Border Grid.Row="2" Background="#181825" CornerRadius="6" Padding="10,8" Margin="0,0,0,8">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock x:Name="txtDescargaStatus" Text="Listo para descargar."
+                                           FontWeight="Bold" Foreground="#CDD6F4"/>
+                                <TextBlock x:Name="txtDescargaContador" Text="" Margin="12,0,0,0"
+                                           Foreground="#A6ADC8" FontFamily="Consolas"/>
+                            </StackPanel>
+                            <ProgressBar x:Name="pbDescarga" Height="16" IsIndeterminate="False"
+                                         Minimum="0" Maximum="100" Value="0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Log de eventos -->
+                    <Border Grid.Row="3" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6">
+                        <ScrollViewer x:Name="svDescargaLog" VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="txtDescargaLog" Margin="10"
+                                       TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                       Foreground="#A6ADC8" LineHeight="18"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Barra de estado -->
+        <StatusBar Grid.Row="2" Background="#181825" Margin="0,6,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="txtStatus" Text="Desconectado" Foreground="#A6ADC8"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock x:Name="txtDbStatus" Text="BD: localhost:8083/traiding_db" Foreground="#6C7086" FontSize="10"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

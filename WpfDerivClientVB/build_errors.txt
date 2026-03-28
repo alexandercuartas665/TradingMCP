@@ -1,0 +1,13 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\MainWindow.xaml.vb(65,17): error BC30203: Se esperaba un identificador. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\MainWindow.xaml.vb(129,37): error BC30183: Una palabra clave no es v├ílida como identificador. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\MainWindow.xaml.vb(65,17): error BC30203: Se esperaba un identificador. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\MainWindow.xaml.vb(129,37): error BC30183: Una palabra clave no es v├ílida como identificador. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:02.17
