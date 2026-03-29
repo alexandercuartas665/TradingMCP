@@ -1,0 +1,365 @@
+<UserControl x:Class="DbConfigControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#0A0A0A">
+
+    <UserControl.Resources>
+
+        <!-- ── Labels ──────────────────────────────────────── -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="Foreground" Value="#5A6A6D"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <!-- ── TextBox inputs ─────────────────────────────── -->
+        <Style x:Key="DbTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#1C1B1B"/>
+            <Setter Property="Foreground" Value="#e0e6ed"/>
+            <Setter Property="BorderBrush" Value="#2a2e39"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CaretBrush" Value="#4CD6FB"/>
+            <Setter Property="SelectionBrush" Value="#4CD6FB"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#4CD6FB"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#2a5f6d"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── PasswordBox ────────────────────────────────── -->
+        <Style x:Key="DbPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#1C1B1B"/>
+            <Setter Property="Foreground" Value="#e0e6ed"/>
+            <Setter Property="BorderBrush" Value="#2a2e39"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CaretBrush" Value="#4CD6FB"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#4CD6FB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── Botón primario ─────────────────────────────── -->
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#4CD6FB"/>
+            <Setter Property="Foreground" Value="#001F27"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Black"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#7DEAFF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#1C1B1B"/>
+                                <Setter Property="Foreground" Value="#3B4A4D"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── Botón secundario ───────────────────────────── -->
+        <Style x:Key="SecondaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1C1B1B"/>
+            <Setter Property="Foreground" Value="#e0e6ed"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2a2e39"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2a2e39"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── Botón test conexión ────────────────────────── -->
+        <Style x:Key="TestBtn" TargetType="Button" BasedOn="{StaticResource SecondaryBtn}">
+            <Setter Property="BorderBrush" Value="#00d4aa"/>
+            <Setter Property="Foreground" Value="#00d4aa"/>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- Header -->
+            <RowDefinition Height="*"/>      <!-- Form -->
+            <RowDefinition Height="Auto"/>   <!-- Status bar -->
+            <RowDefinition Height="Auto"/>   <!-- Actions -->
+        </Grid.RowDefinitions>
+
+        <!-- ████ HEADER ████ -->
+        <Border Grid.Row="0" Padding="30,24,30,20">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#0D0D0D" Offset="0"/>
+                    <GradientStop Color="#0D2A30" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <Border Width="36" Height="36" CornerRadius="8" Background="#0D2A30"
+                            VerticalAlignment="Center" Margin="0,0,14,0">
+                        <TextBlock Text="🗄" FontSize="18"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="CONFIGURACIÓN DE BASE DE DATOS"
+                                   FontSize="13" FontWeight="Black" FontFamily="Consolas"
+                                   Foreground="#e0e6ed"/>
+                        <TextBlock Text="PostgreSQL · Npgsql · Conexión directa"
+                                   FontSize="9" FontFamily="Consolas" Foreground="#3B4A4D"/>
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Text="Configura los parámetros de conexión al servidor PostgreSQL donde se almacenan las velas históricas."
+                           FontSize="10" Foreground="#5A6A6D" TextWrapping="Wrap" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ████ FORM ████ -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,4,0">
+            <StackPanel Margin="30,24">
+
+                <!-- ── Fila 1: Host + Puerto ── -->
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="110"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="SERVIDOR (HOST)" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtHost" Style="{StaticResource DbTextBox}"
+                                 Text="localhost" ToolTip="IP o nombre del servidor PostgreSQL"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="PUERTO" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtPort" Style="{StaticResource DbTextBox}"
+                                 Text="5432" ToolTip="Puerto por defecto: 5432"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── Base de datos ── -->
+                <StackPanel Margin="0,0,0,18">
+                    <TextBlock Text="BASE DE DATOS" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="txtDatabase" Style="{StaticResource DbTextBox}"
+                             Text="traiding_db" ToolTip="Nombre de la base de datos"/>
+                </StackPanel>
+
+                <!-- ── Fila 2: Usuario + Contraseña ── -->
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="USUARIO" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtUsername" Style="{StaticResource DbTextBox}"
+                                 Text="postgres"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="CONTRASEÑA" Style="{StaticResource FieldLabel}"/>
+                        <Grid>
+                            <PasswordBox x:Name="pwdPassword" Style="{StaticResource DbPasswordBox}"
+                                         PasswordChar="●"/>
+                            <!-- Texto visible cuando showpass activo -->
+                            <TextBox x:Name="txtPasswordVisible" Style="{StaticResource DbTextBox}"
+                                     Visibility="Collapsed"/>
+                            <Button x:Name="btnTogglePwd" Content="👁" Width="28" Height="28"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Margin="0,0,4,0" Background="Transparent"
+                                    BorderThickness="0" Foreground="#5A6A6D" Cursor="Hand"
+                                    FontSize="14" Click="BtnTogglePwd_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── Schema ── -->
+                <StackPanel Margin="0,0,0,24">
+                    <TextBlock Text="SCHEMA" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="txtSchema" Style="{StaticResource DbTextBox}"
+                             Text="public" ToolTip="Schema de PostgreSQL (por defecto: public)"/>
+                </StackPanel>
+
+                <!-- ── Separador ── -->
+                <Rectangle Height="1" Fill="#1C1B1B" Margin="0,0,0,20"/>
+
+                <!-- ── Connection string preview ── -->
+                <StackPanel>
+                    <TextBlock Text="VISTA PREVIA DEL CONNECTION STRING" Style="{StaticResource FieldLabel}"/>
+                    <Border Background="#0D0D0D" CornerRadius="6" Padding="12,10"
+                            BorderBrush="#1C1B1B" BorderThickness="1">
+                        <TextBlock x:Name="txtConnPreview"
+                                   FontFamily="Consolas" FontSize="10"
+                                   Foreground="#3B4A4D" TextWrapping="Wrap"
+                                   Text="Host=localhost;Port=5432;Database=traiding_db;Username=postgres;Password=***;"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── Tablas encontradas (se llena tras explorar) ── -->
+                <StackPanel x:Name="pnlTablesSection" Margin="0,20,0,0" Visibility="Collapsed">
+                    <TextBlock Text="TABLAS DISPONIBLES" Style="{StaticResource FieldLabel}"/>
+                    <Border Background="#0D2A30" CornerRadius="6" Padding="12,10"
+                            BorderBrush="#4CD6FB" BorderThickness="1">
+                        <ItemsControl x:Name="lstTables">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Text="▸ " Foreground="#4CD6FB" FontFamily="Consolas" FontSize="10"/>
+                                        <TextBlock Text="{Binding}" Foreground="#e0e6ed"
+                                                   FontFamily="Consolas" FontSize="10"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ████ STATUS BAR ████ -->
+        <Border Grid.Row="2" x:Name="bdrStatus" Background="#1C1B1B"
+                Padding="20,10" Visibility="Collapsed">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse x:Name="ellStatus" Width="8" Height="8"
+                             Fill="#5A6A6D" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="txtStatus" Text="—"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="#e0e6ed"/>
+                </StackPanel>
+                <!-- Spinner (visible mientras prueba) -->
+                <Border x:Name="bdrSpinner" HorizontalAlignment="Right"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="txtSpinner" Text="⟳"
+                               FontSize="16" Foreground="#4CD6FB">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform x:Name="spinnerRot" Angle="0" CenterX="8" CenterY="8"/>
+                        </TextBlock.RenderTransform>
+                        <TextBlock.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard x:Name="spinAnim">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetName="spinnerRot"
+                                                         Storyboard.TargetProperty="Angle"
+                                                         From="0" To="360" Duration="0:0:1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBlock.Triggers>
+                    </TextBlock>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ████ ACTIONS ████ -->
+        <Border Grid.Row="3" Background="#0D0D0D" Padding="20,16"
+                BorderBrush="#1C1B1B" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Info -->
+                <TextBlock Grid.Column="0" Text="Los cambios se guardan en settings.json"
+                           FontSize="9" FontFamily="Consolas"
+                           Foreground="#3B4A4D" VerticalAlignment="Center"/>
+
+                <!-- Explorar BD -->
+                <Button Grid.Column="1" x:Name="btnExplore"
+                        Content="🔍  EXPLORAR BD" Style="{StaticResource SecondaryBtn}"
+                        Click="BtnExplore_Click"/>
+
+                <!-- Probar conexión -->
+                <Button Grid.Column="3" x:Name="btnTest"
+                        Content="⚡  PROBAR CONEXIÓN" Style="{StaticResource TestBtn}"
+                        Click="BtnTest_Click"/>
+
+                <!-- Guardar -->
+                <Button Grid.Column="5" x:Name="btnSave"
+                        Content="💾  GUARDAR" Style="{StaticResource PrimaryBtn}"
+                        Click="BtnSave_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

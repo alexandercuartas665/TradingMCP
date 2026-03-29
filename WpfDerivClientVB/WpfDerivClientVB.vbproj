@@ -21,6 +21,8 @@
     <Page Include="CandleManager\controls\CandleChartControl.xaml" />
     <Page Include="CandleManager\controls\CandleAgentControl.xaml" />
     <Page Include="CandleManager\controls\CandleTransactionsControl.xaml" />
+    <Page Include="CandleManager\DbConfigWindow.xaml" />
+    <Page Include="CandleManager\controls\DbConfigControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>

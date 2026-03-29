@@ -52,6 +52,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- Asset Icon + Name -->
@@ -131,13 +132,20 @@
             <Rectangle Grid.Column="5" Width="1" Fill="#1C1B1B" VerticalAlignment="Stretch" Margin="0,12"/>
 
             <!-- Clock -->
-            <StackPanel Grid.Column="6" VerticalAlignment="Center">
+            <StackPanel Grid.Column="6" VerticalAlignment="Center" Margin="0,0,16,0">
                 <TextBlock Text="UTC TIME" FontSize="8" FontFamily="Consolas"
                            FontWeight="Bold" Foreground="#3B4A4D" HorizontalAlignment="Right"/>
                 <TextBlock x:Name="txtClock" Text="--:--:--"
                            FontFamily="Consolas" FontSize="12" FontWeight="Bold"
                            Foreground="#5A6A6D" HorizontalAlignment="Right"/>
             </StackPanel>
+
+            <!-- Settings Button -->
+            <Button Grid.Column="7" x:Name="btnSettings" VerticalAlignment="Center"
+                    Width="32" Height="32" Background="Transparent" BorderThickness="0"
+                    Cursor="Hand" ToolTip="Configuración de Base de Datos" Click="BtnSettings_Click">
+                <TextBlock Text="⚙" FontSize="18" Foreground="#5A6A6D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
         </Grid>
     </Border>
 </UserControl>

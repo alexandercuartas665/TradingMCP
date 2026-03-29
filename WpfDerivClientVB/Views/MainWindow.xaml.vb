@@ -55,7 +55,7 @@ Namespace WpfDerivClientVB
             AddHandler chartHost.SizeChanged, AddressOf SyncChartSize
 
             ' Configuracion de colores
-            _settings = SettingsManager.Load()
+            _settings = SettingsManager.GetChart()
             ApplySettingsToUI()
             _chartCanvas.SetData(_candles, _settings)
 
@@ -114,7 +114,9 @@ Namespace WpfDerivClientVB
             _settings.BearishColor = txtBearColor.Text.Trim()
             _settings.WickColor = txtWickColor.Text.Trim()
             _settings.BackgroundColor = txtBgColor.Text.Trim()
-            SettingsManager.Save(_settings)
+            Dim all = SettingsManager.Load()
+            all.Chart = _settings
+            SettingsManager.Save(all)
             _chartCanvas.SetData(_candles, _settings)
             System.Windows.MessageBox.Show("Configuracion guardada.", "OK", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information)
         End Sub

@@ -7,6 +7,7 @@ Partial Public Class CandleHeaderControl
 
     ' ── Eventos públicos ──────────────────────────────────────────
     Public Event TimeframeChanged(granularity As Integer)
+    Public Event OpenSettingsRequested()
 
     Private _clockTimer As DispatcherTimer
     Private _activeBtn As Button
@@ -65,6 +66,11 @@ Partial Public Class CandleHeaderControl
 
         Dim granularity As Integer = CInt(btn.Tag)
         RaiseEvent TimeframeChanged(granularity)
+    End Sub
+
+    ' ── Settings Button ──────────────────────────────────────────
+    Private Sub BtnSettings_Click(sender As Object, e As RoutedEventArgs)
+        RaiseEvent OpenSettingsRequested()
     End Sub
 
     ' ── Cleanup ──────────────────────────────────────────────────

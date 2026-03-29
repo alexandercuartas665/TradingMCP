@@ -18,7 +18,7 @@ Namespace WpfDerivClientVB
         Private Const CandleGap As Double = 4
 
         Public Sub New()
-            _settings = SettingsManager.Load()
+            _settings = SettingsManager.GetChart()
             Background = New SolidColorBrush(ParseColor(_settings.BackgroundColor))
         End Sub
 

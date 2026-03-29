@@ -60,6 +60,15 @@ Partial Public Class CandleViewerWindow
     ' ── Conexión de eventos entre controles ───────────────────────
     Private Sub ConectarEventos()
         AddHandler _header.TimeframeChanged, AddressOf OnTimeframeChanged
+        AddHandler _header.OpenSettingsRequested, AddressOf OnOpenSettingsRequested
+    End Sub
+
+    ' ── Evento de apertura de configuración ──────────────────────
+    Private Sub OnOpenSettingsRequested()
+        Dim dbs = DbConfigWindow.AbrirModal(Me)
+        If dbs IsNot Nothing AndAlso dbs.Enabled Then
+            _agent.AddSignalLog("SYSTEM", "Configuración DB actualizada: " & dbs.Host)
+        End If
     End Sub
 
     ' ── Datos demo (visualización inicial) ───────────────────────
