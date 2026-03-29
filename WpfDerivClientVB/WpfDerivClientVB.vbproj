@@ -16,6 +16,11 @@
     <Page Include="Views\MainWindow.xaml" />
     <Page Include="Dashboard\AdminDashboard.xaml" />
     <Page Include="Dashboard\controls\AdminSidebar.xaml" />
+    <Page Include="CandleManager\CandleViewerWindow.xaml" />
+    <Page Include="CandleManager\controls\CandleHeaderControl.xaml" />
+    <Page Include="CandleManager\controls\CandleChartControl.xaml" />
+    <Page Include="CandleManager\controls\CandleAgentControl.xaml" />
+    <Page Include="CandleManager\controls\CandleTransactionsControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +30,10 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CandleManager\" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,11 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\controls\CandleAssetSelectorControl.xaml.vb(13,84): error BC30506: La cl├íusula Handles requiere una variable WithEvents definida en el tipo contenedor o en uno de sus tipos base. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_p1rrbboa_wpftmp.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\controls\CandleAssetSelectorControl.xaml.vb(13,84): error BC30506: La cl├íusula Handles requiere una variable WithEvents definida en el tipo contenedor o en uno de sus tipos base. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_p1rrbboa_wpftmp.vbproj]
+    0 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:02.21

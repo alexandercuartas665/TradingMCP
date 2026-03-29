@@ -1,0 +1,19 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\obj\Debug\net48\CandleManager\CandleViewerWindow.g.vb(35,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(20,15): error BC30311: El valor de tipo 'Grid' no se puede convertir en 'Canvas'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(32,42): error BC30002: No está definido el tipo 'CandleData'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(32,30): error BC30311: El valor de tipo 'List(Of CandleData)' no se puede convertir en 'ObservableCollection(Of CandleModel)'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(166,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\obj\Debug\net48\CandleManager\CandleViewerWindow.g.vb(35,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(166,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(20,15): error BC30311: El valor de tipo 'Grid' no se puede convertir en 'Canvas'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(32,42): error BC30002: No está definido el tipo 'CandleData'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(32,30): error BC30311: El valor de tipo 'List(Of CandleData)' no se puede convertir en 'ObservableCollection(Of CandleModel)'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_gmrl4imd_wpftmp.vbproj]
+    2 Advertencia(s)
+    3 Errores
+
+Tiempo transcurrido 00:00:03.36

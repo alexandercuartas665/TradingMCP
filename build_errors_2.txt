@@ -1,0 +1,13 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(166,17): warning BC42358: Como esta llamada no es 'awaited', la ejecuci├│n del m├®todo actual continuar├í antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_aclngrrj_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml(20,10): error MC3074: la etiqueta 'CandleAssetSelectorControl' no existe en el espacio de nombres XML 'clr-namespace:WpfDerivClientVB'. L├¡nea 20, posici├│n 10. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(166,17): warning BC42358: Como esta llamada no es 'awaited', la ejecuci├│n del m├®todo actual continuar├í antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_aclngrrj_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml(20,10): error MC3074: la etiqueta 'CandleAssetSelectorControl' no existe en el espacio de nombres XML 'clr-namespace:WpfDerivClientVB'. L├¡nea 20, posici├│n 10. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+    1 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:04.95

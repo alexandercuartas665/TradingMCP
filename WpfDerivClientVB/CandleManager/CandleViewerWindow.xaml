@@ -1,0 +1,46 @@
+<Window x:Class="CandleViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pro Trading AI — Visor de Velas"
+        Height="800" Width="1220"
+        MinHeight="580" MinWidth="900"
+        Background="#0A0A0A"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True">
+
+    <!--
+        ╔══════════════════════════════════════════════╗
+        ║  CandleViewerWindow — Child-Window autónomo  ║
+        ║  Se puede abrir N veces (un activo cada una) ║
+        ╚══════════════════════════════════════════════╝
+        Estructura:
+        Row 0: CandleHeaderControl   (54px)
+        Row 1: CandleChartControl | CandleAgentControl
+        Row 2: CandleTransactionsControl (120px)
+    -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- Header -->
+            <RowDefinition Height="*"/>      <!-- Chart + Agent -->
+            <RowDefinition Height="Auto"/>   <!-- Transactions -->
+        </Grid.RowDefinitions>
+
+        <!-- ████ ROW 0: HEADER ████ -->
+        <ContentControl x:Name="HeaderContainer" Grid.Row="0"/>
+
+        <!-- ████ ROW 1: CHART + AGENT ████ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>      <!-- Chart -->
+                <ColumnDefinition Width="Auto"/>   <!-- Agent -->
+            </Grid.ColumnDefinitions>
+
+            <ContentControl x:Name="ChartContainer" Grid.Column="0"/>
+            <ContentControl x:Name="AgentContainer"  Grid.Column="1"/>
+        </Grid>
+
+        <!-- ████ ROW 2: TRANSACTIONS ████ -->
+        <ContentControl x:Name="TransactionsContainer" Grid.Row="2"/>
+    </Grid>
+</Window>

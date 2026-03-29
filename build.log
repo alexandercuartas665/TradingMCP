@@ -1,0 +1,17 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(2,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(7,29): error BC30002: No está definido el tipo 'CandleChart'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(8,26): error BC30002: No está definido el tipo 'ChartSettings'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\obj\Debug\net48\CandleManager\CandleViewerWindow.g.vb(35,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(2,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\obj\Debug\net48\CandleManager\CandleViewerWindow.g.vb(35,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Charts' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(7,29): error BC30002: No está definido el tipo 'CandleChart'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\CandleManager\CandleViewerWindow.xaml.vb(8,26): error BC30002: No está definido el tipo 'ChartSettings'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_cnbe5yex_wpftmp.vbproj]
+    2 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:02.68

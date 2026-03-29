@@ -1,0 +1,143 @@
+<UserControl x:Class="CandleHeaderControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="54" Background="#0A0A0A">
+
+    <UserControl.Resources>
+        <!-- Timeframe Button Style -->
+        <Style x:Key="TfBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1C1B1B"/>
+            <Setter Property="Foreground" Value="#5A6A6D"/>
+            <Setter Property="BorderBrush" Value="#2a2e39"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2a2e39"/>
+                                <Setter Property="Foreground" Value="#e0e6ed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TfBtnActive" TargetType="Button" BasedOn="{StaticResource TfBtn}">
+            <Setter Property="Background" Value="#0D2A30"/>
+            <Setter Property="Foreground" Value="#4CD6FB"/>
+            <Setter Property="BorderBrush" Value="#4CD6FB"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#0A0A0A" BorderBrush="#1C1B1B" BorderThickness="0,0,0,1">
+        <Grid Margin="20,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Asset Icon + Name -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="28" Height="28" CornerRadius="6" Background="#0D2A30"
+                        VerticalAlignment="Center" Margin="0,0,10,0">
+                    <TextBlock Text="📈" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="txtAssetName" Text="BTC/USD"
+                               FontSize="16" FontWeight="Black" Foreground="#e0e6ed"/>
+                    <TextBlock x:Name="txtAssetType" Text="CRYPTO • DERIV"
+                               FontSize="8" FontWeight="Bold" FontFamily="Consolas"
+                               Foreground="#3B4A4D"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Separator -->
+            <Rectangle Grid.Column="1" Width="1" Fill="#1C1B1B" VerticalAlignment="Stretch" Margin="0,12"/>
+
+            <!-- Price + Change -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,0">
+                <TextBlock x:Name="txtPrice" Text="$90,566.00"
+                           FontSize="22" FontWeight="Black" FontFamily="Consolas"
+                           Foreground="#4CD6FB" VerticalAlignment="Center"/>
+                <Border x:Name="bdrChange" Background="#0D2A30" CornerRadius="4"
+                        Padding="7,3" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="txtChange" Text="+2.45%"
+                               FontSize="11" FontWeight="Bold" Foreground="#4CD6FB"
+                               FontFamily="Consolas"/>
+                </Border>
+                <!-- Live pulse dot -->
+                <Ellipse x:Name="ellLive" Width="7" Height="7" Fill="#00d4aa"
+                         VerticalAlignment="Center" Margin="12,0,4,0">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="livePulseScale" ScaleX="1" ScaleY="1" CenterX="3.5" CenterY="3.5"/>
+                    </Ellipse.RenderTransform>
+                    <Ellipse.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="livePulseScale"
+                                                     Storyboard.TargetProperty="ScaleX"
+                                                     From="1" To="1.5" Duration="0:0:1" AutoReverse="True"/>
+                                    <DoubleAnimation Storyboard.TargetName="livePulseScale"
+                                                     Storyboard.TargetProperty="ScaleY"
+                                                     From="1" To="1.5" Duration="0:0:1" AutoReverse="True"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Ellipse.Triggers>
+                </Ellipse>
+                <TextBlock Text="LIVE" FontSize="8" FontWeight="Bold" FontFamily="Consolas"
+                           Foreground="#00d4aa" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Timeframe buttons -->
+            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,0">
+                <TextBlock Text="TIMEFRAME" FontSize="8" FontWeight="Bold" FontFamily="Consolas"
+                           Foreground="#3B4A4D" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <Button x:Name="btn1m"  Content="1m"  Style="{StaticResource TfBtn}" Tag="60"
+                        Margin="2,0" Click="TfBtn_Click"/>
+                <Button x:Name="btn5m"  Content="5m"  Style="{StaticResource TfBtn}" Tag="300"
+                        Margin="2,0" Click="TfBtn_Click"/>
+                <Button x:Name="btn15m" Content="15m" Style="{StaticResource TfBtnActive}" Tag="900"
+                        Margin="2,0" Click="TfBtn_Click"/>
+                <Button x:Name="btn1h"  Content="1h"  Style="{StaticResource TfBtn}" Tag="3600"
+                        Margin="2,0" Click="TfBtn_Click"/>
+                <Button x:Name="btn4h"  Content="4h"  Style="{StaticResource TfBtn}" Tag="14400"
+                        Margin="2,0" Click="TfBtn_Click"/>
+                <Button x:Name="btn1d"  Content="1d"  Style="{StaticResource TfBtn}" Tag="86400"
+                        Margin="2,0" Click="TfBtn_Click"/>
+            </StackPanel>
+
+            <!-- Separator -->
+            <Rectangle Grid.Column="5" Width="1" Fill="#1C1B1B" VerticalAlignment="Stretch" Margin="0,12"/>
+
+            <!-- Clock -->
+            <StackPanel Grid.Column="6" VerticalAlignment="Center">
+                <TextBlock Text="UTC TIME" FontSize="8" FontFamily="Consolas"
+                           FontWeight="Bold" Foreground="#3B4A4D" HorizontalAlignment="Right"/>
+                <TextBlock x:Name="txtClock" Text="--:--:--"
+                           FontFamily="Consolas" FontSize="12" FontWeight="Bold"
+                           Foreground="#5A6A6D" HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
