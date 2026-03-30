@@ -45,14 +45,11 @@
                                    Margin="0,0,20,0"/>
                         <Ellipse Fill="{StaticResource PrimaryFixed}" Width="8" Height="8"
                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="Secure Link" FontSize="10" FontWeight="Bold"
-                                   Foreground="{StaticResource OnSurfaceVariant}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
-
-            <!-- DASHBOARD CANVAS -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+            <!-- DASHBOARD CANVAS (Static) -->
+            <ScrollViewer x:Name="DashboardCanvas" Grid.Row="1" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Background="{StaticResource BgBase}">
                 <StackPanel Margin="28,24,28,40">
@@ -452,6 +449,9 @@
 
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- DYNAMIC CONTENT ROUTER -->
+            <ContentControl x:Name="MainContentContainer" Grid.Row="1" />
         </Grid>
     </Grid>
 </Window>

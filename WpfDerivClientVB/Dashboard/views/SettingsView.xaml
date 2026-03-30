@@ -1,0 +1,236 @@
+<UserControl x:Class="WpfDerivClientVB.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WpfDerivClientVB"
+             Background="{StaticResource BgBase}"
+             Foreground="{StaticResource OnSurface}">
+
+    <UserControl.Resources>
+        <!-- Neomorphic / Glassmorphism Elements -->
+        <Style x:Key="GlassPanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="#0A0A0A" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="BorderBrush" Value="#1C1B1B" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="30" />
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="FieldLabelStyle">
+            <Setter Property="Foreground" Value="{StaticResource OnSurfaceVariant}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="InputStyle">
+            <Setter Property="Background" Value="#121212" />
+            <Setter Property="Foreground" Value="{StaticResource OnSurface}" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#242323" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryFixed}" />
+                                <Setter Property="Background" Value="#050F11" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="PasswordBox" x:Key="PasswordInputStyle">
+            <Setter Property="Background" Value="#121212" />
+            <Setter Property="Foreground" Value="{StaticResource OnSurface}" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#242323" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryFixed}" />
+                                <Setter Property="Background" Value="#050F11" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Solid Button -->
+        <Style TargetType="Button" x:Key="PrimaryBtnStyle">
+            <Setter Property="Background" Value="{StaticResource PrimaryFixed}" />
+            <Setter Property="Foreground" Value="#002026" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="24,12" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#6EE2FF" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#1C1B1B" />
+                    <Setter Property="Foreground" Value="#4C4C4C" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Ghost Button -->
+        <Style TargetType="Button" x:Key="SecondaryBtnStyle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource PrimaryFixed}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="24,12" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryFixed}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0A242B" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="40,24,40,40">
+            <!-- ── HEADER ── -->
+            <Grid Margin="0,0,0,32">
+                <StackPanel HorizontalAlignment="Left">
+                    <TextBlock Text="SYSTEM CONFIGURATION" Foreground="{StaticResource PrimaryFixed}"
+                               FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="Configuración Global" FontSize="36" FontWeight="Black"
+                               Foreground="{StaticResource OnSurface}"/>
+                    <TextBlock Text="Administra los hiperparámetros del sistema y credenciales de base de datos local." 
+                               FontSize="14" Foreground="{StaticResource OnSurfaceVariant}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── DATABASE PANEL ── -->
+            <Border Style="{StaticResource GlassPanelStyle}" MaxWidth="600" HorizontalAlignment="Left" Width="600">
+                <StackPanel>
+                    <!-- Panel Title/Icon -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <Border Width="40" Height="40" CornerRadius="12" Background="#0D2A30" Margin="0,0,16,0">
+                            <TextBlock Text="🛢" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="PostgreSQL Credentials" FontSize="18" FontWeight="Bold" Foreground="{StaticResource OnSurface}"/>
+                            <TextBlock Text="Conexión remota o local al clúster de base de datos" FontSize="12" Foreground="#888888"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Host & Port Row -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="HOST" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtHost" Style="{StaticResource InputStyle}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="PORT" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtPort" Style="{StaticResource InputStyle}" MaxLength="5"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Database -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="DATABASE NAME" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="txtDatabase" Style="{StaticResource InputStyle}"/>
+                    </StackPanel>
+
+                    <!-- User & Pass Row -->
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="USERNAME" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtUsername" Style="{StaticResource InputStyle}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="PASSWORD" Style="{StaticResource FieldLabelStyle}"/>
+                            <PasswordBox x:Name="txtPassword" Style="{StaticResource PasswordInputStyle}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Alert Box -->
+                    <Border x:Name="brdStatus" CornerRadius="8" Padding="16,12" Margin="0,0,0,24" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="iconStatus" Text="✅" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="txtStatus" Text="Connection test succeeded." 
+                                       Foreground="{StaticResource OnSurface}" VerticalAlignment="Center" FontSize="13" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Actions -->
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="btnTestConnection" Style="{StaticResource SecondaryBtnStyle}" 
+                                    Content="Test Connection" Margin="0,0,16,0" Click="btnTestConnection_Click"/>
+                            <Button x:Name="btnSave" Style="{StaticResource PrimaryBtnStyle}" 
+                                    Content="Save Configuration" Click="btnSave_Click"/>
+                        </StackPanel>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

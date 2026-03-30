@@ -26,7 +26,9 @@ Partial Public Class AdminDashboard
     Private Sub OnSidebarItemSelected(menuName As String)
         Select Case menuName
             Case "Dashboard"
-                ' Lógica para mostrar la vista Dashboard
+                DashboardCanvas.Visibility = Visibility.Visible
+                MainContentContainer.Visibility = Visibility.Collapsed
+                MainContentContainer.Content = Nothing
             Case "Users"
                 MessageBox.Show("Vista de Usuarios no implementada.", "Aviso",
                                 MessageBoxButton.OK, MessageBoxImage.Information)
@@ -40,8 +42,9 @@ Partial Public Class AdminDashboard
                 MessageBox.Show("Vista de Monitoreo no implementada.", "Aviso",
                                 MessageBoxButton.OK, MessageBoxImage.Information)
             Case "Settings"
-                MessageBox.Show("Vista de Configuración no implementada.", "Aviso",
-                                MessageBoxButton.OK, MessageBoxImage.Information)
+                DashboardCanvas.Visibility = Visibility.Collapsed
+                MainContentContainer.Visibility = Visibility.Visible
+                MainContentContainer.Content = New WpfDerivClientVB.SettingsView()
         End Select
     End Sub
 
