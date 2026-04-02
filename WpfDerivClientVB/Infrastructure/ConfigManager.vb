@@ -6,17 +6,17 @@ Namespace WpfDerivClientVB
     ' Define la estructura de datos que irá a db_config.json
     Public Class PostgresConfig
         Public Property Host As String = "localhost"
-        Public Property Port As Integer = 5432
+        Public Property Port As Integer = 8083
         Public Property Database As String = "traiding_db"
-        Public Property Username As String = "postgres"
-        Public Property Password As String = ""
+        Public Property Username As String = "traiding_user"
+        Public Property Password As String = "traiding_pass"
 
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.
         ''' </summary>
         Public Function GetConnectionString() As String
             Return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};" &
-                   "Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10;Connect Timeout=5;"
+                   "Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10;"
         End Function
     End Class
 

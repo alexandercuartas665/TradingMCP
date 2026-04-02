@@ -2,7 +2,7 @@ Imports System.Windows
 Imports System.Windows.Controls
 Imports System.Windows.Media
 Imports Npgsql
-Imports WpfDerivClientVB.Infrastructure
+
 
 Namespace WpfDerivClientVB
 
@@ -25,6 +25,7 @@ Namespace WpfDerivClientVB
             txtDatabase.Text = conf.Database
             txtUsername.Text = conf.Username
             txtPassword.Password = conf.Password
+            txtPasswordVisible.Text = conf.Password
         End Sub
 
         ''' <summary>
@@ -39,7 +40,7 @@ Namespace WpfDerivClientVB
                 .Port = puerto,
                 .Database = txtDatabase.Text.Trim(),
                 .Username = txtUsername.Text.Trim(),
-                .Password = txtPassword.Password
+                .Password = If(btnShowPassword.IsChecked = True, txtPasswordVisible.Text, txtPassword.Password)
             }
         End Function
 
@@ -58,16 +59,31 @@ Namespace WpfDerivClientVB
         End Sub
 
         ''' <summary>
+        ''' Controla el Toggle para mostrar/ocultar la contraseña.
+        ''' </summary>
+        Private Sub btnShowPassword_Click(sender As Object, e As RoutedEventArgs)
+            If btnShowPassword.IsChecked = True Then
+                txtPasswordVisible.Text = txtPassword.Password
+                txtPassword.Visibility = Visibility.Collapsed
+                txtPasswordVisible.Visibility = Visibility.Visible
+            Else
+                txtPassword.Password = txtPasswordVisible.Text
+                txtPasswordVisible.Visibility = Visibility.Collapsed
+                txtPassword.Visibility = Visibility.Visible
+            End If
+        End Sub
+
+        ''' <summary>
         ''' Botón para probar la conexión con Npgsql de forma asíncrona.
         ''' </summary>
         Private Async Sub btnTestConnection_Click(sender As Object, e As RoutedEventArgs)
             btnTestConnection.IsEnabled = False
             btnTestConnection.Content = "Probando..."
             
-            Dim conf = ObtenerConfigDeUI()
-            Dim connString = conf.GetConnectionString()
-            
             Try
+                Dim conf = ObtenerConfigDeUI()
+                Dim connString = conf.GetConnectionString()
+            
                 Using conn As New NpgsqlConnection(connString)
                     Await conn.OpenAsync()
                     MostrarEstado("Conexión exitosa al Clúster PostgreSQL.", True)

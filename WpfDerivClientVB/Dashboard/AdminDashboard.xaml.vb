@@ -29,9 +29,10 @@ Partial Public Class AdminDashboard
                 DashboardCanvas.Visibility = Visibility.Visible
                 MainContentContainer.Visibility = Visibility.Collapsed
                 MainContentContainer.Content = Nothing
-            Case "Users"
-                MessageBox.Show("Vista de Usuarios no implementada.", "Aviso",
-                                MessageBoxButton.OK, MessageBoxImage.Information)
+            Case "Clients"
+                DashboardCanvas.Visibility = Visibility.Collapsed
+                MainContentContainer.Visibility = Visibility.Visible
+                MainContentContainer.Content = New WpfDerivClientVB.ClientsView()
             Case "Accounts"
                 MessageBox.Show("Vista de Cuentas no implementada.", "Aviso",
                                 MessageBoxButton.OK, MessageBoxImage.Information)

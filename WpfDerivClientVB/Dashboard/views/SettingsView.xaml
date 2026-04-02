@@ -205,7 +205,13 @@
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="PASSWORD" Style="{StaticResource FieldLabelStyle}"/>
-                            <PasswordBox x:Name="txtPassword" Style="{StaticResource PasswordInputStyle}"/>
+                            <Grid>
+                                <PasswordBox x:Name="txtPassword" Style="{StaticResource PasswordInputStyle}"/>
+                                <TextBox x:Name="txtPasswordVisible" Style="{StaticResource InputStyle}" Visibility="Collapsed"/>
+                                <ToggleButton x:Name="btnShowPassword" Content="👁" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                              Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Foreground="#5A6A6D" 
+                                              Cursor="Hand" FontSize="14" Click="btnShowPassword_Click"/>
+                            </Grid>
                         </StackPanel>
                     </Grid>
 
@@ -222,7 +228,7 @@
                     <Grid>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button x:Name="btnTestConnection" Style="{StaticResource SecondaryBtnStyle}" 
-                                    Content="Test Connection" Margin="0,0,16,0" Click="btnTestConnection_Click"/>
+                                    Content="Test Connection" Margin="0,0,16,0" Click="btnTestConnection_Click" Width="227"/>
                             <Button x:Name="btnSave" Style="{StaticResource PrimaryBtnStyle}" 
                                     Content="Save Configuration" Click="btnSave_Click"/>
                         </StackPanel>

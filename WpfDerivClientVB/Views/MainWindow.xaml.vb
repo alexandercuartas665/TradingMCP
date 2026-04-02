@@ -1,4 +1,5 @@
 Imports System.Collections.ObjectModel
+Imports System.Linq
 Imports System.Net.WebSockets
 Imports System.Text
 Imports System.Threading
@@ -11,7 +12,8 @@ Namespace WpfDerivClientVB
         Inherits System.Windows.Window
 
         ' ===== Constantes y config =====
-        Private ReadOnly API_URI As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
+        ' La URI se construye dinámicamente con el app_id del cliente desde la BD
+        Private _apiUri As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
         Private Const PLATFORM As String = "Deriv"
 
         ' ===== Streaming =====
@@ -59,13 +61,9 @@ Namespace WpfDerivClientVB
             ApplySettingsToUI()
             _chartCanvas.SetData(_candles, _settings)
 
-            ' Repositorio PostgreSQL
-            _repo = New CandleRepository(
-                host:="localhost",
-                port:=8083,
-                database:="traiding_db",
-                username:="traiding_user",
-                password:="traiding_pass")
+            ' Repositorio PostgreSQL — usa la config guardada en db_config.json
+            Dim dbConfig = ConfigManager.LoadDbConfig()
+            _repo = New CandleRepository(dbConfig.GetConnectionString())
 
             ' Descargador historico
             _downloader = New HistoricalDownloader(_repo)
@@ -74,6 +72,31 @@ Namespace WpfDerivClientVB
             txtHistSymbol.Text = "R_100"
             dpDesde.SelectedDate = DateTime.Today.AddDays(-30)
             dpHasta.SelectedDate = DateTime.Today
+
+            ' Cargar app_id de Deriv desde las credenciales del cliente Alexander en BD
+            CargarAppIdDeriv()
+        End Sub
+
+        ''' <summary>
+        ''' Busca en la BD el cliente Alexander y carga su App ID real de Deriv.
+        ''' Si no lo encuentra, usa el app_id por defecto (1089).
+        ''' </summary>
+        Private Async Sub CargarAppIdDeriv()
+            Try
+                Dim clientRepo As New ClientRepository()
+                Dim clientes = Await clientRepo.GetAllAsync()
+                Dim alexander = clientes.FirstOrDefault(
+                    Function(c) c.Name.ToLower().Contains("alexander"))
+
+                If alexander IsNot Nothing Then
+                    Dim creds = Await clientRepo.GetDerivCredentialsAsync(alexander.Id)
+                    If creds IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(creds.AppIdReal) Then
+                        _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={creds.AppIdReal}"
+                    End If
+                End If
+            Catch
+                ' Si falla la carga, se mantiene el app_id por defecto (1089)
+            End Try
         End Sub
 
         ' ===================================================
@@ -155,7 +178,7 @@ Namespace WpfDerivClientVB
             _webSocket = New ClientWebSocket()
 
             Try
-                Await _webSocket.ConnectAsync(New Uri(API_URI), _cancellationTokenSource.Token)
+                Await _webSocket.ConnectAsync(New Uri(_apiUri), _cancellationTokenSource.Token)
                 txtStatus.Text = "Conectado. Solicitando historial..."
 
                 Dim reqJson As String = BuildRequestJson(symbol, granularity)

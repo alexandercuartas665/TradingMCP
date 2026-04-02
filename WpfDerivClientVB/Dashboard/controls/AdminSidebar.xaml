@@ -44,10 +44,10 @@
                     </StackPanel>
                 </Button>
 
-                <Button x:Name="btnNavUsers" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                <Button x:Name="btnNavClients" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="👤" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock Text="Usuarios" VerticalAlignment="Center"/>
+                        <TextBlock Text="👥" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Clientes" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 

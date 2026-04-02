@@ -25,6 +25,14 @@ Namespace WpfDerivClientVB
         End Sub
 
         ''' <summary>
+        ''' Constructor alternativo que acepta directamente una connection string.
+        ''' Usado cuando se obtiene la config desde ConfigManager.
+        ''' </summary>
+        Public Sub New(connectionString As String)
+            _connectionString = connectionString
+        End Sub
+
+        ''' <summary>
         ''' Guarda una sola vela. Si ya existe (mismo platform+symbol+tf+epoch), la ignora.
         ''' </summary>
         Public Async Function SaveCandleAsync(platform As String,

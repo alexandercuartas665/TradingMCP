@@ -1,0 +1,146 @@
+<UserControl x:Class="WpfDerivClientVB.ClientsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+
+    <Grid Margin="30">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Panel Izquierdo: Lista de Clientes -->
+        <Border Grid.Column="0" Background="{DynamicResource SurfaceLow}" CornerRadius="12" Margin="0,0,20,0">
+            <DockPanel Margin="15">
+                <TextBlock DockPanel.Dock="Top" Text="CLIENTES" Foreground="{DynamicResource Primary}" 
+                           FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+                
+                <Button x:Name="btnAddClient" DockPanel.Dock="Bottom" Style="{DynamicResource PrimaryBtn}" 
+                        Content="+ Nuevo Cliente" Margin="0,15,0,0" Click="btnAddClient_Click"/>
+
+                <ListBox x:Name="lstClients" Background="Transparent" BorderThickness="0"
+                         DisplayMemberPath="Name" SelectionChanged="lstClients_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="brd" Background="Transparent" CornerRadius="8" Padding="12,10" Margin="0,2">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="brd" Property="Background" Value="#1A00D4AA"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource Primary}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="brd" Property="Background" Value="#0DFFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Panel Derecho: Detalle y Credenciales -->
+        <Border Grid.Column="1" Background="{DynamicResource SurfaceLow}" CornerRadius="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="25">
+                    <TextBlock Text="DETALLES DEL CLIENTE" Foreground="{DynamicResource Primary}" 
+                               FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                    <!-- Información Básica -->
+                    <Grid x:Name="gridDetails" IsEnabled="False">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,15">
+                            <TextBlock Text="NOMBRE COMPLETO" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtName" Style="{StaticResource InputStyle}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,15">
+                            <TextBlock Text="EMAIL" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtEmail" Style="{StaticResource InputStyle}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="#1AFFFFFF" Margin="0,10,0,25"/>
+
+                    <!-- Seccion Deriv -->
+                    <TextBlock Text="PLATAFORMA DERIV" Foreground="{DynamicResource Primary}" 
+                               FontSize="16" FontWeight="SemiBold" Margin="0,0,0,15"/>
+
+                    <Grid x:Name="gridDeriv" IsEnabled="False">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- CUENTA REAL -->
+                        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#11FFFFFF" Padding="15" CornerRadius="8" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="CUENTA REAL" Foreground="#FFD200" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,15,0">
+                                        <TextBlock Text="APP ID" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="txtRealAppId" Style="{StaticResource InputStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="API TOKEN" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="txtRealToken" Style="{StaticResource InputStyle}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CUENTA VIRTUAL -->
+                        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="#11FFFFFF" Padding="15" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock Text="CUENTA VIRTUAL (DEMO)" Foreground="#00D4AA" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,15,0">
+                                        <TextBlock Text="APP ID" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="txtVirAppId" Style="{StaticResource InputStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="API TOKEN" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="txtVirToken" Style="{StaticResource InputStyle}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Button x:Name="btnSave" Style="{DynamicResource PrimaryBtn}" Content="Guardar Cliente" 
+                            HorizontalAlignment="Right" Width="180" Margin="0,30,0,0" IsEnabled="False" Click="btnSave_Click"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>
