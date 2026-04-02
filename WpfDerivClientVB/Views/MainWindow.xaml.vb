@@ -82,6 +82,9 @@ Namespace WpfDerivClientVB
 
             ' Cargar app_id de Deriv desde las credenciales del cliente Alexander en BD
             CargarAppIdDeriv()
+
+            ' Cargar clientes en el combo de Trading
+            CargarClientesTrading()
         End Sub
 
         ''' <summary>
@@ -97,19 +100,12 @@ Namespace WpfDerivClientVB
                 If alexander IsNot Nothing Then
                     Dim creds = Await clientRepo.GetDerivCredentialsAsync(alexander.Id)
                     If creds IsNot Nothing Then
-                        _appIdReal = creds.AppIdReal
                         _tokenReal = creds.ApiTokenReal
-                        _appIdVirtual = creds.AppIdVirtual
                         _tokenVirtual = creds.ApiTokenVirtual
 
-                        ' Preferir credenciales virtuales para testing
-                        If Not String.IsNullOrWhiteSpace(_appIdVirtual) AndAlso Not String.IsNullOrWhiteSpace(_tokenVirtual) Then
-                            _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={_appIdVirtual}"
-                            _activeToken = _tokenVirtual
-                        ElseIf Not String.IsNullOrWhiteSpace(_appIdReal) AndAlso Not String.IsNullOrWhiteSpace(_tokenReal) Then
-                            _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={_appIdReal}"
-                            _activeToken = _tokenReal
-                        End If
+                        ' El streaming usa siempre app_id=1089 (API pública de velas, no requiere auth).
+                        ' El OAuth App ID es solo para el nuevo flujo de Trading Live.
+                        _activeToken = If(Not String.IsNullOrWhiteSpace(_tokenVirtual), _tokenVirtual, _tokenReal)
                     End If
                 End If
             Catch
@@ -198,14 +194,8 @@ Namespace WpfDerivClientVB
             Try
                 Await _webSocket.ConnectAsync(New Uri(_apiUri), _cancellationTokenSource.Token)
 
-                If Not String.IsNullOrWhiteSpace(_activeToken) Then
-                    txtStatus.Text = "Autorizando..."
-                    Dim authReq As New JObject()
-                    authReq.Add("authorize", _activeToken)
-                    Dim authBytes As Byte() = Encoding.UTF8.GetBytes(authReq.ToString())
-                    Await _webSocket.SendAsync(New ArraySegment(Of Byte)(authBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
-                End If
-
+                ' ticks_history es dato público — no requiere authorize.
+                ' La autenticación solo aplica al tab Trading Live (nuevo flujo OTP).
                 txtStatus.Text = "Conectado. Solicitando historial..."
 
                 Dim reqJson As String = BuildRequestJson(symbol, granularity)
@@ -345,18 +335,20 @@ Namespace WpfDerivClientVB
 
                     If data.ContainsKey("error") Then
                         Dim errMsg As String = data("error")("message").ToString()
-                        ' Si es error de authorization o trade, mostrarlo
-                        If data.ContainsKey("req_id") OrElse data.ContainsKey("buy") Then
+                        Dim errCode As String = If(data("error")("code") IsNot Nothing, data("error")("code").ToString(), "")
+                        ' Errores que cortan el streaming (conexión inválida)
+                        If errCode = "InvalidSymbol" OrElse errCode = "MarketIsClosed" Then
                             Dispatcher.Invoke(Sub()
-                                                  txtTradeResult.Text = $"❌ API Error: {errMsg}"
-                                                  txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
-                                              End Sub)
-                        Else
-                            Dispatcher.Invoke(Sub()
-                                                  System.Windows.MessageBox.Show("Error API: " & errMsg)
+                                                  System.Windows.MessageBox.Show("Error API: " & errMsg, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning)
                                                   ResetUI()
                                               End Sub)
                             Exit Do
+                        Else
+                            ' Errores no críticos (trade, auth) — solo mostrar en status, no cortar
+                            Dispatcher.Invoke(Sub()
+                                                  txtTradeResult.Text = "❌ " & errMsg
+                                                  txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
+                                              End Sub)
                         End If
                     End If
 
@@ -800,12 +792,289 @@ Namespace WpfDerivClientVB
         Private Sub Window_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles Me.Closing
             If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
             If _downloader IsNot Nothing Then _downloader.StopDownload()
+            If _tradingCts IsNot Nothing Then _tradingCts.Cancel()
         End Sub
 
         Private Sub tabMain_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs) Handles tabMain.SelectionChanged
             If tabChart IsNot Nothing AndAlso tabChart.IsSelected Then
                 _chartCanvas.SetData(_candles, _settings)
             End If
+        End Sub
+
+        ' ===================================================
+        '  TAB TRADING LIVE
+        ' ===================================================
+        Private _tradingWs As ClientWebSocket
+        Private _tradingCts As CancellationTokenSource
+        Private _tradingOperaciones As New System.Collections.ObjectModel.ObservableCollection(Of OperacionModel)()
+        Private _tradingClienteActual As ClientModel
+        Private _tradingCredsActual As ClientDerivCredentials
+
+        Private Async Sub CargarClientesTrading()
+            Try
+                Dim repo As New ClientRepository()
+                Dim lista = Await repo.GetAllAsync()
+                cmbTradingClientes.ItemsSource = lista
+                If lista.Count > 0 Then cmbTradingClientes.SelectedIndex = 0
+            Catch ex As Exception
+                txtTradingEstado.Text = "Error BD"
+            End Try
+        End Sub
+
+        Private Async Sub cmbTradingClientes_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+            _tradingClienteActual = TryCast(cmbTradingClientes.SelectedItem, ClientModel)
+            If _tradingClienteActual Is Nothing Then Return
+            Try
+                Dim repo As New ClientRepository()
+                _tradingCredsActual = Await repo.GetDerivCredentialsAsync(_tradingClienteActual.Id)
+            Catch
+            End Try
+        End Sub
+
+        Private Async Sub btnConectarTrading_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingClienteActual Is Nothing Then
+                System.Windows.MessageBox.Show("Selecciona un cliente primero.")
+                Return
+            End If
+            If _tradingCredsActual Is Nothing Then
+                System.Windows.MessageBox.Show("El cliente no tiene credenciales Deriv configuradas.")
+                Return
+            End If
+
+            Dim esDemo As Boolean = (cmbTradingTipoCuenta.SelectedIndex = 0)
+            Dim accountId As String = If(esDemo, _tradingCredsActual.AccountIdVirtual, _tradingCredsActual.AccountIdReal)
+            Dim appId As String = If(esDemo, _tradingCredsActual.AppIdVirtual, _tradingCredsActual.AppIdReal)
+            Dim token As String = If(esDemo, _tradingCredsActual.ApiTokenVirtual, _tradingCredsActual.ApiTokenReal)
+
+            If String.IsNullOrWhiteSpace(accountId) OrElse String.IsNullOrWhiteSpace(token) Then
+                System.Windows.MessageBox.Show("Faltan Account ID o Token para la cuenta " & If(esDemo, "Demo", "Real") & ".")
+                Return
+            End If
+
+            btnConectarTrading.IsEnabled = False
+            txtTradingEstado.Text = "Conectando..."
+            txtTradingEstado.Foreground = New SolidColorBrush(Colors.Yellow)
+            txtTradingBalance.Text = "--"
+
+            Try
+                ' Paso 1: Obtener OTP via REST
+                Dim wsUrl As String = Nothing
+                Dim otpUrl = String.Format("https://api.derivws.com/trading/v1/options/accounts/{0}/otp", accountId)
+
+                Dim responseBody As String = Await Task.Run(Function()
+                    Using wc As New System.Net.WebClient()
+                        wc.Headers.Add("Authorization", "Bearer " & token)
+                        wc.Headers.Add("deriv-app-id", appId)
+                        Return wc.UploadString(otpUrl, "POST", "")
+                    End Using
+                End Function)
+
+                Dim otpObj = JObject.Parse(responseBody)
+                If otpObj("data") IsNot Nothing AndAlso otpObj("data")("url") IsNot Nothing Then
+                    wsUrl = otpObj("data")("url").ToString()
+                Else
+                    Throw New Exception("Respuesta OTP inesperada: " & responseBody)
+                End If
+
+                ' Paso 2: Conectar WebSocket con OTP
+                If _tradingCts IsNot Nothing Then _tradingCts.Cancel()
+                _tradingCts = New CancellationTokenSource()
+                _tradingWs = New ClientWebSocket()
+                Await _tradingWs.ConnectAsync(New Uri(wsUrl), _tradingCts.Token)
+
+                ' UI: conectado
+                txtTradingEstado.Text = If(esDemo, "Demo", "Real") & " - Conectado"
+                txtTradingEstado.Foreground = New SolidColorBrush(Colors.LightGreen)
+                btnConectarTrading.IsEnabled = False
+                btnDesconectarTrading.IsEnabled = True
+                btnTradingCall.IsEnabled = True
+                btnTradingPut.IsEnabled = True
+
+                ' Inicializar tabla de operaciones
+                gridOperaciones.ItemsSource = _tradingOperaciones
+
+                ' Suscribir balance
+                Await SuscribirBalanceTradingAsync()
+
+                ' Iniciar escucha
+                Task.Run(Function() EscucharTradingAsync())
+
+            Catch ex As System.Net.WebException
+                Dim errBody As String = ""
+                If ex.Response IsNot Nothing Then
+                    Using sr As New System.IO.StreamReader(ex.Response.GetResponseStream())
+                        errBody = sr.ReadToEnd()
+                    End Using
+                End If
+                txtTradingEstado.Text = "Error conexión"
+                txtTradingEstado.Foreground = New SolidColorBrush(Colors.Red)
+                btnConectarTrading.IsEnabled = True
+                System.Windows.MessageBox.Show("Error al conectar:" & vbCrLf & errBody, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error)
+            Catch ex As Exception
+                txtTradingEstado.Text = "Error"
+                txtTradingEstado.Foreground = New SolidColorBrush(Colors.Red)
+                btnConectarTrading.IsEnabled = True
+                System.Windows.MessageBox.Show("Error: " & ex.Message, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error)
+            End Try
+        End Sub
+
+        Private Sub btnDesconectarTrading_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingCts IsNot Nothing Then _tradingCts.Cancel()
+            txtTradingEstado.Text = "Desconectado"
+            txtTradingEstado.Foreground = New SolidColorBrush(Colors.OrangeRed)
+            txtTradingBalance.Text = "--"
+            btnConectarTrading.IsEnabled = True
+            btnDesconectarTrading.IsEnabled = False
+            btnTradingCall.IsEnabled = False
+            btnTradingPut.IsEnabled = False
+        End Sub
+
+        Private Async Function SuscribirBalanceTradingAsync() As Task
+            Try
+                Dim req As New JObject()
+                req.Add("balance", 1)
+                req.Add("subscribe", 1)
+                Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+            Catch
+            End Try
+        End Function
+
+        Private Async Sub btnTradingCall_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Await EjecutarContratoTradingAsync("CALL")
+        End Sub
+
+        Private Async Sub btnTradingPut_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Await EjecutarContratoTradingAsync("PUT")
+        End Sub
+
+        Private Async Function EjecutarContratoTradingAsync(tipo As String) As Task
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                System.Windows.MessageBox.Show("No hay conexión activa.")
+                Return
+            End If
+
+            Dim symbolItem = TryCast(cmbTradingSymbol.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim symbol As String = If(symbolItem IsNot Nothing, symbolItem.Content.ToString(), "R_100")
+            Dim monto As Double
+            Dim duracion As Integer
+            Dim durUnitItem = TryCast(cmbTradingDurUnit.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim durUnit As String = If(durUnitItem IsNot Nothing, durUnitItem.Tag?.ToString(), "t")
+
+            If Not Double.TryParse(txtTradingMonto.Text.Trim(), monto) OrElse monto <= 0 Then
+                System.Windows.MessageBox.Show("Monto inválido.")
+                Return
+            End If
+            If Not Integer.TryParse(txtTradingDuracion.Text.Trim(), duracion) OrElse duracion <= 0 Then
+                System.Windows.MessageBox.Show("Duración inválida.")
+                Return
+            End If
+
+            txtTradingOpEstado.Text = String.Format("⏳ Enviando {0} {1} ${2}...", tipo, symbol, monto)
+
+            Try
+                Dim req As New JObject()
+                req.Add("buy", 1)
+                req.Add("price", monto)
+                Dim params As New JObject()
+                params.Add("amount", monto)
+                params.Add("basis", "stake")
+                params.Add("contract_type", tipo)
+                params.Add("currency", "USD")
+                params.Add("duration", duracion)
+                params.Add("duration_unit", durUnit)
+                params.Add("symbol", symbol)
+                req.Add("parameters", params)
+
+                Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+            Catch ex As Exception
+                txtTradingOpEstado.Text = "❌ Error: " & ex.Message
+            End Try
+        End Function
+
+        Private Async Function EscucharTradingAsync() As Task
+            Dim buffer(32767) As Byte
+            Try
+                Do While _tradingWs.State = WebSocketState.Open AndAlso Not _tradingCts.IsCancellationRequested
+                    Dim sb As New System.Text.StringBuilder()
+                    Dim result As WebSocketReceiveResult
+                    Do
+                        result = Await _tradingWs.ReceiveAsync(New ArraySegment(Of Byte)(buffer), _tradingCts.Token)
+                        sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count))
+                    Loop While Not result.EndOfMessage
+
+                    If result.MessageType = WebSocketMessageType.Close Then Exit Do
+
+                    Dim json As String = sb.ToString()
+                    Dispatcher.Invoke(Sub() ProcesarMensajeTrading(json))
+                Loop
+            Catch
+            End Try
+        End Function
+
+        Private Sub ProcesarMensajeTrading(json As String)
+            Try
+                Dim obj = JObject.Parse(json)
+                Dim msgType = obj("msg_type")?.ToString()
+
+                Select Case msgType
+                    Case "balance"
+                        Dim bal = obj("balance")
+                        If bal IsNot Nothing Then
+                            Dim balVal As Decimal = CDec(bal("balance"))
+                            Dim cur As String = bal("currency")?.ToString()
+                            txtTradingBalance.Text = String.Format("{0} {1:N2}", cur, balVal)
+                        End If
+
+                    Case "buy"
+                        Dim buyObj = obj("buy")
+                        If buyObj IsNot Nothing Then
+                            Dim op As New OperacionModel()
+                            op.ContractId = buyObj("contract_id")?.ToString()
+                            op.Tipo = "?"
+                            op.Simbolo = buyObj("shortcode")?.ToString()
+                            op.Monto = If(buyObj("buy_price") IsNot Nothing, CDec(buyObj("buy_price")), 0)
+                            op.Estado = "Abierto"
+                            op.ProfitLoss = 0
+                            op.Hora = DateTime.Now.ToString("HH:mm:ss")
+                            op.Duracion = ""
+                            If _tradingClienteActual IsNot Nothing Then op.ClientId = _tradingClienteActual.Id
+                            _tradingOperaciones.Insert(0, op)
+                            txtTradingOpEstado.Text = String.Format("✅ Contrato abierto: {0}", op.ContractId)
+                            GuardarOperacionBD(op)
+                        End If
+
+                    Case "proposal_open_contract"
+                        Dim poc = obj("proposal_open_contract")
+                        If poc IsNot Nothing Then
+                            Dim contractId = poc("contract_id")?.ToString()
+                            Dim status = poc("status")?.ToString()
+                            Dim profit As Decimal = If(poc("profit") IsNot Nothing, CDec(poc("profit")), 0)
+                            Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
+                            If op IsNot Nothing Then
+                                op.Estado = If(status = "won", "Ganado", If(status = "lost", "Perdido", "Abierto"))
+                                op.ProfitLoss = profit
+                                gridOperaciones.Items.Refresh()
+                            End If
+                        End If
+
+                    Case "error"
+                        Dim errMsg = obj("error")?("message")?.ToString()
+                        txtTradingOpEstado.Text = "❌ " & errMsg
+                End Select
+            Catch
+            End Try
+        End Sub
+
+        Private Sub GuardarOperacionBD(op As OperacionModel)
+            Task.Run(Async Function()
+                Try
+                    Dim repo As New ClientRepository()
+                    Await repo.GuardarOperacionAsync(op)
+                Catch
+                End Try
+            End Function)
         End Sub
     End Class
 End Namespace

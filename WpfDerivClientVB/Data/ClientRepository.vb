@@ -193,5 +193,60 @@ Namespace WpfDerivClientVB
                 Throw New Exception("Error al guardar cliente: " & ex.Message)
             End Try
         End Function
+
+        ''' <summary>
+        ''' Crea la tabla de operaciones si no existe.
+        ''' </summary>
+        Public Async Function EnsureOperacionesTableAsync() As Task
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql = "
+                        CREATE TABLE IF NOT EXISTS public.trading_operations (
+                            id SERIAL PRIMARY KEY,
+                            client_id INTEGER REFERENCES public.clients(id),
+                            contract_id VARCHAR(100),
+                            tipo VARCHAR(10),
+                            simbolo VARCHAR(50),
+                            monto DECIMAL(12,4),
+                            duracion VARCHAR(50),
+                            estado VARCHAR(20),
+                            profit_loss DECIMAL(12,4) DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        );"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        Await cmd.ExecuteNonQueryAsync()
+                    End Using
+                End Using
+            Catch ex As Exception
+                Throw New Exception("Error al crear tabla operaciones: " & ex.Message)
+            End Try
+        End Function
+
+        ''' <summary>
+        ''' Guarda una operación de trading en la BD.
+        ''' </summary>
+        Public Async Function GuardarOperacionAsync(op As OperacionModel) As Task
+            Try
+                Await EnsureOperacionesTableAsync()
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql = "INSERT INTO public.trading_operations (client_id, contract_id, tipo, simbolo, monto, duracion, estado, profit_loss)
+                               VALUES (@cid, @coid, @tipo, @sim, @monto, @dur, @est, @pl)"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("cid", If(op.ClientId > 0, CObj(op.ClientId), DBNull.Value))
+                        cmd.Parameters.AddWithValue("coid", If(op.ContractId, ""))
+                        cmd.Parameters.AddWithValue("tipo", If(op.Tipo, ""))
+                        cmd.Parameters.AddWithValue("sim", If(op.Simbolo, ""))
+                        cmd.Parameters.AddWithValue("monto", op.Monto)
+                        cmd.Parameters.AddWithValue("dur", If(op.Duracion, ""))
+                        cmd.Parameters.AddWithValue("est", If(op.Estado, ""))
+                        cmd.Parameters.AddWithValue("pl", op.ProfitLoss)
+                        Await cmd.ExecuteNonQueryAsync()
+                    End Using
+                End Using
+            Catch
+            End Try
+        End Function
     End Class
 End Namespace
