@@ -254,61 +254,53 @@ Namespace WpfDerivClientVB
         End Sub
 
         Private Async Function SendTradeRequest(contractType As String) As Task
-            If _webSocket Is Nothing OrElse _webSocket.State <> WebSocketState.Open Then
-                txtTradeResult.Text = "❌ Conéctate primero para operar."
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+            ' Usa el WebSocket del tab Trading Live si está conectado
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                txtTradeResult.Text = "⚡ Conecta una cuenta en el tab 'Trading Live' para operar."
+                txtTradeResult.Foreground = New SolidColorBrush(Color.FromRgb(&H89, &HB4, &HFA))
                 Return
             End If
 
-            If String.IsNullOrWhiteSpace(_activeToken) Then
-                txtTradeResult.Text = "❌ No hay un token de cuenta configurado."
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
-                Return
-            End If
-
-            Dim amountStr As String = txtTradeAmount.Text.Trim()
-            Dim durationStr As String = txtTradeDuration.Text.Trim()
             Dim symbol As String = txtTradeSymbol.Text.Trim()
-
             Dim amount As Double
             Dim duration As Integer
 
-            If Not Double.TryParse(amountStr, amount) OrElse amount <= 0 Then
-                txtTradeResult.Text = "❌ Monto inváido."
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+            If Not Double.TryParse(txtTradeAmount.Text.Trim(), amount) OrElse amount <= 0 Then
+                txtTradeResult.Text = "❌ Monto inválido."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
+                Return
+            End If
+            If Not Integer.TryParse(txtTradeDuration.Text.Trim(), duration) OrElse duration <= 0 Then
+                txtTradeResult.Text = "❌ Duración inválida."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
                 Return
             End If
 
-            If Not Integer.TryParse(durationStr, duration) OrElse duration <= 0 Then
-                txtTradeResult.Text = "❌ Duración inváida."
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
-                Return
-            End If
-
-            txtTradeResult.Text = "⏳ Procesando operación..."
+            txtTradeResult.Text = "⏳ Enviando " & contractType & " " & symbol & "..."
             txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
 
             Try
-                Dim tradeReq As New JObject()
-                tradeReq.Add("buy", 1)
-                tradeReq.Add("price", amount)
+                Dim req As New JObject()
+                req.Add("buy", 1)
+                req.Add("price", amount)
+                Dim params As New JObject()
+                params.Add("amount", amount)
+                params.Add("basis", "stake")
+                params.Add("contract_type", contractType)
+                params.Add("currency", "USD")
+                params.Add("duration", duration)
+                params.Add("duration_unit", "t")
+                params.Add("symbol", symbol)
+                req.Add("parameters", params)
 
-                Dim parameters As New JObject()
-                parameters.Add("amount", amount)
-                parameters.Add("basis", "stake")
-                parameters.Add("contract_type", contractType)
-                parameters.Add("currency", "USD")
-                parameters.Add("duration", duration)
-                parameters.Add("duration_unit", "t")
-                parameters.Add("symbol", symbol)
-                tradeReq.Add("parameters", parameters)
+                Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
 
-                Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(tradeReq.ToString())
-                Await _webSocket.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
-
+                txtTradeResult.Text = "⏳ Orden enviada — esperando confirmación en Trading Live..."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
             Catch ex As Exception
-                txtTradeResult.Text = $"❌ Error al comprar: {ex.Message}"
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                txtTradeResult.Text = "❌ Error: " & ex.Message
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
             End Try
         End Function
 

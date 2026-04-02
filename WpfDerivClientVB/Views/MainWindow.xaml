@@ -14,10 +14,109 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="4,3"/>
         </Style>
+        <!-- ComboBoxItem global -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="brd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="brd" Property="Background" Value="#45475A"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="brd" Property="Background" Value="#1A3A5A"/>
+                                <Setter Property="Foreground" Value="#89B4FA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBox con template completo para control total del dropdown -->
         <Style TargetType="ComboBox">
             <Setter Property="Background" Value="#313244"/>
             <Setter Property="Foreground" Value="#CDD6F4"/>
             <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="toggleBtn" Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="tBrd" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="3">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0"/>
+                                                <Border Grid.Column="1" Background="#45475A" CornerRadius="0,3,3,0">
+                                                    <Path Data="M 0 0 L 4 4 L 8 0 Z" Fill="#CDD6F4"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="tBrd" Property="BorderBrush" Value="#89B4FA"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="tBrd" Property="BorderBrush" Value="#89B4FA"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter x:Name="contentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="8,0,24,0"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"
+                                              TextBlock.Foreground="#CDD6F4"/>
+
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"
+                                     Background="Transparent" Foreground="#CDD6F4"
+                                     Margin="6,0,24,0" VerticalContentAlignment="Center"/>
+
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border x:Name="dropBrd"
+                                        Background="#313244"
+                                        BorderBrush="#89B4FA"
+                                        BorderThickness="1"
+                                        CornerRadius="0,0,4,4"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer>
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#89B4FA"/>
@@ -262,89 +361,43 @@
                         </StackPanel>
                     </Expander>
 
-                    <!-- Panel de Trading -->
-                    <Border Grid.Row="2" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Margin="0,8,0,0" Padding="10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                <Label Content="Activo: " VerticalAlignment="Center"/>
-                                <TextBlock x:Name="txtTradeSymbol" Text="R_100" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,20,0"/>
+                    <!-- Panel de Trading (usa conexión del tab Trading Live) -->
+                    <Border Grid.Row="2" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Margin="0,8,0,0" Padding="10,8">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                                <Label Content="Monto USD: " VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtTradeAmount" Text="10" Width="60" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Activo: " Foreground="#A6ADC8" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtTradeSymbol" Text="R_100" Foreground="#89B4FA" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                                    <TextBlock Text="Monto $:" Foreground="#A6ADC8" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtTradeAmount" Text="10" Width="60" Margin="0,0,18,0" VerticalContentAlignment="Center"/>
+                                    <TextBlock Text="Duración (ticks):" Foreground="#A6ADC8" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtTradeDuration" Text="5" Width="50" Margin="0,0,0,0" VerticalContentAlignment="Center"/>
+                                </StackPanel>
 
-                                <Label Content="Duración (Ticks): " VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtTradeDuration" Text="5" Width="50" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
-                            </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button x:Name="btnBuyCall" Content="📈 COMPRAR (CALL)" Style="{StaticResource SuccessBtn}" Width="160" Margin="0,0,10,0" Click="btnBuyCall_Click"/>
+                                    <Button x:Name="btnSellPut" Content="📉 VENDER (PUT)" Style="{StaticResource DangerBtn}" Width="160" Click="btnSellPut_Click"/>
+                                </StackPanel>
+                            </Grid>
 
-                            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <Button x:Name="btnBuyCall" Content="📈 COMPRAR (CALL)" Style="{StaticResource SuccessBtn}" Width="160" Margin="0,0,10,0" Click="btnBuyCall_Click"/>
-                                <Button x:Name="btnSellPut" Content="📉 VENDER (PUT)" Style="{StaticResource DangerBtn}" Width="160" Click="btnSellPut_Click"/>
-                            </StackPanel>
-                            
-                            <TextBlock x:Name="txtTradeResult" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Margin="0,35,0,0" Foreground="#A6ADC8" TextWrapping="Wrap" Height="40" Text="(Estado de la operacion aparecera aqui)"/>
-                        </Grid>
+                            <Border Background="#0D89B4FA" CornerRadius="4" Padding="8,4" Margin="0,6,0,0">
+                                <TextBlock x:Name="txtTradeResult"
+                                           Text="⚡ Conecta una cuenta en el tab 'Trading Live' para operar."
+                                           Foreground="#89B4FA" FontSize="11" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
                     </Border>
                 </Grid>
             </TabItem>
 
             <!-- TAB 3: Trading Live -->
             <TabItem Header="💰  Trading Live">
-                <TabItem.Resources>
-                    <!-- ComboBoxItem oscuro -->
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Background" Value="#313244"/>
-                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                        <Setter Property="Padding" Value="6,4"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter Property="Background" Value="#45475A"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#1A00D4AA"/>
-                                <Setter Property="Foreground" Value="#00D4AA"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                    <!-- Header de columnas DataGrid -->
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#313244"/>
-                        <Setter Property="Foreground" Value="#89B4FA"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="8,5"/>
-                        <Setter Property="BorderBrush" Value="#45475A"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    </Style>
-                    <!-- Celdas DataGrid -->
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Padding" Value="6,3"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#1A89B4FA"/>
-                                <Setter Property="Foreground" Value="#CDD6F4"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                    <!-- Filas DataGrid -->
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Background" Value="#1E1E2E"/>
-                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2A2A3E"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TabItem.Resources>
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -363,7 +416,13 @@
                             <StackPanel Orientation="Horizontal" Grid.Column="0">
                                 <TextBlock Text="Cliente:" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <ComboBox x:Name="cmbTradingClientes" Width="160" Margin="0,0,10,0"
-                                          DisplayMemberPath="Name" SelectionChanged="cmbTradingClientes_SelectionChanged"/>
+                                          SelectionChanged="cmbTradingClientes_SelectionChanged">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" Foreground="#CDD6F4"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <TextBlock Text="Cuenta:" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <ComboBox x:Name="cmbTradingTipoCuenta" Width="100" Margin="0,0,12,0" SelectedIndex="0">
                                     <ComboBoxItem Content="Demo"/>
