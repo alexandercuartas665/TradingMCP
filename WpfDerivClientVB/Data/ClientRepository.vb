@@ -36,12 +36,21 @@ Namespace WpfDerivClientVB
                         CREATE TABLE IF NOT EXISTS public.client_deriv_credentials (
                             id SERIAL PRIMARY KEY,
                             client_id INTEGER NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
-                            app_id_real VARCHAR(50),
-                            api_token_real VARCHAR(100),
-                            app_id_virtual VARCHAR(50),
-                            api_token_virtual VARCHAR(100),
+                            account_id_real VARCHAR(50),
+                            app_id_real VARCHAR(100),
+                            api_token_real VARCHAR(200),
+                            account_id_virtual VARCHAR(50),
+                            app_id_virtual VARCHAR(100),
+                            api_token_virtual VARCHAR(200),
                             UNIQUE(client_id)
                         );"
+
+                    Dim sqlMigrateReal = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS account_id_real VARCHAR(50);"
+                    Dim sqlMigrateVir = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS account_id_virtual VARCHAR(50);"
+                    Dim sqlMigrateAppIdReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN app_id_real TYPE VARCHAR(100);"
+                    Dim sqlMigrateTokenReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_real TYPE VARCHAR(200);"
+                    Dim sqlMigrateAppIdVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN app_id_virtual TYPE VARCHAR(100);"
+                    Dim sqlMigrateTokenVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_virtual TYPE VARCHAR(200);"
 
                     Using cmd As New NpgsqlCommand(sqlClients, conn)
                         Await cmd.ExecuteNonQueryAsync()
@@ -49,6 +58,14 @@ Namespace WpfDerivClientVB
                     Using cmd As New NpgsqlCommand(sqlCreds, conn)
                         Await cmd.ExecuteNonQueryAsync()
                     End Using
+                    For Each migSql In {sqlMigrateReal, sqlMigrateVir, sqlMigrateAppIdReal, sqlMigrateTokenReal, sqlMigrateAppIdVir, sqlMigrateTokenVir}
+                        Try
+                            Using cmd As New NpgsqlCommand(migSql, conn)
+                                Await cmd.ExecuteNonQueryAsync()
+                            End Using
+                        Catch
+                        End Try
+                    Next
                 End Using
             Catch ex As Exception
                 Throw New Exception("Error al inicializar tablas: " & ex.Message)
@@ -97,8 +114,10 @@ Namespace WpfDerivClientVB
                         Using reader = Await cmd.ExecuteReaderAsync()
                             If Await reader.ReadAsync() Then
                                 Return New ClientDerivCredentials With {
+                                    .AccountIdReal = reader("account_id_real").ToString(),
                                     .AppIdReal = reader("app_id_real").ToString(),
                                     .ApiTokenReal = reader("api_token_real").ToString(),
+                                    .AccountIdVirtual = reader("account_id_virtual").ToString(),
                                     .AppIdVirtual = reader("app_id_virtual").ToString(),
                                     .ApiTokenVirtual = reader("api_token_virtual").ToString()
                                 }
@@ -146,16 +165,17 @@ Namespace WpfDerivClientVB
 
                             ' Actualizar credenciales de Deriv vinculadas
                             If client.DerivCredentials IsNot Nothing Then
-                                Dim credsSql = "INSERT INTO public.client_deriv_credentials (client_id, app_id_real, api_token_real, app_id_virtual, api_token_virtual) " &
-                                             "VALUES (@cid, @air, @atr, @aiv, @atv) " &
-                                             "ON CONFLICT (client_id) DO UPDATE SET " &
-                                             "app_id_real = EXCLUDED.app_id_real, api_token_real = EXCLUDED.api_token_real, " &
-                                             "app_id_virtual = EXCLUDED.app_id_virtual, api_token_virtual = EXCLUDED.api_token_virtual"
-                                
+                                Dim credsSql = "
+                                    DELETE FROM public.client_deriv_credentials WHERE client_id = @cid;
+                                    INSERT INTO public.client_deriv_credentials (client_id, account_id_real, app_id_real, api_token_real, account_id_virtual, app_id_virtual, api_token_virtual)
+                                    VALUES (@cid, @acir, @air, @atr, @aciv, @aiv, @atv);"
+
                                 Using cmdCreds = New NpgsqlCommand(credsSql, conn, trans)
                                     cmdCreds.Parameters.AddWithValue("cid", clientId)
+                                    cmdCreds.Parameters.AddWithValue("acir", If(client.DerivCredentials.AccountIdReal, ""))
                                     cmdCreds.Parameters.AddWithValue("air", If(client.DerivCredentials.AppIdReal, ""))
                                     cmdCreds.Parameters.AddWithValue("atr", If(client.DerivCredentials.ApiTokenReal, ""))
+                                    cmdCreds.Parameters.AddWithValue("aciv", If(client.DerivCredentials.AccountIdVirtual, ""))
                                     cmdCreds.Parameters.AddWithValue("aiv", If(client.DerivCredentials.AppIdVirtual, ""))
                                     cmdCreds.Parameters.AddWithValue("atv", If(client.DerivCredentials.ApiTokenVirtual, ""))
                                     Await cmdCreds.ExecuteNonQueryAsync()

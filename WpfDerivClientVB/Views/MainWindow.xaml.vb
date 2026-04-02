@@ -24,6 +24,13 @@ Namespace WpfDerivClientVB
         Private _currentSymbol As String = ""
         Private _currentTimeframe As String = ""
 
+        ' ===== Trading / Credenciales =====
+        Private _appIdVirtual As String = ""
+        Private _tokenVirtual As String = ""
+        Private _appIdReal As String = ""
+        Private _tokenReal As String = ""
+        Private _activeToken As String = ""
+
         ' ===== Grafico y ajustes =====
         Private _settings As ChartSettings
         Private _suppressColorChange As Boolean = False
@@ -78,8 +85,7 @@ Namespace WpfDerivClientVB
         End Sub
 
         ''' <summary>
-        ''' Busca en la BD el cliente Alexander y carga su App ID real de Deriv.
-        ''' Si no lo encuentra, usa el app_id por defecto (1089).
+        ''' Busca en la BD el cliente y carga su App ID y Tokens de Deriv.
         ''' </summary>
         Private Async Sub CargarAppIdDeriv()
             Try
@@ -90,8 +96,20 @@ Namespace WpfDerivClientVB
 
                 If alexander IsNot Nothing Then
                     Dim creds = Await clientRepo.GetDerivCredentialsAsync(alexander.Id)
-                    If creds IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(creds.AppIdReal) Then
-                        _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={creds.AppIdReal}"
+                    If creds IsNot Nothing Then
+                        _appIdReal = creds.AppIdReal
+                        _tokenReal = creds.ApiTokenReal
+                        _appIdVirtual = creds.AppIdVirtual
+                        _tokenVirtual = creds.ApiTokenVirtual
+
+                        ' Preferir credenciales virtuales para testing
+                        If Not String.IsNullOrWhiteSpace(_appIdVirtual) AndAlso Not String.IsNullOrWhiteSpace(_tokenVirtual) Then
+                            _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={_appIdVirtual}"
+                            _activeToken = _tokenVirtual
+                        ElseIf Not String.IsNullOrWhiteSpace(_appIdReal) AndAlso Not String.IsNullOrWhiteSpace(_tokenReal) Then
+                            _apiUri = $"wss://ws.derivws.com/websockets/v3?app_id={_appIdReal}"
+                            _activeToken = _tokenReal
+                        End If
                     End If
                 End If
             Catch
@@ -179,6 +197,15 @@ Namespace WpfDerivClientVB
 
             Try
                 Await _webSocket.ConnectAsync(New Uri(_apiUri), _cancellationTokenSource.Token)
+
+                If Not String.IsNullOrWhiteSpace(_activeToken) Then
+                    txtStatus.Text = "Autorizando..."
+                    Dim authReq As New JObject()
+                    authReq.Add("authorize", _activeToken)
+                    Dim authBytes As Byte() = Encoding.UTF8.GetBytes(authReq.ToString())
+                    Await _webSocket.SendAsync(New ArraySegment(Of Byte)(authBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
+                End If
+
                 txtStatus.Text = "Conectado. Solicitando historial..."
 
                 Dim reqJson As String = BuildRequestJson(symbol, granularity)
@@ -226,6 +253,76 @@ Namespace WpfDerivClientVB
         End Function
 
         ' ===================================================
+        '  TRADING CONTROLS
+        ' ===================================================
+        Private Async Sub btnBuyCall_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Await SendTradeRequest("CALL")
+        End Sub
+
+        Private Async Sub btnSellPut_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Await SendTradeRequest("PUT")
+        End Sub
+
+        Private Async Function SendTradeRequest(contractType As String) As Task
+            If _webSocket Is Nothing OrElse _webSocket.State <> WebSocketState.Open Then
+                txtTradeResult.Text = "❌ Conéctate primero para operar."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                Return
+            End If
+
+            If String.IsNullOrWhiteSpace(_activeToken) Then
+                txtTradeResult.Text = "❌ No hay un token de cuenta configurado."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                Return
+            End If
+
+            Dim amountStr As String = txtTradeAmount.Text.Trim()
+            Dim durationStr As String = txtTradeDuration.Text.Trim()
+            Dim symbol As String = txtTradeSymbol.Text.Trim()
+
+            Dim amount As Double
+            Dim duration As Integer
+
+            If Not Double.TryParse(amountStr, amount) OrElse amount <= 0 Then
+                txtTradeResult.Text = "❌ Monto inváido."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                Return
+            End If
+
+            If Not Integer.TryParse(durationStr, duration) OrElse duration <= 0 Then
+                txtTradeResult.Text = "❌ Duración inváida."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                Return
+            End If
+
+            txtTradeResult.Text = "⏳ Procesando operación..."
+            txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
+
+            Try
+                Dim tradeReq As New JObject()
+                tradeReq.Add("buy", 1)
+                tradeReq.Add("price", amount)
+
+                Dim parameters As New JObject()
+                parameters.Add("amount", amount)
+                parameters.Add("basis", "stake")
+                parameters.Add("contract_type", contractType)
+                parameters.Add("currency", "USD")
+                parameters.Add("duration", duration)
+                parameters.Add("duration_unit", "t")
+                parameters.Add("symbol", symbol)
+                tradeReq.Add("parameters", parameters)
+
+                Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(tradeReq.ToString())
+                Await _webSocket.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
+
+            Catch ex As Exception
+                txtTradeResult.Text = $"❌ Error al comprar: {ex.Message}"
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+            End Try
+        End Function
+
+        ' ===================================================
         '  BUCLE DE ESCUCHA STREAMING
         ' ===================================================
         Private Async Function ListenLoop() As Task
@@ -248,11 +345,19 @@ Namespace WpfDerivClientVB
 
                     If data.ContainsKey("error") Then
                         Dim errMsg As String = data("error")("message").ToString()
-                        Dispatcher.Invoke(Sub()
-                                              System.Windows.MessageBox.Show("Error API: " & errMsg)
-                                              ResetUI()
-                                          End Sub)
-                        Exit Do
+                        ' Si es error de authorization o trade, mostrarlo
+                        If data.ContainsKey("req_id") OrElse data.ContainsKey("buy") Then
+                            Dispatcher.Invoke(Sub()
+                                                  txtTradeResult.Text = $"❌ API Error: {errMsg}"
+                                                  txtTradeResult.Foreground = New SolidColorBrush(Colors.Red)
+                                              End Sub)
+                        Else
+                            Dispatcher.Invoke(Sub()
+                                                  System.Windows.MessageBox.Show("Error API: " & errMsg)
+                                                  ResetUI()
+                                              End Sub)
+                            Exit Do
+                        End If
                     End If
 
                     If data.ContainsKey("candles") Then
@@ -261,6 +366,19 @@ Namespace WpfDerivClientVB
                     ElseIf data.ContainsKey("ohlc") Then
                         Dim ohlcObj As JObject = CType(data("ohlc"), JObject)
                         Dispatcher.Invoke(Sub() HandleLiveTick(ohlcObj))
+                    ElseIf data.ContainsKey("authorize") Then
+                        Dispatcher.Invoke(Sub()
+                                              txtTradeResult.Text = "✅ Cuenta autorizada para operar."
+                                              txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
+                                          End Sub)
+                    ElseIf data.ContainsKey("buy") Then
+                        Dispatcher.Invoke(Sub()
+                                              Dim buyObj As JObject = CType(data("buy"), JObject)
+                                              Dim transactionId As String = buyObj("transaction_id").ToString()
+                                              Dim buyPrice As String = buyObj("buy_price").ToString()
+                                              txtTradeResult.Text = $"✅ Operación exitosa! ID: {transactionId} - Precio: {buyPrice}"
+                                              txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
+                                          End Sub)
                     End If
                 Loop
             Catch ex As OperationCanceledException

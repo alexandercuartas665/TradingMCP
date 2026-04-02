@@ -1,0 +1,10 @@
+{
+  "echo_req": {
+    "authorize": "<not shown>"
+  },
+  "error": {
+    "code": "InvalidToken",
+    "message": "The token is invalid."
+  },
+  "msg_type": "authorize"
+}

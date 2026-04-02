@@ -19,8 +19,10 @@ Namespace WpfDerivClientVB
     ''' Credenciales separadas para las cuentas "Real" y "Virtual" de Deriv.
     ''' </summary>
     Public Class ClientDerivCredentials
+        Public Property AccountIdReal As String
         Public Property AppIdReal As String
         Public Property ApiTokenReal As String
+        Public Property AccountIdVirtual As String
         Public Property AppIdVirtual As String
         Public Property ApiTokenVirtual As String
     End Class

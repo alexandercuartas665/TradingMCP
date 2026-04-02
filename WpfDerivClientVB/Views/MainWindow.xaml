@@ -130,6 +130,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <Canvas x:Name="chartHost" Grid.Row="0" Background="#1E1E2E"
@@ -161,6 +162,35 @@
                             <Border x:Name="previewWick" Width="18" Height="18" Margin="2,0,0,0" CornerRadius="3"/>
                         </StackPanel>
                     </Expander>
+
+                    <!-- Panel de Trading -->
+                    <Border Grid.Row="2" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Margin="0,8,0,0" Padding="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Label Content="Activo: " VerticalAlignment="Center"/>
+                                <TextBlock x:Name="txtTradeSymbol" Text="R_100" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,20,0"/>
+
+                                <Label Content="Monto USD: " VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtTradeAmount" Text="10" Width="60" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
+
+                                <Label Content="Duración (Ticks): " VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtTradeDuration" Text="5" Width="50" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button x:Name="btnBuyCall" Content="📈 COMPRAR (CALL)" Style="{StaticResource SuccessBtn}" Width="160" Margin="0,0,10,0" Click="btnBuyCall_Click"/>
+                                <Button x:Name="btnSellPut" Content="📉 VENDER (PUT)" Style="{StaticResource DangerBtn}" Width="160" Click="btnSellPut_Click"/>
+                            </StackPanel>
+                            
+                            <TextBlock x:Name="txtTradeResult" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Margin="0,35,0,0" Foreground="#A6ADC8" TextWrapping="Wrap" Height="40" Text="(Estado de la operacion aparecera aqui)"/>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
 
