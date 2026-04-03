@@ -223,6 +223,47 @@ Namespace WpfDerivClientVB
         End Function
 
         ''' <summary>
+        ''' Obtiene las últimas operaciones de un cliente desde la BD.
+        ''' </summary>
+        Public Async Function ObtenerOperacionesAsync(clientId As Integer, Optional limite As Integer = 50) As Task(Of List(Of OperacionModel))
+            Dim lista As New List(Of OperacionModel)()
+            Try
+                Await EnsureOperacionesTableAsync()
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql = "SELECT id, client_id, contract_id, tipo, simbolo, monto, duracion, estado, profit_loss, created_at
+                               FROM public.trading_operations
+                               WHERE client_id = @cid
+                               ORDER BY created_at DESC
+                               LIMIT @lim"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("cid", clientId)
+                        cmd.Parameters.AddWithValue("lim", limite)
+                        Using reader = Await cmd.ExecuteReaderAsync()
+                            Do While Await reader.ReadAsync()
+                                Dim op As New OperacionModel()
+                                op.Id = reader.GetInt32(0)
+                                op.ClientId = If(reader.IsDBNull(1), 0, reader.GetInt32(1))
+                                op.ContractId = If(reader.IsDBNull(2), "", reader.GetString(2))
+                                op.Tipo = If(reader.IsDBNull(3), "", reader.GetString(3))
+                                op.Simbolo = If(reader.IsDBNull(4), "", reader.GetString(4))
+                                op.Monto = If(reader.IsDBNull(5), 0D, reader.GetDecimal(5))
+                                op.Duracion = If(reader.IsDBNull(6), "", reader.GetString(6))
+                                op.Estado = If(reader.IsDBNull(7), "", reader.GetString(7))
+                                op.ProfitLoss = If(reader.IsDBNull(8), 0D, reader.GetDecimal(8))
+                                op.CreatedAt = If(reader.IsDBNull(9), DateTime.UtcNow, reader.GetDateTime(9))
+                                op.Hora = op.CreatedAt.ToLocalTime().ToString("HH:mm:ss")
+                                lista.Add(op)
+                            Loop
+                        End Using
+                    End Using
+                End Using
+            Catch
+            End Try
+            Return lista
+        End Function
+
+        ''' <summary>
         ''' Guarda una operación de trading en la BD.
         ''' </summary>
         Public Async Function GuardarOperacionAsync(op As OperacionModel) As Task

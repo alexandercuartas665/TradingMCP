@@ -1,9 +1,10 @@
 <Window x:Class="WpfDerivClientVB.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Deriv Trading - Live Streaming" Height="620" Width="960"
+Title="Deriv Trading - Live Streaming" Height="620" Width="960"
         Background="#1E1E2E">
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="#CDD6F4"/>
         </Style>
@@ -498,13 +499,40 @@
                                   Background="#181825" Foreground="#CDD6F4" RowBackground="#1E1E2E"
                                   AlternatingRowBackground="#181825" GridLinesVisibility="None" BorderBrush="#45475A">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Hora" Binding="{Binding Hora}" Width="130"/>
-                                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="60"/>
-                                <DataGridTextColumn Header="Símbolo" Binding="{Binding Simbolo}" Width="90"/>
-                                <DataGridTextColumn Header="Monto" Binding="{Binding Monto, StringFormat=\{0:F2\}}" Width="80"/>
-                                <DataGridTextColumn Header="Duración" Binding="{Binding Duracion}" Width="80"/>
-                                <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
-                                <DataGridTextColumn Header="P/L" Binding="{Binding ProfitLoss, StringFormat=\{0:F2\}}" Width="90"/>
+                                <DataGridTextColumn Header="Hora" Binding="{Binding Hora}" Width="80"/>
+                                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="50"/>
+                                <DataGridTextColumn Header="Símbolo" Binding="{Binding Simbolo}" Width="80"/>
+                                <DataGridTextColumn Header="Monto $" Binding="{Binding Monto, StringFormat=\{0:F2\}}" Width="65"/>
+                                <DataGridTextColumn Header="Entrada" Binding="{Binding EntrySpot}" Width="75"/>
+                                <DataGridTextColumn Header="Spot" Binding="{Binding SpotActual}" Width="75"/>
+                                <DataGridTemplateColumn Header="Estado" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Estado}" Foreground="{Binding EstadoColor}" FontWeight="SemiBold"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Expira" Binding="{Binding TiempoRestante}" Width="70"/>
+                                <DataGridTemplateColumn Header="P/L" Width="75">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ProfitLoss, StringFormat=\{0:F2\}}" Foreground="{Binding PLColor}" FontWeight="SemiBold"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Cerrar" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="✖ Vender"
+                                                    Tag="{Binding ContractId}"
+                                                    Click="BtnCerrarOperacion_Click"
+                                                    Visibility="{Binding EsAbierto, Converter={StaticResource BoolToVis}}"
+                                                    Background="#F38BA8" Foreground="#1E1E2E"
+                                                    FontSize="10" FontWeight="Bold"
+                                                    Padding="3,1" BorderThickness="0" Cursor="Hand"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="Contract ID" Binding="{Binding ContractId}" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>

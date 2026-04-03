@@ -5,9 +5,11 @@ Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports System.Windows.Media
+Imports System.Windows.Data
 Imports Newtonsoft.Json.Linq
 
 Namespace WpfDerivClientVB
+
     Partial Public Class MainWindow
         Inherits System.Windows.Window
 
@@ -284,28 +286,26 @@ Namespace WpfDerivClientVB
                 Return
             End If
 
-            txtTradeResult.Text = "⏳ Enviando " & contractType & " " & symbol & "..."
+            txtTradeResult.Text = "⏳ Solicitando cotización " & contractType & " " & symbol & "..."
             txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
 
             Try
+                _pendingProposalAmount = amount
                 Dim req As New JObject()
-                req.Add("buy", 1)
-                req.Add("price", amount)
-                Dim params As New JObject()
-                params.Add("amount", amount)
-                params.Add("basis", "stake")
-                params.Add("contract_type", contractType)
-                params.Add("currency", "USD")
-                params.Add("duration", duration)
-                params.Add("duration_unit", "t")
-                params.Add("symbol", symbol)
-                req.Add("parameters", params)
+                req.Add("proposal", 1)
+                req.Add("amount", amount)
+                req.Add("basis", "stake")
+                req.Add("contract_type", contractType)
+                req.Add("currency", "USD")
+                req.Add("duration", duration)
+                req.Add("duration_unit", "t")
+                req.Add("underlying_symbol", symbol)
 
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
                 Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
 
-                txtTradeResult.Text = "⏳ Orden enviada — esperando confirmación en Trading Live..."
-                txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
+                txtTradeResult.Text = "⏳ Esperando cotización..."
+                txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
             Catch ex As Exception
                 txtTradeResult.Text = "❌ Error: " & ex.Message
                 txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
@@ -809,6 +809,8 @@ Namespace WpfDerivClientVB
         Private _tradingOperaciones As New System.Collections.ObjectModel.ObservableCollection(Of OperacionModel)()
         Private _tradingClienteActual As ClientModel
         Private _tradingCredsActual As ClientDerivCredentials
+        ' Proposal pendiente: guardamos monto para el buy cuando llegue proposal_id
+        Private _pendingProposalAmount As Double = 0
 
         Private Async Sub CargarClientesTrading()
             Try
@@ -890,7 +892,15 @@ Namespace WpfDerivClientVB
                 btnTradingCall.IsEnabled = True
                 btnTradingPut.IsEnabled = True
 
-                ' Inicializar tabla de operaciones
+                ' Cargar historial de operaciones desde BD
+                _tradingOperaciones.Clear()
+                If _tradingClienteActual IsNot Nothing Then
+                    Dim repo As New ClientRepository()
+                    Dim historial = Await repo.ObtenerOperacionesAsync(_tradingClienteActual.Id)
+                    For Each op In historial
+                        _tradingOperaciones.Add(op)
+                    Next
+                End If
                 gridOperaciones.ItemsSource = _tradingOperaciones
 
                 ' Suscribir balance
@@ -972,21 +982,19 @@ Namespace WpfDerivClientVB
                 Return
             End If
 
-            txtTradingOpEstado.Text = String.Format("⏳ Enviando {0} {1} ${2}...", tipo, symbol, monto)
+            txtTradingOpEstado.Text = String.Format("⏳ Solicitando cotización {0} {1} ${2}...", tipo, symbol, monto)
 
             Try
+                _pendingProposalAmount = monto
                 Dim req As New JObject()
-                req.Add("buy", 1)
-                req.Add("price", monto)
-                Dim params As New JObject()
-                params.Add("amount", monto)
-                params.Add("basis", "stake")
-                params.Add("contract_type", tipo)
-                params.Add("currency", "USD")
-                params.Add("duration", duracion)
-                params.Add("duration_unit", durUnit)
-                params.Add("symbol", symbol)
-                req.Add("parameters", params)
+                req.Add("proposal", 1)
+                req.Add("amount", monto)
+                req.Add("basis", "stake")
+                req.Add("contract_type", tipo)
+                req.Add("currency", "USD")
+                req.Add("duration", duracion)
+                req.Add("duration_unit", durUnit)
+                req.Add("underlying_symbol", symbol)
 
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
                 Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
@@ -1020,6 +1028,24 @@ Namespace WpfDerivClientVB
                 Dim obj = JObject.Parse(json)
                 Dim msgType = obj("msg_type")?.ToString()
 
+                ' La nueva API mete msg_type dentro del objeto error — normalizar
+                If String.IsNullOrEmpty(msgType) AndAlso obj("error") IsNot Nothing Then
+                    msgType = obj("error")?("msg_type")?.ToString()
+                End If
+
+                ' Si hay error (con o sin msg_type), mostrarlo siempre
+                If obj("error") IsNot Nothing Then
+                    Dim errMsg = obj("error")?("message")?.ToString()
+                    Dim errCode = obj("error")?("code")?.ToString()
+                    Dim errDetails = obj("error")?("details")?.ToString()
+                    Dim fullErr = "❌ " & errMsg & If(String.IsNullOrEmpty(errCode), "", " [" & errCode & "]") &
+                                  If(String.IsNullOrEmpty(errDetails), "", " — " & errDetails)
+                    txtTradingOpEstado.Text = fullErr
+                    txtTradeResult.Text = fullErr
+                    txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
+                    Return
+                End If
+
                 Select Case msgType
                     Case "balance"
                         Dim bal = obj("balance")
@@ -1029,22 +1055,50 @@ Namespace WpfDerivClientVB
                             txtTradingBalance.Text = String.Format("{0} {1:N2}", cur, balVal)
                         End If
 
+                    Case "proposal"
+                        ' Nueva API: recibimos cotización → ejecutar buy automáticamente
+                        Dim propObj = obj("proposal")
+                        If propObj IsNot Nothing Then
+                            Dim proposalId = propObj("id")?.ToString()
+                            Dim askPrice As Double = If(propObj("ask_price") IsNot Nothing, CDbl(propObj("ask_price")), _pendingProposalAmount)
+                            Dim dispPrice = propObj("display_value")?.ToString()
+                            txtTradingOpEstado.Text = String.Format("💱 Cotización: {0} — Ejecutando...", If(dispPrice, askPrice.ToString()))
+                            txtTradeResult.Text = String.Format("💱 Cotización: {0} — Ejecutando...", If(dispPrice, askPrice.ToString()))
+                            txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
+                            ' Enviar buy con el proposal_id
+                            Dim buyReq As New JObject()
+                            buyReq.Add("buy", proposalId)
+                            buyReq.Add("price", askPrice)
+                            Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
+                            _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                        End If
+
                     Case "buy"
                         Dim buyObj = obj("buy")
                         If buyObj IsNot Nothing Then
                             Dim op As New OperacionModel()
                             op.ContractId = buyObj("contract_id")?.ToString()
-                            op.Tipo = "?"
-                            op.Simbolo = buyObj("shortcode")?.ToString()
+                            ' Extraer CALL/PUT del shortcode  ej: "CALL_R_100_17.4_..."
+                            Dim shortcode = If(buyObj("shortcode")?.ToString(), "")
+                            op.Tipo = If(shortcode.StartsWith("CALL"), "CALL", If(shortcode.StartsWith("PUT"), "PUT", "?"))
+                            ' Simbolo limpio desde shortcode: segundo segmento
+                            Dim parts = shortcode.Split("_"c)
+                            op.Simbolo = If(parts.Length >= 3, parts(1) & "_" & parts(2), shortcode)
                             op.Monto = If(buyObj("buy_price") IsNot Nothing, CDec(buyObj("buy_price")), 0)
                             op.Estado = "Abierto"
                             op.ProfitLoss = 0
+                            op.TiempoRestante = "..."
                             op.Hora = DateTime.Now.ToString("HH:mm:ss")
                             op.Duracion = ""
                             If _tradingClienteActual IsNot Nothing Then op.ClientId = _tradingClienteActual.Id
                             _tradingOperaciones.Insert(0, op)
-                            txtTradingOpEstado.Text = String.Format("✅ Contrato abierto: {0}", op.ContractId)
+                            Dim msgBuy = String.Format("✅ {0} abierto: {1} — ${2}", op.Tipo, op.ContractId, op.Monto)
+                            txtTradingOpEstado.Text = msgBuy
+                            txtTradeResult.Text = msgBuy
+                            txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
                             GuardarOperacionBD(op)
+                            ' Suscribir actualizaciones en vivo del contrato
+                            SuscribirContratoAsync(op.ContractId)
                         End If
 
                     Case "proposal_open_contract"
@@ -1057,15 +1111,79 @@ Namespace WpfDerivClientVB
                             If op IsNot Nothing Then
                                 op.Estado = If(status = "won", "Ganado", If(status = "lost", "Perdido", "Abierto"))
                                 op.ProfitLoss = profit
-                                gridOperaciones.Items.Refresh()
+                                ' Entry spot
+                                If poc("entry_tick") IsNot Nothing Then op.EntrySpot = poc("entry_tick").ToString()
+                                ' Current spot
+                                If poc("current_spot") IsNot Nothing Then op.SpotActual = poc("current_spot").ToString()
+                                ' Tiempo restante (tick contracts)
+                                Dim tickCount = If(poc("tick_count") IsNot Nothing, CInt(poc("tick_count")), 0)
+                                Dim ticksPassed = If(poc("tick_passed") IsNot Nothing, CInt(poc("tick_passed")), 0)
+                                If tickCount > 0 Then
+                                    Dim ticksLeft = tickCount - ticksPassed
+                                    op.TiempoRestante = If(ticksLeft > 0, ticksLeft & "t", "0t")
+                                ElseIf poc("date_expiry") IsNot Nothing Then
+                                    Dim expUnix = CLng(poc("date_expiry"))
+                                    Dim expDt = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(expUnix)
+                                    Dim secsLeft = CInt((expDt - DateTime.UtcNow).TotalSeconds)
+                                    op.TiempoRestante = If(secsLeft > 0, secsLeft & "s", "0s")
+                                End If
                             End If
                         End If
 
-                    Case "error"
-                        Dim errMsg = obj("error")?("message")?.ToString()
-                        txtTradingOpEstado.Text = "❌ " & errMsg
+                    Case "sell"
+                        Dim sellObj = obj("sell")
+                        If sellObj IsNot Nothing Then
+                            Dim contractId = sellObj("contract_id")?.ToString()
+                            Dim soldFor = If(sellObj("sold_for") IsNot Nothing, CDec(sellObj("sold_for")), 0D)
+                            Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
+                            If op IsNot Nothing Then
+                                op.Estado = "Cerrado"
+                                op.ProfitLoss = soldFor - op.Monto
+                                op.TiempoRestante = "—"
+                            End If
+                            txtTradingOpEstado.Text = String.Format("✅ Contrato cerrado. Recibido: {0:F2}", soldFor)
+                        End If
+
                 End Select
             Catch
+            End Try
+        End Sub
+
+        Private Sub SuscribirContratoAsync(contractId As String)
+#Disable Warning BC42358
+            Task.Run(Async Function()
+                Try
+                    If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then Return
+                    Dim req As New JObject()
+                    req.Add("proposal_open_contract", 1)
+                    req.Add("contract_id", contractId)
+                    req.Add("subscribe", 1)
+                    Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                    Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Catch
+                End Try
+            End Function)
+#Enable Warning BC42358
+        End Sub
+
+        Private Async Sub BtnCerrarOperacion_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Dim btn = TryCast(sender, System.Windows.Controls.Button)
+            If btn Is Nothing Then Return
+            Dim contractId = btn.Tag?.ToString()
+            If String.IsNullOrEmpty(contractId) Then Return
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                System.Windows.MessageBox.Show("No hay conexión activa.")
+                Return
+            End If
+            Try
+                Dim req As New JObject()
+                req.Add("sell", contractId)
+                req.Add("price", 0)   ' 0 = vender a precio de mercado
+                Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                txtTradingOpEstado.Text = "⏳ Cerrando contrato " & contractId & "..."
+            Catch ex As Exception
+                txtTradingOpEstado.Text = "❌ Error al cerrar: " & ex.Message
             End Try
         End Sub
 
