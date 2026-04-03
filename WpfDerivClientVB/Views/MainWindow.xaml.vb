@@ -87,6 +87,12 @@ Namespace WpfDerivClientVB
             CargarClientesTrading()
         End Sub
 
+        Protected Overrides Sub OnSourceInitialized(e As EventArgs)
+            MyBase.OnSourceInitialized(e)
+            ThemeHelper.ApplyDarkTitleBar(Me)
+        End Sub
+
+
         ''' <summary>
         ''' Busca en la BD el cliente y carga su App ID y Tokens de Deriv.
         ''' </summary>

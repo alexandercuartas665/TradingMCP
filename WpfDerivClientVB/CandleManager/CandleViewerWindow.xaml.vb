@@ -29,6 +29,11 @@ Partial Public Class CandleViewerWindow
         CargarDatosDemo()
     End Sub
 
+    Protected Overrides Sub OnSourceInitialized(e As EventArgs)
+        MyBase.OnSourceInitialized(e)
+        ThemeHelper.ApplyDarkTitleBar(Me)
+    End Sub
+
     ''' <summary>
     ''' Constructor para abrir con un activo específico.
     ''' Usar desde el Dashboard: New CandleViewerWindow("EUR/USD", 300)

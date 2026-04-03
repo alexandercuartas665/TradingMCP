@@ -18,4 +18,14 @@ Partial Public Class AdminSidebar
         Dim menuName As String = btn.Name.Replace("btnNav", "")
         RaiseEvent MenuItemSelected(menuName)
     End Sub
+
+    Private Sub BtnTest_Click(sender As Object, e As RoutedEventArgs)
+        Dim mainWindow As New WpfDerivClientVB.MainWindow()
+        mainWindow.Show()
+    End Sub
+
+    Private Sub BtnOpenCandleViewer_Click(sender As Object, e As RoutedEventArgs)
+        Dim candleWindow As New CandleViewerWindow()
+        candleWindow.Show()
+    End Sub
 End Class

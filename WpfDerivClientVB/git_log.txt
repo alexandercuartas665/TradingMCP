@@ -1,0 +1,153 @@
+commit 15cc24f5ce877f216b1c14ea3f0df2ca429dff29
+Author: Alexander Cuartas <fulano03022012@gmail.com>
+Date:   Thu Apr 2 18:42:11 2026 -0500
+
+    SE INICIA PROCESO DE VENTAS Y COMPRAS
+
+ WpfDerivClientVB/App.xaml                 |   2 +-
+ WpfDerivClientVB/Views/MainWindow.xaml    | 215 +++++++++++++++++++-----------
+ WpfDerivClientVB/Views/MainWindow.xaml.vb |  68 +++++-----
+ 3 files changed, 168 insertions(+), 117 deletions(-)
+
+commit 02e0416609f232597d2f0c1e4c581d769c34355a
+Author: Alexander Cuartas <fulano03022012@gmail.com>
+Date:   Thu Apr 2 18:10:31 2026 -0500
+
+    AJUSTE EN VENTANA PRUEBAS MEJORAS DISEÑO Y DATOS DESDE BASE DE DATOS AVANCES para hacer operaciones
+
+ WpfDerivClientVB/App.xaml                 |   2 +-
+ WpfDerivClientVB/Data/ClientRepository.vb |  55 ++++++
+ WpfDerivClientVB/Data/OperacionModel.vb   |  17 ++
+ WpfDerivClientVB/Views/MainWindow.xaml    | 263 +++++++++++++++++++++++-
+ WpfDerivClientVB/Views/MainWindow.xaml.vb | 319 +++++++++++++++++++++++++++---
+ 5 files changed, 628 insertions(+), 28 deletions(-)
+
+commit 33550c8d9d50d8d7d74d17f19532fb78cb29e29a
+Author: Alexander Cuartas <fulano03022012@gmail.com>
+Date:   Thu Apr 2 17:26:10 2026 -0500
+
+    PRUEBA DE CONEXION A LA CUENTA
+
+ WpfDerivClientVB/App.xaml                          |    2 +-
+ WpfDerivClientVB/Dashboard/views/ClientsView.xaml  |   38 +-
+ .../Dashboard/views/ClientsView.xaml.vb            |  132 +-
+ WpfDerivClientVB/Data/ClientModel.vb               |    2 +
+ WpfDerivClientVB/Data/ClientRepository.vb          |   40 +-
+ WpfDerivClientVB/Views/MainWindow.xaml             |   30 +
+ WpfDerivClientVB/Views/MainWindow.xaml.vb          |  136 +-
+ node_modules/.package-lock.json                    |   28 +
+ node_modules/ws/LICENSE                            |   20 +
+ node_modules/ws/README.md                          |  548 ++++++++
+ node_modules/ws/browser.js                         |    8 +
+ node_modules/ws/index.js                           |   22 +
+ node_modules/ws/lib/buffer-util.js                 |  131 ++
+ node_modules/ws/lib/constants.js                   |   19 +
+ node_modules/ws/lib/event-target.js                |  292 ++++
+ node_modules/ws/lib/extension.js                   |  203 +++
+ node_modules/ws/lib/limiter.js                     |   55 +
+ node_modules/ws/lib/permessage-deflate.js          |  528 ++++++++
+ node_modules/ws/lib/receiver.js                    |  706 ++++++++++
+ node_modules/ws/lib/sender.js                      |  602 +++++++++
+ node_modules/ws/lib/stream.js                      |  161 +++
+ node_modules/ws/lib/subprotocol.js                 |   62 +
+ node_modules/ws/lib/validation.js                  |  152 +++
+ node_modules/ws/lib/websocket-server.js            |  554 ++++++++
+ node_modules/ws/lib/websocket.js                   | 1393 ++++++++++++++++++++
+ node_modules/ws/package.json                       |   70 +
+ node_modules/ws/wrapper.mjs                        |   21 +
+ out_deriv.txt                                      |   10 +
+ package-lock.json                                  |   33 +
+ package.json                                       |    5 +
+ 30 files changed, 5962 insertions(+), 41 deletions(-)
+
+commit bab7ec2db1ab23e3238af18e740c9f4e8fd1e4fd
+Author: Alexander Cuartas <fulano03022012@gmail.com>
+Date:   Thu Apr 2 11:36:07 2026 -0500
+
+    AJUSTE CLIENTES Y SACAR PARAMETROS DE LA APLICACION
+
+ WpfDerivClientVB/App.xaml                          |    64 +-
+ WpfDerivClientVB/Dashboard/AdminDashboard.xaml.vb  |     7 +-
+ .../Dashboard/controls/AdminSidebar.xaml           |     6 +-
+ WpfDerivClientVB/Dashboard/views/ClientsView.xaml  |   146 +
+ .../Dashboard/views/ClientsView.xaml.vb            |   135 +
+ WpfDerivClientVB/Dashboard/views/SettingsView.xaml |    10 +-
+ .../Dashboard/views/SettingsView.xaml.vb           |    26 +-
+ WpfDerivClientVB/Data/CandleRepository.vb          |     8 +
+ WpfDerivClientVB/Data/ClientModel.vb               |    28 +
+ WpfDerivClientVB/Data/ClientRepository.vb          |   177 +
+ WpfDerivClientVB/Data/init_clients.sql             |    29 +
+ WpfDerivClientVB/Infrastructure/ConfigManager.vb   |     8 +-
+ WpfDerivClientVB/Views/MainWindow.xaml.vb          |    41 +-
+ WpfDerivClientVB/WpfDerivClientVB.vbproj           |     1 +
+ documentacion/trading_document_1.pdf               |   Bin 6648085 -> 0 bytes
+ documentacion/trading_document_10.pdf              |   Bin 1027202 -> 0 bytes
+ documentacion/trading_document_11.pdf              |   Bin 290763 -> 0 bytes
+ documentacion/trading_document_12.pdf              |   Bin 1581862 -> 0 bytes
+ documentacion/trading_document_13.pdf              |   Bin 1111856 -> 0 bytes
+ documentacion/trading_document_14.pdf              |   Bin 1182324 -> 0 bytes
+ documentacion/trading_document_15.pdf              |   Bin 425292 -> 0 bytes
+ documentacion/trading_document_16.pdf              |   Bin 1087154 -> 0 bytes
+ documentacion/trading_document_17.pdf              |   Bin 1474999 -> 0 bytes
+ documentacion/trading_document_18.pdf              |   Bin 739853 -> 0 bytes
+ documentacion/trading_document_19.pdf              |  6893 --
+ documentacion/trading_document_2.pdf               |   Bin 2881950 -> 0 bytes
+ documentacion/trading_document_20.pdf              | 41886 ----------
+ documentacion/trading_document_21.pdf              |   Bin 617706 -> 0 bytes
+ documentacion/trading_document_22.pdf              |   Bin 689033 -> 0 bytes
+ documentacion/trading_document_23.pdf              |   Bin 1027202 -> 0 bytes
+ documentacion/trading_document_24.pdf              |   Bin 840317 -> 0 bytes
+ documentacion/trading_document_25.pdf              |  4086 -
+ documentacion/trading_document_26.pdf              |   Bin 682958 -> 0 bytes
+ documentacion/trading_document_27.pdf              |   Bin 7238815 -> 0 bytes
+ documentacion/trading_document_28.pdf              |   Bin 329246 -> 0 bytes
+ documentacion/trading_document_29.pdf              |   Bin 2529507 -> 0 bytes
+ documentacion/trading_document_3.pdf               |   Bin 1777290 -> 0 bytes
+ documentacion/trading_document_30.pdf              |  7244 --
+ documentacion/trading_document_31.pdf              | 40551 ----------
+ documentacion/trading_document_32.pdf              |   Bin 206385 -> 0 bytes
+ documentacion/trading_document_33.pdf              |   Bin 6532725 -> 0 bytes
+ documentacion/trading_document_34.pdf              |   Bin 1455137 -> 0 bytes
+ documentacion/trading_document_35.pdf              |   Bin 4085729 -> 0 bytes
+ documentacion/trading_document_36.pdf              | 51181 ------------
+ documentacion/trading_document_37.pdf              |   Bin 307654 -> 0 bytes
+ documentacion/trading_document_38.pdf              |   Bin 14820349 -> 0 bytes
+ documentacion/trading_document_39.pdf              |   Bin 492238 -> 0 bytes
+ documentacion/trading_document_4.pdf               |   Bin 677020 -> 0 bytes
+ documentacion/trading_document_40.pdf              |   Bin 316891 -> 0 bytes
+ documentacion/trading_document_42.pdf              |   Bin 1419654 -> 0 bytes
+ documentacion/trading_document_43.pdf              |   Bin 714869 -> 0 bytes
+ documentacion/trading_document_44.pdf              |   Bin 502365 -> 0 bytes
+ documentacion/trading_document_45.pdf              |   Bin 3138627 -> 0 bytes
+ documentacion/trading_document_46.pdf              |   Bin 1845382 -> 0 bytes
+ documentacion/trading_document_47.pdf              |   Bin 2555157 -> 0 bytes
+ documentacion/trading_document_48.pdf              |   Bin 650719 -> 0 bytes
+ documentacion/trading_document_5.pdf               |   Bin 1826899 -> 0 bytes
+ documentacion/trading_document_50.pdf              |   Bin 146295 -> 0 bytes
+ documentacion/trading_document_51.pdf              |   Bin 710091 -> 0 bytes
+ documentacion/trading_document_52.pdf              |   Bin 1193229 -> 0 bytes
+ documentacion/trading_document_53.pdf              |   Bin 833335 -> 0 bytes
+ documentacion/trading_document_54.pdf              |   Bin 523840 -> 0 bytes
+ documentacion/trading_document_55.pdf              |   Bin 1551719 -> 0 bytes
+ documentacion/trading_document_56.pdf              |   Bin 593547 -> 0 bytes
+ documentacion/trading_document_57.pdf              |   Bin 3399683 -> 0 bytes
+ documentacion/trading_document_6.pdf               |   Bin 1506316 -> 0 bytes
+ documentacion/trading_document_7.pdf               |  7244 --
+ documentacion/trading_document_8.pdf               |   Bin 642674 -> 0 bytes
+ documentacion/trading_document_9.pdf               | 81067 -------------------
+ 69 files changed, 659 insertions(+), 240179 deletions(-)
+
+commit f4760a926c148c83a1c0d72ececa0593513e26d5
+Author: Alexander Cuartas <acuartas@BITCODE.COM.CO>
+Date:   Sun Mar 29 19:42:17 2026 -0500
+
+    VISOR DE CONFIGURACIONES
+
+ WpfDerivClientVB/Dashboard/AdminDashboard.xaml     |  10 +-
+ WpfDerivClientVB/Dashboard/AdminDashboard.xaml.vb  |   9 +-
+ WpfDerivClientVB/Dashboard/views/SettingsView.xaml | 236 +++++++++++++++++++++
+ .../Dashboard/views/SettingsView.xaml.vb           | 103 +++++++++
+ WpfDerivClientVB/Infrastructure/ConfigManager.vb   |  65 ++++++
+ WpfDerivClientVB/WpfDerivClientVB.vbproj           |   1 +
+ WpfDerivClientVB/build_output.txt                  |  15 ++
+ 7 files changed, 431 insertions(+), 8 deletions(-)

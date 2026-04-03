@@ -1,0 +1,17 @@
+  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos están actualizados para la restauración.
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Dashboard\controls\AdminSidebar.xaml.vb(23,31): error BC30002: No está definido el tipo 'MainWindow'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(205,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(892,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+
+ERROR al compilar.
+
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(205,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(892,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+C:\DesarrolloIA\Traiding\WpfDerivClientVB\Dashboard\controls\AdminSidebar.xaml.vb(23,31): error BC30002: No está definido el tipo 'MainWindow'. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_brj2cerq_wpftmp.vbproj]
+    3 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:08.85

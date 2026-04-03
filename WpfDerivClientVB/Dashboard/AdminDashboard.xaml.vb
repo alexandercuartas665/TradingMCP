@@ -20,6 +20,11 @@ Partial Public Class AdminDashboard
         IniciarReloj()
     End Sub
 
+    Protected Overrides Sub OnSourceInitialized(e As EventArgs)
+        MyBase.OnSourceInitialized(e)
+        ThemeHelper.ApplyDarkTitleBar(Me)
+    End Sub
+
     ' ================================================================
     '  NAVEGACIÓN DEL SIDEBAR 
     ' ================================================================
