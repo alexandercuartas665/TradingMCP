@@ -1,0 +1,90 @@
+<Window x:Class="TradingSettingsModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuración de Cuenta" Height="380" Width="420"
+        Background="#131313" WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" WindowStyle="ToolWindow">
+    
+    <Window.Resources>
+        <!-- Re-use basic styles for dark theme -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="#A6ADC8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#1E1E2E"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Height" Value="28"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="#11111B"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="brd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="brd" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#89B4FA"/>
+        </Style>
+        <Style x:Key="SecondaryBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#45475A"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="⚙ Configuración de Conexión" FontSize="18" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,4"/>
+            <TextBlock Text="Seleccione con qué credenciales operará este visor." FontSize="12" Foreground="#8992A8" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1">
+            <Label Content="Plataforma:"/>
+            <ComboBox x:Name="cmbPlataforma" Margin="0,0,0,15" SelectedIndex="0">
+                <ComboBoxItem Content="Deriv"/>
+            </ComboBox>
+
+            <Label Content="Cliente:"/>
+            <ComboBox x:Name="cmbCliente" Margin="0,0,0,15" DisplayMemberPath="Name">
+            </ComboBox>
+
+            <Label Content="Tipo de Cuenta:"/>
+            <ComboBox x:Name="cmbTipoCuenta" Margin="0,0,0,15" SelectedIndex="0">
+                <ComboBoxItem Content="Demo"/>
+                <ComboBoxItem Content="Real"/>
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Cancelar" Style="{StaticResource SecondaryBtn}" Width="100" Click="BtnCancelar_Click"/>
+            <Button Content="Guardar" Style="{StaticResource PrimaryBtn}" Width="100" Click="BtnGuardar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

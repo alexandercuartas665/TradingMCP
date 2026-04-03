@@ -208,9 +208,11 @@ Namespace WpfDerivClientVB
                 Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(reqJson)
                 Await _webSocket.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
 
+#Disable Warning BC42358
                 Task.Run(Function() As Task
                              Return ListenLoop()
                          End Function)
+#Enable Warning BC42358
             Catch ex As Exception
                 System.Windows.MessageBox.Show("Error de conexion: " & ex.Message)
                 ResetUI()
@@ -895,7 +897,9 @@ Namespace WpfDerivClientVB
                 Await SuscribirBalanceTradingAsync()
 
                 ' Iniciar escucha
+#Disable Warning BC42358
                 Task.Run(Function() EscucharTradingAsync())
+#Enable Warning BC42358
 
             Catch ex As System.Net.WebException
                 Dim errBody As String = ""

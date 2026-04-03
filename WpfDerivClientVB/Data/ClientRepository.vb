@@ -1,7 +1,6 @@
 Imports System.Collections.Generic
 Imports System.Threading.Tasks
 Imports Npgsql
-Imports WpfDerivClientVB.Infrastructure
 
 Namespace WpfDerivClientVB
     ''' <summary>

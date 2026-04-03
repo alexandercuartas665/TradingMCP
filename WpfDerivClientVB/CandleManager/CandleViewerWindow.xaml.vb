@@ -68,11 +68,16 @@ Partial Public Class CandleViewerWindow
         AddHandler _header.OpenSettingsRequested, AddressOf OnOpenSettingsRequested
     End Sub
 
-    ' ── Evento de apertura de configuración ──────────────────────
+    ' ── Evento de apertura de configuración de trading ───────────
     Private Sub OnOpenSettingsRequested()
-        Dim dbs = DbConfigWindow.AbrirModal(Me)
-        If dbs IsNot Nothing AndAlso dbs.Enabled Then
-            _agent.AddSignalLog("SYSTEM", "Configuración DB actualizada: " & dbs.Host)
+        Dim modal As New TradingSettingsModal()
+        modal.Owner = Me
+        If modal.ShowDialog() = True Then
+            Dim clientId = modal.SelectedClientId
+            Dim platform = modal.SelectedPlatform
+            Dim accType = modal.SelectedAccountType
+
+            _agent.AddSignalLog("SYSTEM", $"Config. Trading: Cliente={clientId}, {platform} ({accType})")
         End If
     End Sub
 

@@ -25,6 +25,7 @@
     <Page Include="CandleManager\controls\DbConfigControl.xaml" />
     <Page Include="Dashboard\views\SettingsView.xaml" />
     <Page Include="Dashboard\views\ClientsView.xaml" />
+    <Page Include="CandleManager\Modals\TradingSettingsModal.xaml" />
   </ItemGroup>
 
   <ItemGroup>
