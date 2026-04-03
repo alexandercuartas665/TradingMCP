@@ -445,44 +445,131 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                         </Grid>
                     </Border>
 
-                    <!-- Panel de compra/venta -->
+                    <!-- Panel de operaciones -->
                     <Border Grid.Row="1" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                                <TextBlock Text="Símbolo:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <ComboBox x:Name="cmbTradingSymbol" Width="110" Margin="0,0,15,0" SelectedIndex="0">
-                                    <ComboBoxItem Content="R_10"/>
-                                    <ComboBoxItem Content="R_25"/>
-                                    <ComboBoxItem Content="R_50"/>
-                                    <ComboBoxItem Content="R_75"/>
-                                    <ComboBoxItem Content="R_100"/>
-                                    <ComboBoxItem Content="BOOM500"/>
-                                    <ComboBoxItem Content="CRASH500"/>
-                                </ComboBox>
-                                <TextBlock Text="Monto $:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox x:Name="txtTradingMonto" Text="1" Width="65" Margin="0,0,15,0" VerticalContentAlignment="Center"
-                                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" CaretBrush="#CDD6F4"/>
-                                <TextBlock Text="Duración:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox x:Name="txtTradingDuracion" Text="5" Width="45" Margin="0,0,5,0" VerticalContentAlignment="Center"
-                                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" CaretBrush="#CDD6F4"/>
-                                <ComboBox x:Name="cmbTradingDurUnit" Width="65" Margin="0,0,15,0" SelectedIndex="0">
-                                    <ComboBoxItem Content="ticks" Tag="t"/>
-                                    <ComboBoxItem Content="seg" Tag="s"/>
-                                    <ComboBoxItem Content="min" Tag="m"/>
-                                    <ComboBoxItem Content="hora" Tag="h"/>
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Grid.Column="1">
-                                <Button x:Name="btnTradingCall" Content="📈 CALL (Sube)" Style="{StaticResource SuccessBtn}"
-                                        Width="145" Margin="0,0,8,0" IsEnabled="False" Click="btnTradingCall_Click"/>
-                                <Button x:Name="btnTradingPut" Content="📉 PUT (Baja)" Style="{StaticResource DangerBtn}"
-                                        Width="145" IsEnabled="False" Click="btnTradingPut_Click"/>
-                            </StackPanel>
-                        </Grid>
+                        <StackPanel>
+                            <!-- Fila básica -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <WrapPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Símbolo:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <ComboBox x:Name="cmbTradingSymbol" Width="110" Margin="0,0,12,0" SelectedIndex="4"
+                                              SelectionChanged="cmbTradingSymbol_SelectionChanged">
+                                        <ComboBoxItem Content="R_10"      Tag="R_10"/>
+                                        <ComboBoxItem Content="R_25"      Tag="R_25"/>
+                                        <ComboBoxItem Content="R_50"      Tag="R_50"/>
+                                        <ComboBoxItem Content="R_75"      Tag="R_75"/>
+                                        <ComboBoxItem Content="R_100"     Tag="R_100"/>
+                                        <ComboBoxItem Content="R_100 1s"  Tag="1HZ100V"/>
+                                        <ComboBoxItem Content="R_75 1s"   Tag="1HZ75V"/>
+                                        <ComboBoxItem Content="R_50 1s"   Tag="1HZ50V"/>
+                                        <ComboBoxItem Content="R_25 1s"   Tag="1HZ25V"/>
+                                        <ComboBoxItem Content="R_10 1s"   Tag="1HZ10V"/>
+                                        <ComboBoxItem Content="BOOM 1000" Tag="BOOM1000N"/>
+                                        <ComboBoxItem Content="BOOM 500"  Tag="BOOM500N"/>
+                                        <ComboBoxItem Content="CRASH 1000" Tag="CRASH1000N"/>
+                                        <ComboBoxItem Content="CRASH 500" Tag="CRASH500N"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Monto $:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtTradingMonto" Text="1" Width="60" Margin="0,0,12,0" VerticalContentAlignment="Center"
+                                             Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" CaretBrush="#CDD6F4"/>
+                                    <TextBlock Text="Duración:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtTradingDuracion" Text="5" Width="42" Margin="0,0,4,0" VerticalContentAlignment="Center"
+                                             Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" CaretBrush="#CDD6F4"/>
+                                    <ComboBox x:Name="cmbTradingDurUnit" Width="65" Margin="0,0,12,0" SelectedIndex="0">
+                                        <ComboBoxItem Content="ticks" Tag="t"/>
+                                        <ComboBoxItem Content="seg"   Tag="s"/>
+                                        <ComboBoxItem Content="min"   Tag="m"/>
+                                        <ComboBoxItem Content="hora"  Tag="h"/>
+                                        <ComboBoxItem Content="días"  Tag="d"/>
+                                    </ComboBox>
+                                </WrapPanel>
+                                <StackPanel Orientation="Horizontal" Grid.Column="1">
+                                    <Button x:Name="btnTradingCall" Content="📈 CALL" Style="{StaticResource SuccessBtn}"
+                                            Width="110" Margin="0,0,6,0" IsEnabled="False" Click="btnTradingCall_Click"/>
+                                    <Button x:Name="btnTradingPut" Content="📉 PUT" Style="{StaticResource DangerBtn}"
+                                            Width="110" IsEnabled="False" Click="btnTradingPut_Click"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Expander Avanzado -->
+                            <Expander x:Name="expAvanzado" Header="⚙ Opciones Avanzadas" Foreground="#89B4FA"
+                                      FontWeight="SemiBold" Margin="0,8,0,0"
+                                      Expanded="expAvanzado_Expanded" Collapsed="expAvanzado_Collapsed">
+                                <Border Background="#1E1E2E" BorderBrush="#45475A" BorderThickness="1"
+                                        CornerRadius="4" Padding="12,10" Margin="0,6,0,0">
+                                    <StackPanel>
+                                        <!-- Fila 1: Tipo contrato + Basis -->
+                                        <WrapPanel Margin="0,0,0,8">
+                                            <TextBlock Text="Tipo contrato:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <ComboBox x:Name="cmbContratoTipo" Width="165" Margin="0,0,16,0" SelectedIndex="0"
+                                                      SelectionChanged="cmbContratoTipo_SelectionChanged">
+                                                <ComboBoxItem Content="📈 CALL — Sube"         Tag="CALL"/>
+                                                <ComboBoxItem Content="📉 PUT  — Baja"          Tag="PUT"/>
+                                                <ComboBoxItem Content="☝ ONETOUCH — Toca"       Tag="ONETOUCH"/>
+                                                <ComboBoxItem Content="✋ NOTOUCH — No toca"    Tag="NOTOUCH"/>
+                                                <ComboBoxItem Content="🔢 Dígito PAR"            Tag="DIGITEVEN"/>
+                                                <ComboBoxItem Content="🔢 Dígito IMPAR"          Tag="DIGITODD"/>
+                                                <ComboBoxItem Content="🔢 Dígito &gt; X"         Tag="DIGITOVER"/>
+                                                <ComboBoxItem Content="🔢 Dígito &lt; X"         Tag="DIGITUNDER"/>
+                                                <ComboBoxItem Content="🔢 Dígito = X"            Tag="DIGITMATCH"/>
+                                                <ComboBoxItem Content="🔢 Dígito ≠ X"            Tag="DIGITDIFF"/>
+                                            </ComboBox>
+                                            <TextBlock Text="Base:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <ComboBox x:Name="cmbTradingBasis" Width="100" Margin="0,0,16,0" SelectedIndex="0">
+                                                <ComboBoxItem Content="Stake (pago fijo)"  Tag="stake"/>
+                                                <ComboBoxItem Content="Payout (ganancia)" Tag="payout"/>
+                                            </ComboBox>
+                                            <TextBlock Text="Moneda:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <ComboBox x:Name="cmbTradingCurrency" Width="70" Margin="0,0,0,0" SelectedIndex="0">
+                                                <ComboBoxItem Content="USD"/>
+                                                <ComboBoxItem Content="EUR"/>
+                                                <ComboBoxItem Content="GBP"/>
+                                            </ComboBox>
+                                        </WrapPanel>
+
+                                        <!-- Fila 2: Barrera (visible solo cuando aplica) -->
+                                        <WrapPanel x:Name="pnlBarrera" Margin="0,0,0,8" Visibility="Collapsed">
+                                            <TextBlock x:Name="lblBarrera1" Text="Barrera:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <TextBox x:Name="txtBarrera" Width="80" Margin="0,0,16,0" VerticalContentAlignment="Center"
+                                                     Background="#313244" Foreground="#F9E2AF" BorderBrush="#89B4FA" CaretBrush="#CDD6F4"
+                                                     ToolTip="Ej: +1.5 / -1.5 para Touch. Dígito 0-9 para contratos Digit."/>
+                                            <TextBlock x:Name="lblBarrera2" Text="Barrera 2:" VerticalAlignment="Center"
+                                                       Margin="0,0,5,0" Visibility="Collapsed"/>
+                                            <TextBox x:Name="txtBarrera2" Width="80" Margin="0,0,16,0" VerticalContentAlignment="Center"
+                                                     Background="#313244" Foreground="#F9E2AF" BorderBrush="#89B4FA" CaretBrush="#CDD6F4"
+                                                     Visibility="Collapsed" ToolTip="Barrera inferior para contratos In/Out"/>
+                                            <TextBlock x:Name="lblBarreraHint" Text="" Foreground="#A6ADC8" FontSize="11"
+                                                       VerticalAlignment="Center" FontStyle="Italic"/>
+                                        </WrapPanel>
+
+                                        <!-- Fila 3: Cotización previa + botón ejecutar -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="Cotización:" Foreground="#A6ADC8" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="txtCotizacion" Text="— presiona Cotizar primero —"
+                                                           Foreground="#89B4FA" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Grid.Column="1">
+                                                <Button Content="💱 Cotizar" Width="95" Margin="0,0,8,0"
+                                                        Background="#313244" Foreground="#89B4FA" BorderBrush="#89B4FA"
+                                                        Click="btnCotizar_Click" x:Name="btnCotizar" IsEnabled="False"/>
+                                                <Button x:Name="btnEjecutarAvanzado" Content="✅ Ejecutar" Width="95"
+                                                        Style="{StaticResource SuccessBtn}" IsEnabled="False"
+                                                        Click="btnEjecutarAvanzado_Click"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+                        </StackPanel>
                     </Border>
 
                     <!-- Historial de operaciones -->

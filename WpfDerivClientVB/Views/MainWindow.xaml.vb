@@ -563,153 +563,153 @@ Namespace WpfDerivClientVB
 
             Try
                 Await Task.Run(Async Function() As Task
-                    Try
-                        AppLogger.Info("Cargando velas desde PostgreSQL...")
-                        Dim candles As List(Of CandleModel) = Await _repo.GetCandlesAsync(PLATFORM, sym, tf, limit:=500)
-                        AppLogger.Info(String.Format("Velas cargadas: {0}", candles.Count))
+                                   Try
+                                       AppLogger.Info("Cargando velas desde PostgreSQL...")
+                                       Dim candles As List(Of CandleModel) = Await _repo.GetCandlesAsync(PLATFORM, sym, tf, limit:=500)
+                                       AppLogger.Info(String.Format("Velas cargadas: {0}", candles.Count))
 
-                        Dispatcher.Invoke(Sub()
-                            Try
-                                pbDescarga.IsIndeterminate = False
+                                       Dispatcher.Invoke(Sub()
+                                                             Try
+                                                                 pbDescarga.IsIndeterminate = False
 
-                                If candles.Count = 0 Then
-                                    txtDescargaStatus.Text = "Sin datos en BD para " & sym & " " & tf & ". Descarga historial primero."
-                                    btnCalcularIndicadores.IsEnabled = True
-                                    Return
-                                End If
+                                                                 If candles.Count = 0 Then
+                                                                     txtDescargaStatus.Text = "Sin datos en BD para " & sym & " " & tf & ". Descarga historial primero."
+                                                                     btnCalcularIndicadores.IsEnabled = True
+                                                                     Return
+                                                                 End If
 
-                                Dim sb As New System.Text.StringBuilder()
-                                Dim showRows As Integer = 15
-                                Dim showFrom As Integer = Math.Max(0, candles.Count - showRows)
-                                Dim line70 As String = New String("="c, 70)
-                                Dim dash70 As String = New String("-"c, 70)
+                                                                 Dim sb As New System.Text.StringBuilder()
+                                                                 Dim showRows As Integer = 15
+                                                                 Dim showFrom As Integer = Math.Max(0, candles.Count - showRows)
+                                                                 Dim line70 As String = New String("="c, 70)
+                                                                 Dim dash70 As String = New String("-"c, 70)
 
-                                sb.AppendLine(line70)
-                                sb.AppendLine(String.Format(" INDICADORES: {0} | {1} | Período MA: {2} | {3} velas de BD", sym, tf, per, candles.Count))
-                                sb.AppendLine(line70)
+                                                                 sb.AppendLine(line70)
+                                                                 sb.AppendLine(String.Format(" INDICADORES: {0} | {1} | Período MA: {2} | {3} velas de BD", sym, tf, per, candles.Count))
+                                                                 sb.AppendLine(line70)
 
-                                ' ── 1. Medias Moviles ────────────────────
-                                AppLogger.Info("Calculando Medias Moviles...")
-                                sb.AppendLine()
-                                sb.AppendLine(String.Format("── TREND: Medias Moviles ({0}) ──", per))
-                                sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
+                                                                 ' ── 1. Medias Moviles ────────────────────
+                                                                 AppLogger.Info("Calculando Medias Moviles...")
+                                                                 sb.AppendLine()
+                                                                 sb.AppendLine(String.Format("── TREND: Medias Moviles ({0}) ──", per))
+                                                                 sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
                                                            "Hora", "Close", "SMA", "EMA", "WMA"))
-                                sb.AppendLine(dash70)
+                                                                 sb.AppendLine(dash70)
 
-                                Dim smaR = Indicators.MovingAverages.SMA(candles, per)
-                                Dim emaR = Indicators.MovingAverages.EMA(candles, per)
-                                Dim wmaR = Indicators.MovingAverages.WMA(candles, per)
+                                                                 Dim smaR = Indicators.MovingAverages.SMA(candles, per)
+                                                                 Dim emaR = Indicators.MovingAverages.EMA(candles, per)
+                                                                 Dim wmaR = Indicators.MovingAverages.WMA(candles, per)
 
-                                Dim idx As Integer = showFrom
-                                Do While idx < candles.Count
-                                    sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
+                                                                 Dim idx As Integer = showFrom
+                                                                 Do While idx < candles.Count
+                                                                     sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
                                         candles(idx).OpenTime,
                                         candles(idx).ClosePrice.ToString("F4"),
                                         FormatVal(smaR(idx).IndicatorValue, "F4"),
                                         FormatVal(emaR(idx).IndicatorValue, "F4"),
                                         FormatVal(wmaR(idx).IndicatorValue, "F4")))
-                                    idx += 1
-                                Loop
+                                                                     idx += 1
+                                                                 Loop
 
-                                ' ── 2. RSI ───────────────────────────────
-                                AppLogger.Info("Calculando RSI(14)...")
-                                Dim rsiIndicator As New Indicators.RSI(14)
-                                Dim rsiR = rsiIndicator.Calculate(candles)
-                                sb.AppendLine()
-                                sb.AppendLine("── MOMENTUM: RSI(14) ──")
-                                sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-20}",
+                                                                 ' ── 2. RSI ───────────────────────────────
+                                                                 AppLogger.Info("Calculando RSI(14)...")
+                                                                 Dim rsiIndicator As New Indicators.RSI(14)
+                                                                 Dim rsiR = rsiIndicator.Calculate(candles)
+                                                                 sb.AppendLine()
+                                                                 sb.AppendLine("── MOMENTUM: RSI(14) ──")
+                                                                 sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-20}",
                                                            "Hora", "Close", "RSI", "Señal"))
-                                sb.AppendLine(dash70)
-                                idx = showFrom
-                                Do While idx < candles.Count
-                                    Dim rsiVal As String = FormatVal(rsiR(idx).IndicatorValue, "F2")
-                                    Dim signal As String = ""
-                                    If rsiR(idx).IndicatorValue.HasValue Then
-                                        Dim rv As Decimal = rsiR(idx).IndicatorValue.Value
-                                        If rv > 70 Then signal = "SOBRECOMPRA"
-                                        If rv < 30 Then signal = "SOBREVENTA"
-                                        If rv >= 45 AndAlso rv <= 55 Then signal = "NEUTRAL"
-                                    End If
-                                    sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-20}",
+                                                                 sb.AppendLine(dash70)
+                                                                 idx = showFrom
+                                                                 Do While idx < candles.Count
+                                                                     Dim rsiVal As String = FormatVal(rsiR(idx).IndicatorValue, "F2")
+                                                                     Dim signal As String = ""
+                                                                     If rsiR(idx).IndicatorValue.HasValue Then
+                                                                         Dim rv As Decimal = rsiR(idx).IndicatorValue.Value
+                                                                         If rv > 70 Then signal = "SOBRECOMPRA"
+                                                                         If rv < 30 Then signal = "SOBREVENTA"
+                                                                         If rv >= 45 AndAlso rv <= 55 Then signal = "NEUTRAL"
+                                                                     End If
+                                                                     sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-20}",
                                         candles(idx).OpenTime, candles(idx).ClosePrice.ToString("F4"),
                                         rsiVal, signal))
-                                    idx += 1
-                                Loop
+                                                                     idx += 1
+                                                                 Loop
 
-                                ' ── 3. Bollinger Bands ──────────────────
-                                AppLogger.Info("Calculando Bollinger Bands(20,2)...")
-                                Dim bbIndicator As New Indicators.BollingerBands(20, 2D)
-                                Dim bbR = bbIndicator.CalculateBands(candles)
-                                sb.AppendLine()
-                                sb.AppendLine("── VOLATILITY: BB(20,2) ──")
-                                sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12} {5,-10}",
+                                                                 ' ── 3. Bollinger Bands ──────────────────
+                                                                 AppLogger.Info("Calculando Bollinger Bands(20,2)...")
+                                                                 Dim bbIndicator As New Indicators.BollingerBands(20, 2D)
+                                                                 Dim bbR = bbIndicator.CalculateBands(candles)
+                                                                 sb.AppendLine()
+                                                                 sb.AppendLine("── VOLATILITY: BB(20,2) ──")
+                                                                 sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12} {5,-10}",
                                                            "Hora", "Close", "Upper", "Middle", "Lower", "BandW%"))
-                                sb.AppendLine(dash70)
-                                idx = showFrom
-                                Do While idx < candles.Count
-                                    sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12} {5,-10}",
+                                                                 sb.AppendLine(dash70)
+                                                                 idx = showFrom
+                                                                 Do While idx < candles.Count
+                                                                     sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12} {5,-10}",
                                         candles(idx).OpenTime,
                                         candles(idx).ClosePrice.ToString("F4"),
                                         FormatVal(bbR(idx).Upper, "F4"),
                                         FormatVal(bbR(idx).Middle, "F4"),
                                         FormatVal(bbR(idx).Lower, "F4"),
                                         FormatVal(bbR(idx).BandWidth, "F2")))
-                                    idx += 1
-                                Loop
+                                                                     idx += 1
+                                                                 Loop
 
-                                ' ── 4. MACD ─────────────────────────────
-                                AppLogger.Info("Calculando MACD(12,26,9)...")
-                                Dim macdIndicator As New Indicators.MACD(12, 26, 9)
-                                Dim macdR = macdIndicator.CalculateMacd(candles)
-                                sb.AppendLine()
-                                sb.AppendLine("── TREND: MACD(12,26,9) ──")
-                                sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
+                                                                 ' ── 4. MACD ─────────────────────────────
+                                                                 AppLogger.Info("Calculando MACD(12,26,9)...")
+                                                                 Dim macdIndicator As New Indicators.MACD(12, 26, 9)
+                                                                 Dim macdR = macdIndicator.CalculateMacd(candles)
+                                                                 sb.AppendLine()
+                                                                 sb.AppendLine("── TREND: MACD(12,26,9) ──")
+                                                                 sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
                                                            "Hora", "Close", "MACD", "Signal", "Histogram"))
-                                sb.AppendLine(dash70)
-                                idx = showFrom
-                                Do While idx < candles.Count
-                                    Dim hist As String = FormatVal(macdR(idx).Histogram, "F5")
-                                    If macdR(idx).Histogram.HasValue Then
-                                        hist = (If(macdR(idx).Histogram.Value > 0, "+", "")) & hist
-                                    End If
-                                    sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
+                                                                 sb.AppendLine(dash70)
+                                                                 idx = showFrom
+                                                                 Do While idx < candles.Count
+                                                                     Dim hist As String = FormatVal(macdR(idx).Histogram, "F5")
+                                                                     If macdR(idx).Histogram.HasValue Then
+                                                                         hist = (If(macdR(idx).Histogram.Value > 0, "+", "")) & hist
+                                                                     End If
+                                                                     sb.AppendLine(String.Format("{0,-19} {1,-12} {2,-12} {3,-12} {4,-12}",
                                         candles(idx).OpenTime,
                                         candles(idx).ClosePrice.ToString("F4"),
                                         FormatVal(macdR(idx).MacdLine, "F5"),
                                         FormatVal(macdR(idx).SignalLine, "F5"),
                                         hist))
-                                    idx += 1
-                                Loop
+                                                                     idx += 1
+                                                                 Loop
 
-                                sb.AppendLine()
-                                sb.AppendLine(line70)
-                                sb.AppendLine(String.Format("Log completo en: {0}", AppLogger.GetLogPath()))
+                                                                 sb.AppendLine()
+                                                                 sb.AppendLine(line70)
+                                                                 sb.AppendLine(String.Format("Log completo en: {0}", AppLogger.GetLogPath()))
 
-                                txtDescargaLog.Text = sb.ToString()
-                                txtDescargaStatus.Text = String.Format(
+                                                                 txtDescargaLog.Text = sb.ToString()
+                                                                 txtDescargaStatus.Text = String.Format(
                                     "Completo: {0} velas | SMA/EMA/WMA({1}) | RSI(14) | BB(20,2) | MACD(12,26,9)", candles.Count, per)
-                                txtDescargaContador.Text = String.Format("| Último: {0}", candles.Last().OpenTime)
-                                pbDescarga.Value = 100
-                                btnCalcularIndicadores.IsEnabled = True
-                                AppLogger.Info("Calculo de indicadores completado OK")
+                                                                 txtDescargaContador.Text = String.Format("| Último: {0}", candles.Last().OpenTime)
+                                                                 pbDescarga.Value = 100
+                                                                 btnCalcularIndicadores.IsEnabled = True
+                                                                 AppLogger.Info("Calculo de indicadores completado OK")
 
-                            Catch exInner As Exception
-                                AppLogger.Error("Error dentro de Dispatcher.Invoke en calculo de indicadores", exInner)
-                                pbDescarga.IsIndeterminate = False
-                                txtDescargaStatus.Text = "Error al calcular. Ver log: " & AppLogger.GetLogPath()
-                                btnCalcularIndicadores.IsEnabled = True
-                            End Try
-                        End Sub)
+                                                             Catch exInner As Exception
+                                                                 AppLogger.Error("Error dentro de Dispatcher.Invoke en calculo de indicadores", exInner)
+                                                                 pbDescarga.IsIndeterminate = False
+                                                                 txtDescargaStatus.Text = "Error al calcular. Ver log: " & AppLogger.GetLogPath()
+                                                                 btnCalcularIndicadores.IsEnabled = True
+                                                             End Try
+                                                         End Sub)
 
-                    Catch exTask As Exception
-                        AppLogger.Error("Error en Task.Run de calculo de indicadores", exTask)
-                        Dispatcher.Invoke(Sub()
-                            pbDescarga.IsIndeterminate = False
-                            txtDescargaStatus.Text = "Error. Revisa log: " & AppLogger.GetLogPath()
-                            btnCalcularIndicadores.IsEnabled = True
-                        End Sub)
-                    End Try
-                End Function)
+                                   Catch exTask As Exception
+                                       AppLogger.Error("Error en Task.Run de calculo de indicadores", exTask)
+                                       Dispatcher.Invoke(Sub()
+                                                             pbDescarga.IsIndeterminate = False
+                                                             txtDescargaStatus.Text = "Error. Revisa log: " & AppLogger.GetLogPath()
+                                                             btnCalcularIndicadores.IsEnabled = True
+                                                         End Sub)
+                                   End Try
+                               End Function)
 
             Catch exOuter As Exception
                 AppLogger.Error("Error inesperado en btnCalcularIndicadores_Click", exOuter)
@@ -809,8 +809,10 @@ Namespace WpfDerivClientVB
         Private _tradingOperaciones As New System.Collections.ObjectModel.ObservableCollection(Of OperacionModel)()
         Private _tradingClienteActual As ClientModel
         Private _tradingCredsActual As ClientDerivCredentials
-        ' Proposal pendiente: guardamos monto para el buy cuando llegue proposal_id
+        ' Proposal pendiente
         Private _pendingProposalAmount As Double = 0
+        Private _pendingProposalId As String = ""
+        Private _modoAvanzado As Boolean = False
 
         Private Async Sub CargarClientesTrading()
             Try
@@ -864,12 +866,12 @@ Namespace WpfDerivClientVB
                 Dim otpUrl = String.Format("https://api.derivws.com/trading/v1/options/accounts/{0}/otp", accountId)
 
                 Dim responseBody As String = Await Task.Run(Function()
-                    Using wc As New System.Net.WebClient()
-                        wc.Headers.Add("Authorization", "Bearer " & token)
-                        wc.Headers.Add("deriv-app-id", appId)
-                        Return wc.UploadString(otpUrl, "POST", "")
-                    End Using
-                End Function)
+                                                                Using wc As New System.Net.WebClient()
+                                                                    wc.Headers.Add("Authorization", "Bearer " & token)
+                                                                    wc.Headers.Add("deriv-app-id", appId)
+                                                                    Return wc.UploadString(otpUrl, "POST", "")
+                                                                End Using
+                                                            End Function)
 
                 Dim otpObj = JObject.Parse(responseBody)
                 If otpObj("data") IsNot Nothing AndAlso otpObj("data")("url") IsNot Nothing Then
@@ -891,6 +893,7 @@ Namespace WpfDerivClientVB
                 btnDesconectarTrading.IsEnabled = True
                 btnTradingCall.IsEnabled = True
                 btnTradingPut.IsEnabled = True
+                btnCotizar.IsEnabled = True
 
                 ' Cargar historial de operaciones desde BD
                 _tradingOperaciones.Clear()
@@ -939,6 +942,8 @@ Namespace WpfDerivClientVB
             btnDesconectarTrading.IsEnabled = False
             btnTradingCall.IsEnabled = False
             btnTradingPut.IsEnabled = False
+            btnCotizar.IsEnabled = False
+            btnEjecutarAvanzado.IsEnabled = False
         End Sub
 
         Private Async Function SuscribirBalanceTradingAsync() As Task
@@ -960,32 +965,34 @@ Namespace WpfDerivClientVB
             Await EjecutarContratoTradingAsync("PUT")
         End Sub
 
+        ' ---- Helpers para leer controles compartidos ----
+        Private Function GetSymbol() As String
+            Dim item = TryCast(cmbTradingSymbol.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Return If(item?.Tag?.ToString(), "R_100")
+        End Function
+        Private Function GetDurUnit() As String
+            Dim item = TryCast(cmbTradingDurUnit.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Return If(item?.Tag?.ToString(), "t")
+        End Function
+
         Private Async Function EjecutarContratoTradingAsync(tipo As String) As Task
             If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
                 System.Windows.MessageBox.Show("No hay conexión activa.")
                 Return
             End If
-
-            Dim symbolItem = TryCast(cmbTradingSymbol.SelectedItem, System.Windows.Controls.ComboBoxItem)
-            Dim symbol As String = If(symbolItem IsNot Nothing, symbolItem.Content.ToString(), "R_100")
+            Dim symbol = GetSymbol()
             Dim monto As Double
             Dim duracion As Integer
-            Dim durUnitItem = TryCast(cmbTradingDurUnit.SelectedItem, System.Windows.Controls.ComboBoxItem)
-            Dim durUnit As String = If(durUnitItem IsNot Nothing, durUnitItem.Tag?.ToString(), "t")
-
             If Not Double.TryParse(txtTradingMonto.Text.Trim(), monto) OrElse monto <= 0 Then
-                System.Windows.MessageBox.Show("Monto inválido.")
-                Return
+                System.Windows.MessageBox.Show("Monto inválido.") : Return
             End If
             If Not Integer.TryParse(txtTradingDuracion.Text.Trim(), duracion) OrElse duracion <= 0 Then
-                System.Windows.MessageBox.Show("Duración inválida.")
-                Return
+                System.Windows.MessageBox.Show("Duración inválida.") : Return
             End If
-
-            txtTradingOpEstado.Text = String.Format("⏳ Solicitando cotización {0} {1} ${2}...", tipo, symbol, monto)
-
+            txtTradingOpEstado.Text = String.Format("⏳ Cotizando {0} {1} ${2}...", tipo, symbol, monto)
             Try
                 _pendingProposalAmount = monto
+                _modoAvanzado = False
                 Dim req As New JObject()
                 req.Add("proposal", 1)
                 req.Add("amount", monto)
@@ -993,15 +1000,134 @@ Namespace WpfDerivClientVB
                 req.Add("contract_type", tipo)
                 req.Add("currency", "USD")
                 req.Add("duration", duracion)
-                req.Add("duration_unit", durUnit)
+                req.Add("duration_unit", GetDurUnit())
                 req.Add("underlying_symbol", symbol)
-
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
                 Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
             Catch ex As Exception
                 txtTradingOpEstado.Text = "❌ Error: " & ex.Message
             End Try
         End Function
+
+        ' ---- Panel Avanzado ----
+        Private Sub expAvanzado_Expanded(sender As Object, e As System.Windows.RoutedEventArgs)
+            btnTradingCall.IsEnabled = False
+            btnTradingPut.IsEnabled = False
+        End Sub
+        Private Sub expAvanzado_Collapsed(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingWs IsNot Nothing AndAlso _tradingWs.State = WebSocketState.Open Then
+                btnTradingCall.IsEnabled = True
+                btnTradingPut.IsEnabled = True
+            End If
+            txtCotizacion.Text = "— presiona Cotizar primero —"
+            _pendingProposalId = ""
+            btnEjecutarAvanzado.IsEnabled = False
+        End Sub
+
+        Private Sub cmbTradingSymbol_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+            ' Resetear cotización al cambiar símbolo
+            If txtCotizacion IsNot Nothing Then
+                txtCotizacion.Text = "— presiona Cotizar primero —"
+                _pendingProposalId = ""
+                If btnEjecutarAvanzado IsNot Nothing Then btnEjecutarAvanzado.IsEnabled = False
+            End If
+        End Sub
+
+        Private Sub cmbContratoTipo_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+            Dim item = TryCast(cmbContratoTipo.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim tipo = If(item?.Tag?.ToString(), "CALL")
+            ' Resetear cotización
+            If Not txtCotizacion Is Nothing Then
+                txtCotizacion.Text = "— presiona Cotizar primero —"
+                _pendingProposalId = ""
+                btnEjecutarAvanzado.IsEnabled = False
+                ' Mostrar/ocultar barrera según tipo
+                Select Case tipo
+                    Case "ONETOUCH", "NOTOUCH"
+                        pnlBarrera.Visibility = System.Windows.Visibility.Visible
+                        lblBarrera2.Visibility = System.Windows.Visibility.Collapsed
+                        txtBarrera2.Visibility = System.Windows.Visibility.Collapsed
+                        txtBarrera.Text = "+1.5"
+                        lblBarreraHint.Text = "Ej: +1.5 (relativa) o 628.50 (absoluta)"
+                    Case "DIGITOVER", "DIGITUNDER", "DIGITMATCH", "DIGITDIFF"
+                        pnlBarrera.Visibility = System.Windows.Visibility.Visible
+                        lblBarrera2.Visibility = System.Windows.Visibility.Collapsed
+                        txtBarrera2.Visibility = System.Windows.Visibility.Collapsed
+                        txtBarrera.Text = "5"
+                        lblBarreraHint.Text = "Dígito del 0 al 9"
+                    Case Else
+                        pnlBarrera.Visibility = System.Windows.Visibility.Collapsed
+                End Select
+            End If
+        End Sub
+
+        Private Async Sub btnCotizar_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                System.Windows.MessageBox.Show("No hay conexión activa.") : Return
+            End If
+            Dim tipoItem = TryCast(cmbContratoTipo.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim tipo = If(tipoItem?.Tag?.ToString(), "CALL")
+            Dim basisItem = TryCast(cmbTradingBasis.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim basis = If(basisItem?.Tag?.ToString(), "stake")
+            Dim currency = If(TryCast(cmbTradingCurrency.SelectedItem, System.Windows.Controls.ComboBoxItem)?.Content?.ToString(), "USD")
+            Dim symbol = GetSymbol()
+            Dim monto As Double
+            Dim duracion As Integer
+            If Not Double.TryParse(txtTradingMonto.Text.Trim(), monto) OrElse monto <= 0 Then
+                System.Windows.MessageBox.Show("Monto inválido.") : Return
+            End If
+            If Not Integer.TryParse(txtTradingDuracion.Text.Trim(), duracion) OrElse duracion <= 0 Then
+                System.Windows.MessageBox.Show("Duración inválida.") : Return
+            End If
+            txtCotizacion.Text = "⏳ Cotizando..."
+            btnEjecutarAvanzado.IsEnabled = False
+            _pendingProposalId = ""
+            Try
+                _pendingProposalAmount = monto
+                _modoAvanzado = True
+                Dim req As New JObject()
+                req.Add("proposal", 1)
+                req.Add("amount", monto)
+                req.Add("basis", basis)
+                req.Add("contract_type", tipo)
+                req.Add("currency", currency)
+                req.Add("duration", duracion)
+                req.Add("duration_unit", GetDurUnit())
+                req.Add("underlying_symbol", symbol)
+                ' Agregar barrera si aplica
+                If pnlBarrera.Visibility = System.Windows.Visibility.Visible Then
+                    Dim barVal = txtBarrera.Text.Trim()
+                    If Not String.IsNullOrEmpty(barVal) Then req.Add("barrier", barVal)
+                    If txtBarrera2.Visibility = System.Windows.Visibility.Visible Then
+                        Dim bar2Val = txtBarrera2.Text.Trim()
+                        If Not String.IsNullOrEmpty(bar2Val) Then req.Add("barrier2", bar2Val)
+                    End If
+                End If
+                Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+            Catch ex As Exception
+                txtCotizacion.Text = "❌ Error: " & ex.Message
+            End Try
+        End Sub
+
+        Private Async Sub btnEjecutarAvanzado_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If String.IsNullOrEmpty(_pendingProposalId) Then
+                System.Windows.MessageBox.Show("Cotiza primero antes de ejecutar.") : Return
+            End If
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then Return
+            Try
+                btnEjecutarAvanzado.IsEnabled = False
+                Dim buyReq As New JObject()
+                buyReq.Add("buy", _pendingProposalId)
+                buyReq.Add("price", _pendingProposalAmount)
+                Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
+                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                txtTradingOpEstado.Text = "⏳ Ejecutando orden avanzada..."
+                _pendingProposalId = ""
+            Catch ex As Exception
+                txtTradingOpEstado.Text = "❌ Error: " & ex.Message
+            End Try
+        End Sub
 
         Private Async Function EscucharTradingAsync() As Task
             Dim buffer(32767) As Byte
@@ -1056,21 +1182,32 @@ Namespace WpfDerivClientVB
                         End If
 
                     Case "proposal"
-                        ' Nueva API: recibimos cotización → ejecutar buy automáticamente
                         Dim propObj = obj("proposal")
                         If propObj IsNot Nothing Then
                             Dim proposalId = propObj("id")?.ToString()
                             Dim askPrice As Double = If(propObj("ask_price") IsNot Nothing, CDbl(propObj("ask_price")), _pendingProposalAmount)
-                            Dim dispPrice = propObj("display_value")?.ToString()
-                            txtTradingOpEstado.Text = String.Format("💱 Cotización: {0} — Ejecutando...", If(dispPrice, askPrice.ToString()))
-                            txtTradeResult.Text = String.Format("💱 Cotización: {0} — Ejecutando...", If(dispPrice, askPrice.ToString()))
-                            txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
-                            ' Enviar buy con el proposal_id
-                            Dim buyReq As New JObject()
-                            buyReq.Add("buy", proposalId)
-                            buyReq.Add("price", askPrice)
-                            Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
-                            _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                            Dim payout As Double = If(propObj("payout") IsNot Nothing, CDbl(propObj("payout")), 0)
+                            Dim longcode = propObj("longcode")?.ToString()
+
+                            If _modoAvanzado Then
+                                ' Modo avanzado: mostrar cotización y esperar confirmación del usuario
+                                _pendingProposalId = proposalId
+                                _pendingProposalAmount = askPrice
+                                Dim cotMsg = String.Format("💰 Pago: ${0:F2}  →  Ganancia potencial: ${1:F2}", askPrice, payout)
+                                txtCotizacion.Text = cotMsg
+                                txtTradingOpEstado.Text = If(longcode, longcode, cotMsg)
+                                btnEjecutarAvanzado.IsEnabled = True
+                            Else
+                                ' Modo simple: ejecutar buy automáticamente
+                                txtTradingOpEstado.Text = String.Format("💱 Cotización: ${0:F2} — Ejecutando...", askPrice)
+                                txtTradeResult.Text = txtTradingOpEstado.Text
+                                txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
+                                Dim buyReq As New JObject()
+                                buyReq.Add("buy", proposalId)
+                                buyReq.Add("price", askPrice)
+                                Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
+                                _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                            End If
                         End If
 
                     Case "buy"
