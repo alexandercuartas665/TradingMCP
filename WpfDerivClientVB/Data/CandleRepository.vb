@@ -184,6 +184,56 @@ Namespace WpfDerivClientVB
             Return resultado
         End Function
 
+        ''' <summary>
+        ''' Carga todas las velas dentro de un rango de epoch (inclusive) ordenadas oldest first.
+        ''' Usado por el motor de backtesting para cargar el historial completo de una sesion.
+        ''' </summary>
+        Public Async Function GetCandlesRangoAsync(platform As String,
+                                                    symbol As String,
+                                                    timeframe As String,
+                                                    fromEpoch As Long,
+                                                    toEpoch As Long) As Task(Of List(Of CandleModel))
+            Dim resultado As New List(Of CandleModel)()
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql As String =
+                        "SELECT epoch, open_price, high_price, low_price, close_price " &
+                        "FROM public.candles " &
+                        "WHERE platform=@platform AND symbol=@symbol AND timeframe=@timeframe " &
+                        "  AND epoch >= @fromEpoch AND epoch <= @toEpoch " &
+                        "ORDER BY epoch ASC;"
+
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("platform", platform)
+                        cmd.Parameters.AddWithValue("symbol", symbol)
+                        cmd.Parameters.AddWithValue("timeframe", timeframe)
+                        cmd.Parameters.AddWithValue("fromEpoch", fromEpoch)
+                        cmd.Parameters.AddWithValue("toEpoch", toEpoch)
+
+                        Using reader = Await cmd.ExecuteReaderAsync()
+                            Dim epochBase As New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                            Do While Await reader.ReadAsync()
+                                Dim m As New CandleModel()
+                                m.Epoch      = CLng(reader("epoch"))
+                                m.OpenTime   = epochBase.AddSeconds(m.Epoch).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                m.OpenPrice  = CDec(reader("open_price"))
+                                m.High       = CDec(reader("high_price"))
+                                m.Low        = CDec(reader("low_price"))
+                                m.ClosePrice = CDec(reader("close_price"))
+                                m.Status     = "[BD]"
+                                resultado.Add(m)
+                            Loop
+                        End Using
+                    End Using
+                End Using
+                Console.WriteLine(String.Format("[CandleRepository.GetCandlesRangoAsync] {0} velas de {1} {2} {3} ({4}->{5})", resultado.Count, platform, symbol, timeframe, fromEpoch, toEpoch))
+            Catch ex As Exception
+                Console.WriteLine("[CandleRepository.GetCandlesRangoAsync] Error: " & ex.Message)
+            End Try
+            Return resultado
+        End Function
+
         ' ---- Helper para asignar parametros ----
 
         Private Shared Sub AddCandleParams(cmd As NpgsqlCommand,
