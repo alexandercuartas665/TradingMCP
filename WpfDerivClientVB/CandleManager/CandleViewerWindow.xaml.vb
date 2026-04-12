@@ -1,4 +1,5 @@
 Imports System.Windows
+Imports WpfDerivClientVB.WpfDerivClientVB
 
 ' ================================================================
 '  CandleViewerWindow
@@ -73,11 +74,27 @@ Partial Public Class CandleViewerWindow
         Dim modal As New TradingSettingsModal()
         modal.Owner = Me
         If modal.ShowDialog() = True Then
-            Dim clientId = modal.SelectedClientId
-            Dim platform = modal.SelectedPlatform
-            Dim accType = modal.SelectedAccountType
+            Dim client    = modal.SelectedClient
+            Dim platform  = modal.SelectedPlatform
+            Dim accType   = modal.SelectedAccountType
+            Dim symbol    = modal.SelectedAssetSymbol
+            Dim assetName = modal.SelectedAssetName
 
-            _agent.AddSignalLog("SYSTEM", $"Config. Trading: Cliente={clientId}, {platform} ({accType})")
+            ' Actualizar símbolo activo del visor
+            _symbol = symbol
+            Me.Title = "Pro Trading AI — " & assetName
+
+            ' Actualizar header del visor
+            Dim assetType = If(symbol.StartsWith("BOOM") OrElse symbol.StartsWith("CRASH"), "Boom/Crash",
+                            If(symbol.StartsWith("JD"), "Jump Index", "Volatility Index"))
+            _header.SetAsset(assetName, assetType)
+
+            ' Log en el panel del agente
+            Dim clientLabel = If(client IsNot Nothing, client.Name, "?")
+            Dim tipoLabel   = If(accType = "demo", "Demo", "Real")
+            _agent.AddSignalLog("SYSTEM",
+                String.Format("Sesión → Cliente: {0} | {1} | {2} | {3}",
+                              clientLabel, platform.ToUpper(), tipoLabel, symbol))
         End If
     End Sub
 

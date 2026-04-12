@@ -438,7 +438,7 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                             <StackPanel Orientation="Horizontal" Grid.Column="2" VerticalAlignment="Center">
                                 <TextBlock Text="Balance: " Foreground="#A6ADC8"/>
                                 <TextBlock x:Name="txtTradingBalance" Text="--" FontSize="16" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,15,0"/>
-                                <Border x:Name="brdTradingEstado" Background="#313244" CornerRadius="4" Padding="8,3">
+                                <Border x:Name="brdTradingEstado" Background="#313244" CornerRadius="4" Padding="8,3" Margin="0,0,12,0">
                                     <TextBlock x:Name="txtTradingEstado" Text="Desconectado" Foreground="#F38BA8" FontSize="11" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
@@ -710,6 +710,117 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                     </Border>
                 </Grid>
             </TabItem>
+
+            <!-- TAB 5: Servidor API -->
+            <TabItem Header="🖥 Server">
+                <Grid Margin="8" Background="#1E1E2E">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Fila superior: API Server + Análisis de Mercado -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Columna 0: API Server -->
+                        <Border Grid.Column="0" Background="#181825" BorderBrush="#45475A" BorderThickness="1"
+                                CornerRadius="6" Padding="12,10" Margin="0,0,6,0">
+                            <StackPanel>
+                                <TextBlock Text="🌐 API SERVER" Foreground="#89B4FA" FontWeight="Bold"
+                                           FontSize="13" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="Puerto:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="txtApiPort" Text="8765" Width="55"
+                                             VerticalContentAlignment="Center" Margin="0,0,10,0"/>
+                                    <Button x:Name="btnApiServer" Content="▶ Iniciar Servidor"
+                                            Click="btnApiServer_Click"/>
+                                </StackPanel>
+                                <TextBlock x:Name="txtApiUrl" Text="" Foreground="#A6E3A1"
+                                           FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"
+                                           Margin="0,0,0,6"/>
+                                <TextBlock Foreground="#A6ADC8" FontSize="10" TextWrapping="Wrap">
+                                    <Run>curl http://localhost:8765/api/status</Run>
+                                    <LineBreak/>
+                                    <Run>curl -X POST http://localhost:8765/api/trade -H "Content-Type: application/json" -d "{contract_type:CALL,...}"</Run>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Columna 1: Análisis de Mercado -->
+                        <Border Grid.Column="1" Background="#181825" BorderBrush="#45475A" BorderThickness="1"
+                                CornerRadius="6" Padding="12,10" Margin="6,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="📊 ANÁLISIS DE MERCADO" Foreground="#89B4FA" FontWeight="Bold"
+                                           FontSize="13" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="Símbolo:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="cmbAnalisisSymbol" Width="110" Margin="0,0,0,0" SelectedIndex="4">
+                                        <ComboBoxItem Content="R_10"     Tag="R_10"/>
+                                        <ComboBoxItem Content="R_25"     Tag="R_25"/>
+                                        <ComboBoxItem Content="R_50"     Tag="R_50"/>
+                                        <ComboBoxItem Content="R_75"     Tag="R_75"/>
+                                        <ComboBoxItem Content="R_100"    Tag="R_100"/>
+                                        <ComboBoxItem Content="R_100 1s" Tag="1HZ100V"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Período:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="cmbAnalisisPeriodo" Width="90" SelectedIndex="0">
+                                        <ComboBoxItem Content="20 min"  Tag="20"/>
+                                        <ComboBoxItem Content="30 min"  Tag="30"/>
+                                        <ComboBoxItem Content="1 hora"  Tag="60"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <Button x:Name="btnAnalizar" Content="🔍 Analizar Mercado"
+                                        Style="{StaticResource SuccessBtn}" IsEnabled="False"
+                                        Click="btnAnalizar_Click" Margin="0,0,0,4"/>
+                                <Button x:Name="btnAnalizarYOperar" Content="🤖 Analizar y Operar"
+                                        Background="#CBA6F7" Foreground="#1E1E2E" FontWeight="Bold"
+                                        IsEnabled="False" Click="btnAnalizarYOperar_Click"
+                                        Margin="0,4,0,6" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                                <Border x:Name="pnlAnalisisResult" Background="#181825" CornerRadius="4"
+                                        Padding="8" Margin="0,6,0,0" BorderBrush="#45475A" BorderThickness="1">
+                                    <TextBlock x:Name="txtAnalisisResult"
+                                               Text="— Pulsa Analizar para ver recomendación —"
+                                               Foreground="#A6ADC8" TextWrapping="Wrap"
+                                               FontSize="11" FontFamily="Consolas"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Fila inferior: Log de peticiones -->
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PETICIONES API" Foreground="#89B4FA"
+                                       FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Name="btnLimpiarLog" Content="🗑 Limpiar"
+                                    Padding="6,3" FontSize="11" Click="btnLimpiarLog_Click"/>
+                        </Grid>
+                        <TextBox Grid.Row="1" x:Name="txtApiLog" IsReadOnly="True"
+                                 Background="#0D1117" Foreground="#A6E3A1"
+                                 FontFamily="Consolas" FontSize="11"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 AcceptsReturn="True" TextWrapping="NoWrap"
+                                 Text="[Sistema] API Server listo. Pulsa ▶ Iniciar Servidor para comenzar."
+                                 BorderBrush="#45475A" BorderThickness="1"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
         </TabControl>
 
         <!-- Barra de estado -->

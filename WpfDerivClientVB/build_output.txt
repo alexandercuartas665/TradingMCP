@@ -1,22 +1,9 @@
   Determinando los proyectos que se van a restaurar...
-  Todos los proyectos están actualizados para la restauración.
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(211,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(898,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(211,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(898,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
   WpfDerivClientVB -> C:\DesarrolloIA\Traiding\WpfDerivClientVB\bin\Debug\net48\WpfDerivClientVB.exe
 
-Compilación correcta.
-
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(211,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(898,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB_u0jlxu3y_wpftmp.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Data\ClientRepository.vb(4,9): warning BC40056: El espacio de nombres o el tipo especificado en el 'WpfDerivClientVB.Infrastructure' Imports no contienen ningún miembro público o no se encuentran. Asegúrese de que el espacio de nombres o el tipo se hayan definido y de que contengan al menos un miembro público. Asegúrese de que el nombre del elemento importado no use ningún alias. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(211,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
-C:\DesarrolloIA\Traiding\WpfDerivClientVB\Views\MainWindow.xaml.vb(898,17): warning BC42358: Como esta llamada no es 'awaited', la ejecución del método actual continuará antes de que se complete la llamada. Puede aplicar el operador Await al resultado de la llamada. [C:\DesarrolloIA\Traiding\WpfDerivClientVB\WpfDerivClientVB.vbproj]
-    6 Advertencia(s)
+Compilaci├│n correcta.
+    0 Advertencia(s)
     0 Errores
 
-Tiempo transcurrido 00:00:06.51
+Tiempo transcurrido 00:00:07.15
