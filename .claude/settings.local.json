@@ -34,7 +34,10 @@
       "Bash(printf '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1\"}}}\\\\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"calcular_indicador\",\"arguments\":{\"nombre\":\"Bollinger\",\"symbol\":\"R_100\",\"granularity\":60,\"ultimos\":2}}}\\\\n')",
       "Bash(printf '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1\"}}}\\\\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"ejecutar_estrategia\",\"arguments\":{\"nombre\":\"EmaRsi\",\"symbol\":\"R_100\",\"granularity\":60}}}\\\\n{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"ejecutar_estrategia\",\"arguments\":{\"nombre\":\"Seykota\",\"symbol\":\"R_100\",\"granularity\":60,\"periodo\":20}}}\\\\n{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{\"name\":\"calcular_indicador\",\"arguments\":{\"nombre\":\"RSI\",\"symbol\":\"R_100\",\"granularity\":60,\"ultimos\":3}}}\\\\n')",
       "Bash(printf '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1\"}}}\\\\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"ejecutar_estrategia\",\"arguments\":{\"nombre\":\"EmaRsi\",\"symbol\":\"R_100\",\"granularity\":60}}}\\\\n')",
-      "mcp__indicadores-deriv__descargar_historico"
+      "mcp__indicadores-deriv__descargar_historico",
+      "Bash(docker exec *)",
+      "Bash(powershell -ExecutionPolicy Bypass -File reporte_bd.ps1)",
+      "PowerShell(Set-Location \"C:\\\\DesarrolloIA\\\\Traiding\\\\DescargasHistoricas\"; powershell -ExecutionPolicy Bypass -File \"reporte_bd.ps1\" 2>&1)"
     ]
   }
 }

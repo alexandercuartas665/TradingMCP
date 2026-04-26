@@ -40,6 +40,7 @@
   <ItemGroup>
     <Folder Include="CandleManager\" />
     <Folder Include="Funciones\" />
+    <Folder Include="EstrategiasDinamicas\" />
   </ItemGroup>
 
 </Project>

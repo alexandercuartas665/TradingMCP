@@ -1,0 +1,26 @@
+﻿{
+    "EURUSD-1h":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "EURUSD-1d":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "EURUSD-4h":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "EURUSD-5m":  {
+                      "pendientes":  [
+
+                                     ],
+                      "cursor":  "2024-12-23"
+                  }
+}

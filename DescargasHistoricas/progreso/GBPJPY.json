@@ -1,0 +1,26 @@
+﻿{
+    "GBPJPY-4h":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "GBPJPY-5m":  {
+                      "pendientes":  [
+
+                                     ],
+                      "cursor":  "2025-04-08"
+                  },
+    "GBPJPY-1d":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "GBPJPY-1h":  {
+                      "cursor":  "2025-03-19",
+                      "pendientes":  [
+
+                                     ]
+                  }
+}

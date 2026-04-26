@@ -1,92 +1,211 @@
 # ============================================================
-# descargar_masivo.ps1
+# descargar_masivo.ps1  (v2 - alta velocidad)
 #
-# Descarga historico de todos los activos/temporalidades
-# de forma pausada para no saturar la API de Deriv.
+# Mejoras sobre v1:
+#   - Chunks ADAPTATIVOS por timeframe (hasta 400x mas rapidos en 1d/4h)
+#   - Delay en SEGUNDOS por timeframe (no minutos fijos para todos)
+#   - Descarga PARALELA de simbolos (MaxParalelo, default 3)
+#   - Progreso individual por simbolo en carpeta progreso/
+#   - Migracion automatica desde progreso.json v1
 #
-# Estrategia:
-#   - Chunks de ChunkDias dias por peticion
-#   - Pausa de DelayMinutos entre cada chunk
-#   - Guarda progreso en progreso.json (puede parar y reanudar)
+# LIMITE DEL API DERIV (verificado empiricamente):
+#   El API solo tiene ~380 dias de historia disponible.
+#   No importa que fecha se pida, siempre devuelve desde hoy hacia atras.
+#   Por eso Desde se limita automaticamente a 380 dias atras.
+#   Para datos mas antiguos usar: .\importar_historico.ps1 (Stooq/Yahoo)
+#
+# Limites velas por conexion WebSocket:
+#   1d  -> 2000 dias/chunk = ~2000 velas  OK
+#   4h  -> 1000 dias/chunk = ~6000 velas  OK
+#   1h  -> 400  dias/chunk = ~9600 velas  OK
+#   5m  -> 55   dias/chunk = ~15840 velas OK
 #
 # Uso:
 #   .\descargar_masivo.ps1
-#   .\descargar_masivo.ps1 -DelayMinutos 15 -ChunkDias 4
-#   .\descargar_masivo.ps1 -SoloActivo "frxEURUSD" -SoloTF "1h"
-#   .\descargar_masivo.ps1 -Resetear   (borra progreso y empieza de cero)
+#   .\descargar_masivo.ps1 -MaxParalelo 5
+#   .\descargar_masivo.ps1 -SoloActivo "frxEURUSD" -SoloTF "5m"
+#   .\descargar_masivo.ps1 -Resetear
+#   .\descargar_masivo.ps1 -VerPendientes
 # ============================================================
 param(
-    [int]$DelayMinutos  = 1,
-    [int]$ChunkDias     = 5,
-    [string]$Desde      = "2019-04-11",
-    [string]$Hasta      = (Get-Date -Format "yyyy-MM-dd"),
-    [string]$Server     = "http://localhost:8765",
-    [string]$SoloActivo = "",
-    [string]$SoloTF     = "",
-    [switch]$Resetear
+    [int]$MaxParalelo    = 3,
+    [int]$MaxReintentos  = 3,
+    [string]$Desde       = "",          # default: calculado automaticamente segun limite API
+    [string]$Hasta       = (Get-Date -Format "yyyy-MM-dd"),
+    [string]$Server      = "http://localhost:8765",
+    [string]$SoloActivo  = "",
+    [string]$SoloTF      = "",
+    [switch]$Resetear,
+    [switch]$VerPendientes
 )
 
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $ErrorActionPreference = "Continue"
-$ProgressFile = "$PSScriptRoot\progreso.json"
+
+# ============================================================
+# LIMITE REAL DEL API DE DERIV (verificado: ~380 dias max)
+# Pendientes mas antiguos que esto se descartan automaticamente.
+# ============================================================
+$DERIV_API_LIMITE_DIAS = 380
+$DERIV_API_INICIO = (Get-Date).AddDays(-$DERIV_API_LIMITE_DIAS)
+
+# Si no se especifico Desde, usar el limite real del API
+if ($Desde -eq "") {
+    $Desde = $DERIV_API_INICIO.ToString("yyyy-MM-dd")
+}
+
+$ScriptDir    = $PSScriptRoot
+$ProgresoDir  = "$ScriptDir\progreso"
+$ProgresoV1   = "$ScriptDir\progreso.json"
+
+# Chunks adaptativos por TF (dias por peticion)
+$CHUNK_POR_TF  = @{ "1d" = 2000; "4h" = 1000; "1h" = 400; "5m" = 55 }
+# Delay en segundos entre chunks
+$DELAY_POR_TF  = @{ "1d" = 3;    "4h" = 5;    "1h" = 10;  "5m" = 30 }
 
 # ============================================================
 # CATALOGO DE COMBINACIONES
-# [?] = verificar simbolo exacto en Deriv antes de ejecutar
 # ============================================================
 $COMBINACIONES = @(
-    # Forex
-    @{ Id="EURUSD-1d"; Symbol="frxEURUSD"; TF="1d"; Nombre="EURUSD" }
-    @{ Id="EURUSD-4h"; Symbol="frxEURUSD"; TF="4h"; Nombre="EURUSD" }
-    @{ Id="EURUSD-1h"; Symbol="frxEURUSD"; TF="1h"; Nombre="EURUSD" }
-    @{ Id="EURUSD-5m"; Symbol="frxEURUSD"; TF="5m"; Nombre="EURUSD" }
-    @{ Id="GBPUSD-1d"; Symbol="frxGBPUSD"; TF="1d"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-4h"; Symbol="frxGBPUSD"; TF="4h"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-1h"; Symbol="frxGBPUSD"; TF="1h"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-5m"; Symbol="frxGBPUSD"; TF="5m"; Nombre="GBPUSD" }
-    @{ Id="USDCHF-1d"; Symbol="frxUSDCHF"; TF="1d"; Nombre="USDCHF" }
-    @{ Id="USDCHF-4h"; Symbol="frxUSDCHF"; TF="4h"; Nombre="USDCHF" }
-    @{ Id="USDCHF-1h"; Symbol="frxUSDCHF"; TF="1h"; Nombre="USDCHF" }
-    @{ Id="USDCHF-5m"; Symbol="frxUSDCHF"; TF="5m"; Nombre="USDCHF" }
-    @{ Id="USDJPY-1d"; Symbol="frxUSDJPY"; TF="1d"; Nombre="USDJPY" }
-    @{ Id="USDJPY-4h"; Symbol="frxUSDJPY"; TF="4h"; Nombre="USDJPY" }
-    @{ Id="USDJPY-1h"; Symbol="frxUSDJPY"; TF="1h"; Nombre="USDJPY" }
-    @{ Id="USDJPY-5m"; Symbol="frxUSDJPY"; TF="5m"; Nombre="USDJPY" }
-    @{ Id="GBPJPY-1d"; Symbol="frxGBPJPY"; TF="1d"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-4h"; Symbol="frxGBPJPY"; TF="4h"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-1h"; Symbol="frxGBPJPY"; TF="1h"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-5m"; Symbol="frxGBPJPY"; TF="5m"; Nombre="GBPJPY" }
-    # Metales
-    @{ Id="XAUUSD-1d"; Symbol="frxXAUUSD"; TF="1d"; Nombre="XAUUSD (Oro)" }
-    @{ Id="XAUUSD-4h"; Symbol="frxXAUUSD"; TF="4h"; Nombre="XAUUSD (Oro)" }
-    @{ Id="XAUUSD-1h"; Symbol="frxXAUUSD"; TF="1h"; Nombre="XAUUSD (Oro)" }
-    @{ Id="XAUUSD-5m"; Symbol="frxXAUUSD"; TF="5m"; Nombre="XAUUSD (Oro)" }
-    @{ Id="XAGUSD-1d"; Symbol="frxXAGUSD"; TF="1d"; Nombre="XAGUSD (Plata)" }
-    @{ Id="XAGUSD-4h"; Symbol="frxXAGUSD"; TF="4h"; Nombre="XAGUSD (Plata)" }
-    @{ Id="XAGUSD-1h"; Symbol="frxXAGUSD"; TF="1h"; Nombre="XAGUSD (Plata)" }
-    @{ Id="XAGUSD-5m"; Symbol="frxXAGUSD"; TF="5m"; Nombre="XAGUSD (Plata)" }
-    # Commodities [?] verificar simbolo
-    @{ Id="OIL-1d";    Symbol="frxUSOIL";  TF="1d"; Nombre="OIL_US [?]" }
-    @{ Id="OIL-4h";    Symbol="frxUSOIL";  TF="4h"; Nombre="OIL_US [?]" }
-    @{ Id="OIL-1h";    Symbol="frxUSOIL";  TF="1h"; Nombre="OIL_US [?]" }
-    @{ Id="OIL-5m";    Symbol="frxUSOIL";  TF="5m"; Nombre="OIL_US [?]" }
-    # Indices [?] verificar simbolo
-    @{ Id="NAS100-1d"; Symbol="OTC_NDX";   TF="1d"; Nombre="NAS100 [?]" }
-    @{ Id="NAS100-4h"; Symbol="OTC_NDX";   TF="4h"; Nombre="NAS100 [?]" }
-    @{ Id="NAS100-1h"; Symbol="OTC_NDX";   TF="1h"; Nombre="NAS100 [?]" }
-    @{ Id="NAS100-5m"; Symbol="OTC_NDX";   TF="5m"; Nombre="NAS100 [?]" }
-    @{ Id="SP500-1d";  Symbol="OTC_SPC";   TF="1d"; Nombre="SP500 [?]" }
-    @{ Id="SP500-4h";  Symbol="OTC_SPC";   TF="4h"; Nombre="SP500 [?]" }
-    @{ Id="SP500-1h";  Symbol="OTC_SPC";   TF="1h"; Nombre="SP500 [?]" }
-    @{ Id="SP500-5m";  Symbol="OTC_SPC";   TF="5m"; Nombre="SP500 [?]" }
+    @{ Id="EURUSD-1d";  Symbol="frxEURUSD"; TF="1d"; Nombre="EURUSD" }
+    @{ Id="EURUSD-4h";  Symbol="frxEURUSD"; TF="4h"; Nombre="EURUSD" }
+    @{ Id="EURUSD-1h";  Symbol="frxEURUSD"; TF="1h"; Nombre="EURUSD" }
+    @{ Id="EURUSD-5m";  Symbol="frxEURUSD"; TF="5m"; Nombre="EURUSD" }
+    @{ Id="GBPUSD-1d";  Symbol="frxGBPUSD"; TF="1d"; Nombre="GBPUSD" }
+    @{ Id="GBPUSD-4h";  Symbol="frxGBPUSD"; TF="4h"; Nombre="GBPUSD" }
+    @{ Id="GBPUSD-1h";  Symbol="frxGBPUSD"; TF="1h"; Nombre="GBPUSD" }
+    @{ Id="GBPUSD-5m";  Symbol="frxGBPUSD"; TF="5m"; Nombre="GBPUSD" }
+    @{ Id="USDCHF-1d";  Symbol="frxUSDCHF"; TF="1d"; Nombre="USDCHF" }
+    @{ Id="USDCHF-4h";  Symbol="frxUSDCHF"; TF="4h"; Nombre="USDCHF" }
+    @{ Id="USDCHF-1h";  Symbol="frxUSDCHF"; TF="1h"; Nombre="USDCHF" }
+    @{ Id="USDCHF-5m";  Symbol="frxUSDCHF"; TF="5m"; Nombre="USDCHF" }
+    @{ Id="USDJPY-1d";  Symbol="frxUSDJPY"; TF="1d"; Nombre="USDJPY" }
+    @{ Id="USDJPY-4h";  Symbol="frxUSDJPY"; TF="4h"; Nombre="USDJPY" }
+    @{ Id="USDJPY-1h";  Symbol="frxUSDJPY"; TF="1h"; Nombre="USDJPY" }
+    @{ Id="USDJPY-5m";  Symbol="frxUSDJPY"; TF="5m"; Nombre="USDJPY" }
+    @{ Id="GBPJPY-1d";  Symbol="frxGBPJPY"; TF="1d"; Nombre="GBPJPY" }
+    @{ Id="GBPJPY-4h";  Symbol="frxGBPJPY"; TF="4h"; Nombre="GBPJPY" }
+    @{ Id="GBPJPY-1h";  Symbol="frxGBPJPY"; TF="1h"; Nombre="GBPJPY" }
+    @{ Id="GBPJPY-5m";  Symbol="frxGBPJPY"; TF="5m"; Nombre="GBPJPY" }
+    @{ Id="XAUUSD-1d";  Symbol="frxXAUUSD"; TF="1d"; Nombre="XAUUSD" }
+    @{ Id="XAUUSD-4h";  Symbol="frxXAUUSD"; TF="4h"; Nombre="XAUUSD" }
+    @{ Id="XAUUSD-1h";  Symbol="frxXAUUSD"; TF="1h"; Nombre="XAUUSD" }
+    @{ Id="XAUUSD-5m";  Symbol="frxXAUUSD"; TF="5m"; Nombre="XAUUSD" }
+    @{ Id="XAGUSD-1d";  Symbol="frxXAGUSD"; TF="1d"; Nombre="XAGUSD" }
+    @{ Id="XAGUSD-4h";  Symbol="frxXAGUSD"; TF="4h"; Nombre="XAGUSD" }
+    @{ Id="XAGUSD-1h";  Symbol="frxXAGUSD"; TF="1h"; Nombre="XAGUSD" }
+    @{ Id="XAGUSD-5m";  Symbol="frxXAGUSD"; TF="5m"; Nombre="XAGUSD" }
+    @{ Id="OIL-1d";     Symbol="frxUSOIL";  TF="1d"; Nombre="OIL_US" }
+    @{ Id="OIL-4h";     Symbol="frxUSOIL";  TF="4h"; Nombre="OIL_US" }
+    @{ Id="OIL-1h";     Symbol="frxUSOIL";  TF="1h"; Nombre="OIL_US" }
+    @{ Id="OIL-5m";     Symbol="frxUSOIL";  TF="5m"; Nombre="OIL_US" }
+    @{ Id="NAS100-1d";  Symbol="OTC_NDX";   TF="1d"; Nombre="NAS100" }
+    @{ Id="NAS100-4h";  Symbol="OTC_NDX";   TF="4h"; Nombre="NAS100" }
+    @{ Id="NAS100-1h";  Symbol="OTC_NDX";   TF="1h"; Nombre="NAS100" }
+    @{ Id="NAS100-5m";  Symbol="OTC_NDX";   TF="5m"; Nombre="NAS100" }
+    @{ Id="SP500-1d";   Symbol="OTC_SPC";   TF="1d"; Nombre="SP500"  }
+    @{ Id="SP500-4h";   Symbol="OTC_SPC";   TF="4h"; Nombre="SP500"  }
+    @{ Id="SP500-1h";   Symbol="OTC_SPC";   TF="1h"; Nombre="SP500"  }
+    @{ Id="SP500-5m";   Symbol="OTC_SPC";   TF="5m"; Nombre="SP500"  }
 )
 
 # ============================================================
-# FUNCIONES
+# HELPERS DE PROGRESO (archivos por simbolo)
+# El nombre del archivo se basa en el Nombre del activo: EURUSD.json
 # ============================================================
 
+function Get-ProgresoFile($nombre) {
+    return "$ProgresoDir\$nombre.json"
+}
+
+function Load-ProgresoSimbolo($nombre) {
+    $file = Get-ProgresoFile $nombre
+    if (-not (Test-Path $file)) { return @{} }
+    try {
+        $raw = Get-Content $file -Raw | ConvertFrom-Json
+        $result = @{}
+        $limitStr = $DERIV_API_INICIO.ToString("yyyy-MM-dd")
+
+        foreach ($prop in $raw.PSObject.Properties) {
+            $v = $prop.Value
+            if ($v -is [string]) {
+                $result[$prop.Name] = @{ cursor = $v; pendientes = @() }
+            } else {
+                # Auto-descartar pendientes mas viejos que el limite del API
+                $pendFiltrados = @($v.pendientes | Where-Object {
+                    $_.hasta -gt $limitStr
+                })
+                $descartados = $v.pendientes.Count - $pendFiltrados.Count
+                if ($descartados -gt 0) {
+                    Write-Host "  [AUTO-DESCARTADO] $descartados rangos de $($prop.Name) fuera del limite del API ($limitStr)" -ForegroundColor DarkGray
+                }
+
+                $result[$prop.Name] = @{
+                    cursor     = $v.cursor
+                    pendientes = @($pendFiltrados | ForEach-Object {
+                        @{ desde = $_.desde; hasta = $_.hasta; intentos = if ($_.intentos) { [int]$_.intentos } else { 1 } }
+                    })
+                }
+            }
+        }
+        return $result
+    } catch { return @{} }
+}
+
+function Save-ProgresoSimbolo($nombre, $prog) {
+    if (-not (Test-Path $ProgresoDir)) { New-Item -ItemType Directory -Path $ProgresoDir | Out-Null }
+    $prog | ConvertTo-Json -Depth 5 | Set-Content (Get-ProgresoFile $nombre) -Encoding UTF8
+}
+
+# ============================================================
+# MIGRACION desde progreso.json v1 (si existe)
+# ============================================================
+function Migrate-V1 {
+    if (-not (Test-Path $ProgresoV1)) { return }
+    try {
+        $raw = Get-Content $ProgresoV1 -Raw | ConvertFrom-Json
+        if (-not (Test-Path $ProgresoDir)) { New-Item -ItemType Directory -Path $ProgresoDir | Out-Null }
+
+        # Agrupar claves por nombre de activo (EURUSD-1h -> EURUSD)
+        $grupos = @{}
+        foreach ($prop in $raw.PSObject.Properties) {
+            $partes  = $prop.Name -split "-"
+            $activo  = $partes[0]
+            if (-not $grupos.ContainsKey($activo)) { $grupos[$activo] = @{} }
+            $v = $prop.Value
+            if ($v -is [string]) {
+                $grupos[$activo][$prop.Name] = @{ cursor = $v; pendientes = @() }
+            } else {
+                $grupos[$activo][$prop.Name] = @{
+                    cursor     = $v.cursor
+                    pendientes = @($v.pendientes | ForEach-Object {
+                        @{ desde = $_.desde; hasta = $_.hasta; intentos = if ($_.intentos) { [int]$_.intentos } else { 1 } }
+                    })
+                }
+            }
+        }
+
+        foreach ($activo in $grupos.Keys) {
+            $file = Get-ProgresoFile $activo
+            if (-not (Test-Path $file)) {
+                $grupos[$activo] | ConvertTo-Json -Depth 5 | Set-Content $file -Encoding UTF8
+                Write-Host "  Migrado: $activo.json" -ForegroundColor DarkGray
+            }
+        }
+
+        # Renombrar el v1 para no migrar dos veces
+        Rename-Item $ProgresoV1 "$ProgresoV1.migrado" -Force
+        Write-Host "  progreso.json migrado a carpeta progreso/ (el original queda como .migrado)" -ForegroundColor Yellow
+    } catch {
+        Write-Host "  [WARN] No se pudo migrar progreso.json: $_" -ForegroundColor Yellow
+    }
+}
+
+# ============================================================
+# API HELPERS
+# ============================================================
 function Invoke-Api($path) {
-    try { return Invoke-RestMethod -Uri "$Server$path" -Method GET -TimeoutSec 60 }
+    try { return Invoke-RestMethod -Uri "$Server$path" -Method GET -TimeoutSec 90 }
     catch { return $null }
 }
 
@@ -101,157 +220,492 @@ function Wait-Chunk([int]$MaxSeg = 300) {
     return $null
 }
 
-function Load-Progreso {
-    if (Test-Path $ProgressFile) {
-        try { return Get-Content $ProgressFile -Raw | ConvertFrom-Json }
-        catch { return @{} }
+function Descargar-Chunk($symbol, $tf, $desdeStr, $hastaStr) {
+    $url  = "/api/historico/descargar?symbol=$symbol&timeframe=$([uri]::EscapeDataString($tf))&desde=$desdeStr&hasta=$hastaStr"
+    $resp = Invoke-Api $url
+    if ($resp -eq $null -or -not $resp.ok) { return $null }
+    return Wait-Chunk
+}
+
+function Format-Eta([int]$chunks, [int]$delaySeg) {
+    $seg = $chunks * $delaySeg
+    if ($seg -lt 60)   { return "$seg seg" }
+    if ($seg -lt 3600) { return "$([int]($seg/60))m $($seg%60)s" }
+    return "$([int]($seg/3600))h $([int](($seg%3600)/60))m"
+}
+
+# ============================================================
+# WORKER: descarga todas las TFs de un simbolo
+# Devuelve un hashtable de resultados
+# ============================================================
+function Invoke-DescargarSimbolo {
+    param(
+        $Combos,          # Array de combos de este simbolo
+        $Nombre,          # "EURUSD"
+        $DesdeStr,        # "2019-04-11"
+        $HastaStr,        # "2026-04-23"
+        $MaxReintentos,
+        $Server,
+        $ChunkPorTF,
+        $DelayPorTF,
+        $ProgresoDir,
+        $LogPrefix        # para identificar en salida paralela
+    )
+
+    $prog        = Load-ProgresoSimbolo $Nombre
+    $fechaLimite = [datetime]::ParseExact($DesdeStr, "yyyy-MM-dd", $null)
+    $velasTotal  = 0
+    $errores     = 0
+
+    foreach ($combo in $Combos) {
+        $id        = $combo.Id
+        $tf        = $combo.TF
+        $chunkDias = $ChunkPorTF[$tf]
+        $delaySeg  = $DelayPorTF[$tf]
+
+        # Estado inicial
+        if ($prog.ContainsKey($id)) {
+            $est = $prog[$id]
+        } else {
+            $est = @{ cursor = $HastaStr; pendientes = @() }
+        }
+
+        $cursor     = [datetime]::ParseExact($est.cursor, "yyyy-MM-dd", $null)
+        $pendientes = [System.Collections.ArrayList]@($est.pendientes | ForEach-Object {
+            @{ desde = $_.desde; hasta = $_.hasta; intentos = if ($_.intentos) { [int]$_.intentos } else { 1 } }
+        })
+
+        $yaCompleto = ($cursor -le $fechaLimite) -and ($pendientes.Count -eq 0)
+        if ($yaCompleto) {
+            Write-Host "$LogPrefix [$id] ya completo - saltando" -ForegroundColor DarkGray
+            continue
+        }
+
+        $diasRest    = [Math]::Max(0, ($cursor - $fechaLimite).TotalDays)
+        $chunksNew   = [int][Math]::Ceiling($diasRest / $chunkDias)
+        $chunksTotal = $chunksNew + $pendientes.Count
+
+        Write-Host "$LogPrefix --- $id  chunk=$chunkDias dias  delay=$delaySeg s  ETA=$(Format-Eta $chunksTotal $delaySeg) ---" -ForegroundColor Cyan
+
+        # -- 1. REINTENTAR PENDIENTES --
+        $pendientesAun = [System.Collections.ArrayList]@()
+        foreach ($p in $pendientes) {
+            $intentos = if ($p.intentos) { [int]$p.intentos } else { 1 }
+
+            if ($intentos -gt $MaxReintentos) {
+                Write-Host "$LogPrefix   [DESCARTADO] $($p.desde)->$($p.hasta) (fallo $intentos veces)" -ForegroundColor DarkGray
+                continue
+            }
+
+            $hora = Get-Date -Format "HH:mm:ss"
+            Write-Host "$LogPrefix [$hora] RETRY $intentos/$MaxReintentos  $id  $($p.desde)->$($p.hasta) ..." -NoNewline -ForegroundColor Yellow
+            $estado = Descargar-Chunk $combo.Symbol $tf $p.desde $p.hasta
+
+            if ($estado -ne $null -and -not $estado.tuvo_error) {
+                $velasTotal += $estado.velas_guardadas
+                Write-Host " OK ($($estado.velas_guardadas) velas)" -ForegroundColor Green
+            } else {
+                $msg = if ($estado) { $estado.mensaje } else { "Timeout" }
+                Write-Host " FALLO ($msg)" -ForegroundColor Red
+                $pendientesAun.Add(@{ desde = $p.desde; hasta = $p.hasta; intentos = $intentos + 1 }) | Out-Null
+                $errores++
+            }
+            Start-Sleep -Seconds $delaySeg
+        }
+
+        $est.pendientes = @($pendientesAun)
+        $prog[$id] = $est
+        Save-ProgresoSimbolo $Nombre $prog
+
+        # -- 2. NUEVOS CHUNKS --
+        while ($cursor -gt $fechaLimite) {
+            $chunkDesde = $cursor.AddDays(-$chunkDias)
+            if ($chunkDesde -lt $fechaLimite) { $chunkDesde = $fechaLimite }
+
+            $desdeStr2 = $chunkDesde.ToString("yyyy-MM-dd")
+            $hastaStr2 = $cursor.ToString("yyyy-MM-dd")
+
+            $hora = Get-Date -Format "HH:mm:ss"
+            Write-Host "$LogPrefix [$hora] $id  $desdeStr2 -> $hastaStr2 ..." -NoNewline
+
+            $estado = Descargar-Chunk $combo.Symbol $tf $desdeStr2 $hastaStr2
+
+            if ($estado -ne $null -and -not $estado.tuvo_error) {
+                $velasTotal += $estado.velas_guardadas
+                Write-Host " OK ($($estado.velas_guardadas) velas)" -ForegroundColor Green
+            } else {
+                $msg = if ($estado) { $estado.mensaje } else { "Timeout" }
+                Write-Host " FALLO: $msg" -ForegroundColor Red
+                $est.pendientes += @{ desde = $desdeStr2; hasta = $hastaStr2; intentos = 1 }
+                $errores++
+            }
+
+            $cursor     = $chunkDesde
+            $est.cursor = $cursor.ToString("yyyy-MM-dd")
+            $prog[$id]  = $est
+            Save-ProgresoSimbolo $Nombre $prog
+
+            if ($cursor -gt $fechaLimite) {
+                Start-Sleep -Seconds $delaySeg
+            }
+        }
+
+        $pendFinal = $est.pendientes.Count
+        if ($pendFinal -eq 0) {
+            Write-Host "$LogPrefix [COMPLETO] $id" -ForegroundColor Green
+        } else {
+            Write-Host "$LogPrefix [COMPLETO con $pendFinal pendientes] $id" -ForegroundColor Yellow
+        }
     }
-    return @{}
-}
 
-function Save-Progreso($prog) {
-    $prog | ConvertTo-Json | Set-Content $ProgressFile -Encoding UTF8
-}
-
-function Format-Eta($chunksRestantes, $delayMin) {
-    $minutos = $chunksRestantes * $delayMin
-    if ($minutos -lt 60)   { return "$minutos min" }
-    if ($minutos -lt 1440) { return "$([int]($minutos/60)) h $($minutos % 60) min" }
-    return "$([int]($minutos/1440)) dias $([int](($minutos % 1440)/60)) h"
+    return @{ Velas = $velasTotal; Errores = $errores }
 }
 
 # ============================================================
 # INICIO
 # ============================================================
-
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  DESCARGA MASIVA HISTORICA" -ForegroundColor Cyan
-Write-Host "  Chunks: $ChunkDias dias | Pausa: $DelayMinutos min entre chunks" -ForegroundColor Cyan
-Write-Host "  Periodo: $Desde --> $Hasta" -ForegroundColor Cyan
+Write-Host "  DESCARGA MASIVA HISTORICA v2" -ForegroundColor Cyan
+Write-Host "  Paralelo: $MaxParalelo simbolos | Periodo: $Desde -> $Hasta" -ForegroundColor Cyan
+Write-Host "  Chunks adaptativos: 1d=$($CHUNK_POR_TF['1d'])d  4h=$($CHUNK_POR_TF['4h'])d  1h=$($CHUNK_POR_TF['1h'])d  5m=$($CHUNK_POR_TF['5m'])d" -ForegroundColor Cyan
+Write-Host "  Delays:             1d=$($DELAY_POR_TF['1d'])s   4h=$($DELAY_POR_TF['4h'])s   1h=$($DELAY_POR_TF['1h'])s  5m=$($DELAY_POR_TF['5m'])s" -ForegroundColor Cyan
+Write-Host "  Limite API Deriv  : $DERIV_API_LIMITE_DIAS dias atras ($($DERIV_API_INICIO.ToString('yyyy-MM-dd')))" -ForegroundColor DarkYellow
+Write-Host "  Para datos anteriores usar: .\importar_historico.ps1" -ForegroundColor DarkYellow
 Write-Host "============================================================" -ForegroundColor Cyan
 
-# -- Verificar servidor --
+# Migrar progreso v1 si existe
+Migrate-V1
+
+# Asegurar carpeta de progreso
+if (-not (Test-Path $ProgresoDir)) { New-Item -ItemType Directory -Path $ProgresoDir | Out-Null }
+
+# Resetear
+if ($Resetear) {
+    if (Test-Path $ProgresoDir) {
+        Remove-Item "$ProgresoDir\*.json" -Force -ErrorAction SilentlyContinue
+        Write-Host "  Progreso reiniciado." -ForegroundColor Yellow
+    }
+}
+
+# Filtrar combinaciones
+$combos = $COMBINACIONES
+if ($SoloActivo -ne "") { $combos = $combos | Where-Object { $_.Symbol -eq $SoloActivo -or $_.Nombre -eq $SoloActivo } }
+if ($SoloTF     -ne "") { $combos = $combos | Where-Object { $_.TF -eq $SoloTF } }
+
+# Agrupar por simbolo (Nombre)
+$gruposSimbolo = @{}
+foreach ($c in $combos) {
+    if (-not $gruposSimbolo.ContainsKey($c.Nombre)) { $gruposSimbolo[$c.Nombre] = @() }
+    $gruposSimbolo[$c.Nombre] += $c
+}
+$simbolos = @($gruposSimbolo.Keys | Sort-Object)
+
+Write-Host "  Simbolos: $($simbolos.Count)  |  Combinaciones: $($combos.Count)" -ForegroundColor Cyan
+
+# Ver pendientes
+if ($VerPendientes) {
+    Write-Host ""
+    $hayPend = $false
+    foreach ($sym in $simbolos) {
+        $prog = Load-ProgresoSimbolo $sym
+        foreach ($c in $gruposSimbolo[$sym]) {
+            if ($prog.ContainsKey($c.Id) -and $prog[$c.Id].pendientes.Count -gt 0) {
+                if (-not $hayPend) {
+                    Write-Host "  RANGOS PENDIENTES:" -ForegroundColor Yellow
+                    $hayPend = $true
+                }
+                Write-Host "  [$($c.Id)]" -ForegroundColor Yellow
+                foreach ($p in $prog[$c.Id].pendientes) {
+                    Write-Host "    $($p.desde) -> $($p.hasta)  (intento $($p.intentos))" -ForegroundColor DarkYellow
+                }
+            }
+        }
+    }
+    if (-not $hayPend) { Write-Host "  Sin rangos pendientes." -ForegroundColor Green }
+    exit 0
+}
+
+# Verificar servidor
 $ping = Invoke-Api "/api/indicadores"
 if ($ping -eq $null) {
     Write-Host ""
-    Write-Host "[ERROR] No se puede conectar al servidor $Server" -ForegroundColor Red
-    Write-Host "        Abre la aplicacion WpfDerivClientVB primero." -ForegroundColor Yellow
+    Write-Host "  [ERROR] No se puede conectar a $Server" -ForegroundColor Red
+    Write-Host "          Abre la aplicacion WpfDerivClientVB primero." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "  Servidor: OK" -ForegroundColor Green
+Write-Host "  Servidor API: OK" -ForegroundColor Green
+Write-Host ""
 
-# -- Resetear progreso si se pide --
-if ($Resetear -and (Test-Path $ProgressFile)) {
-    Remove-Item $ProgressFile -Force
-    Write-Host "  Progreso reiniciado." -ForegroundColor Yellow
+# Mostrar ETA estimada
+$totalDias = ([datetime]::ParseExact($Hasta, "yyyy-MM-dd", $null) - [datetime]::ParseExact($Desde, "yyyy-MM-dd", $null)).TotalDays
+Write-Host "  ETA estimada (descarga limpia, chunks nuevos):" -ForegroundColor DarkCyan
+foreach ($tf in @("1d","4h","1h","5m")) {
+    $nCombos = ($combos | Where-Object { $_.TF -eq $tf }).Count
+    if ($nCombos -eq 0) { continue }
+    $chunks  = [int][Math]::Ceiling($totalDias / $CHUNK_POR_TF[$tf])
+    $seqSeg  = $chunks * $DELAY_POR_TF[$tf] * $nCombos
+    $parSeg  = $chunks * $DELAY_POR_TF[$tf] * [Math]::Ceiling($nCombos / $MaxParalelo)
+    Write-Host ("    {0,-4}: {1,3} combos x {2,4} chunks x {3,2}s = {4,6} seq  |  {5} paralelo" -f `
+        $tf, $nCombos, $chunks, $DELAY_POR_TF[$tf],
+        (Format-Eta ($chunks * $nCombos) $DELAY_POR_TF[$tf]),
+        (Format-Eta ([int]($chunks * [Math]::Ceiling($nCombos/$MaxParalelo))) $DELAY_POR_TF[$tf])
+    ) -ForegroundColor DarkCyan
 }
-
-# -- Filtrar combinaciones --
-$combos = $COMBINACIONES
-if ($SoloActivo -ne "") { $combos = $combos | Where-Object { $_.Symbol -eq $SoloActivo } }
-if ($SoloTF     -ne "") { $combos = $combos | Where-Object { $_.TF     -eq $SoloTF } }
-
-Write-Host "  Combinaciones activas: $($combos.Count)" -ForegroundColor Cyan
-Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ============================================================
-# BUCLE PRINCIPAL
+# EJECUCION PARALELA POR SIMBOLO
+# Orden: primero los TF grandes (1d,4h,1h), luego 5m
+# Dentro de cada simbolo el orden es 1d->4h->1h->5m
 # ============================================================
 
-$fechaLimite = [datetime]::ParseExact($Desde, "yyyy-MM-dd", $null)
-$progreso    = Load-Progreso
+# Ordenar TFs dentro de cada simbolo: 1d primero
+$tfOrden = @{ "1d"=0; "4h"=1; "1h"=2; "5m"=3 }
+foreach ($sym in $simbolos) {
+    $gruposSimbolo[$sym] = @($gruposSimbolo[$sym] | Sort-Object { $tfOrden[$_.TF] })
+}
 
-$totalChunksOk  = 0
-$totalVelas     = 0
-$totalErrores   = 0
+$totalVelas   = 0
+$totalErrores = 0
 
-foreach ($combo in $combos) {
-    $id = $combo.Id
-
-    # -- Determinar cursor (punto de continuacion) --
-    $cursorStr = if ($progreso.PSObject.Properties[$id]) { $progreso.$id } else { $Hasta }
-    $cursor    = [datetime]::ParseExact($cursorStr, "yyyy-MM-dd", $null)
-
-    if ($cursor -le $fechaLimite) {
-        Write-Host "[$id] Ya completo - saltando." -ForegroundColor DarkGray
-        continue
+if ($MaxParalelo -le 1) {
+    # ---- MODO SECUENCIAL (MaxParalelo=1) ----
+    foreach ($sym in $simbolos) {
+        $res = Invoke-DescargarSimbolo `
+            -Combos       $gruposSimbolo[$sym] `
+            -Nombre       $sym `
+            -DesdeStr     $Desde `
+            -HastaStr     $Hasta `
+            -MaxReintentos $MaxReintentos `
+            -Server       $Server `
+            -ChunkPorTF   $CHUNK_POR_TF `
+            -DelayPorTF   $DELAY_POR_TF `
+            -ProgresoDir  $ProgresoDir `
+            -LogPrefix    "[$sym]"
+        $totalVelas   += $res.Velas
+        $totalErrores += $res.Errores
     }
 
-    # Estimar chunks restantes para ETA
-    $diasRestantes   = ($cursor - $fechaLimite).TotalDays
-    $chunksRestantes = [int][Math]::Ceiling($diasRestantes / $ChunkDias)
-
-    Write-Host "--------------------------------------------------------------" -ForegroundColor DarkCyan
-    Write-Host "  $($combo.Nombre) | $($combo.TF) | Desde $cursorStr hasta $Desde" -ForegroundColor White
-    Write-Host "  Chunks restantes: ~$chunksRestantes | ETA: ~$(Format-Eta $chunksRestantes $DelayMinutos)" -ForegroundColor DarkCyan
-    Write-Host "--------------------------------------------------------------" -ForegroundColor DarkCyan
-
-    while ($cursor -gt $fechaLimite) {
-        $chunkDesde = $cursor.AddDays(-$ChunkDias)
-        if ($chunkDesde -lt $fechaLimite) { $chunkDesde = $fechaLimite }
-
-        $desdeStr = $chunkDesde.ToString("yyyy-MM-dd")
-        $hastaStr = $cursor.ToString("yyyy-MM-dd")
-
-        $hora = Get-Date -Format "HH:mm:ss"
-        Write-Host "[$hora] $id  $desdeStr --> $hastaStr ..." -NoNewline
-
-        # -- Lanzar descarga --
-        $url  = "/api/historico/descargar?symbol=$($combo.Symbol)&timeframe=$([uri]::EscapeDataString($combo.TF))&desde=$desdeStr&hasta=$hastaStr"
-        $resp = Invoke-Api $url
-
-        if ($resp -eq $null -or -not $resp.ok) {
-            Write-Host " [ERROR al iniciar]" -ForegroundColor Red
-            $totalErrores++
-            $cursor = $chunkDesde
-            continue
-        }
-
-        # -- Esperar resultado --
-        $estado = Wait-Chunk
-
-        if ($estado -eq $null) {
-            Write-Host " [TIMEOUT]" -ForegroundColor Yellow
-            $totalErrores++
-        } elseif ($estado.tuvo_error) {
-            Write-Host " [FALLO] $($estado.mensaje)" -ForegroundColor Red
-            $totalErrores++
-        } else {
-            $velas = $estado.velas_guardadas
-            $totalVelas    += $velas
-            $totalChunksOk++
-            Write-Host " OK  ($velas velas)" -ForegroundColor Green
-        }
-
-        # -- Avanzar cursor y guardar progreso --
-        $cursor = $chunkDesde
-        if ($progreso.PSObject.Properties[$id]) {
-            $progreso.$id = $cursor.ToString("yyyy-MM-dd")
-        } else {
-            $progreso | Add-Member -NotePropertyName $id -NotePropertyValue $cursor.ToString("yyyy-MM-dd") -Force
-        }
-        Save-Progreso $progreso
-
-        # -- Pausa entre chunks --
-        if ($cursor -gt $fechaLimite) {
-            $proxima = (Get-Date).AddMinutes($DelayMinutos).ToString("HH:mm:ss")
-            Write-Host "    Esperando $DelayMinutos min... (proxima peticion a las $proxima)" -ForegroundColor DarkGray
-            Start-Sleep -Seconds ($DelayMinutos * 60)
-        }
+} else {
+    # ---- MODO PARALELO (MaxParalelo > 1) ----
+    # Dividir simbolos en lotes
+    $jobsDef  = @()
+    foreach ($sym in $simbolos) {
+        $jobsDef += @{ Nombre = $sym; Combos = $gruposSimbolo[$sym] }
     }
 
-    # Marcar combinacion completa
-    if ($progreso.PSObject.Properties[$id]) {
-        $progreso.$id = $Desde
-    } else {
-        $progreso | Add-Member -NotePropertyName $id -NotePropertyValue $Desde -Force
-    }
-    Save-Progreso $progreso
+    $idx = 0
+    while ($idx -lt $jobsDef.Count) {
+        # Tomar un lote de MaxParalelo simbolos
+        $lote = $jobsDef[$idx .. ([Math]::Min($idx + $MaxParalelo - 1, $jobsDef.Count - 1))]
+        $idx += $MaxParalelo
 
-    Write-Host "  [COMPLETO] $id" -ForegroundColor Green
-    Write-Host ""
+        Write-Host "--- Iniciando lote: $($lote | ForEach-Object { $_.Nombre }) ---" -ForegroundColor Magenta
+
+        # Capturar variables necesarias para el scriptblock
+        $capturedServer      = $Server
+        $capturedDesde       = $Desde
+        $capturedHasta       = $Hasta
+        $capturedMaxR        = $MaxReintentos
+        $capturedChunk       = $CHUNK_POR_TF
+        $capturedDelay       = $DELAY_POR_TF
+        $capturedProgresoDir = $ProgresoDir
+        $capturedScriptDir   = $ScriptDir
+
+        $jobs = @()
+        foreach ($jd in $lote) {
+            $symLocal    = $jd.Nombre
+            $combosLocal = $jd.Combos
+
+            $job = Start-Job -ScriptBlock {
+                param($sym, $combos, $desdeStr, $hastaStr, $maxR, $srv, $chunkTF, $delayTF, $progDir)
+
+                # Re-definir funciones dentro del job (los jobs no heredan funciones del scope padre)
+                function Load-ProgresoSimbolo($nombre) {
+                    $file = "$progDir\$nombre.json"
+                    if (-not (Test-Path $file)) { return @{} }
+                    try {
+                        $raw = Get-Content $file -Raw | ConvertFrom-Json
+                        $result = @{}
+                        foreach ($prop in $raw.PSObject.Properties) {
+                            $v = $prop.Value
+                            if ($v -is [string]) {
+                                $result[$prop.Name] = @{ cursor = $v; pendientes = @() }
+                            } else {
+                                $result[$prop.Name] = @{
+                                    cursor     = $v.cursor
+                                    pendientes = @($v.pendientes | ForEach-Object {
+                                        @{ desde = $_.desde; hasta = $_.hasta; intentos = if ($_.intentos) { [int]$_.intentos } else { 1 } }
+                                    })
+                                }
+                            }
+                        }
+                        return $result
+                    } catch { return @{} }
+                }
+
+                function Save-ProgresoSimbolo($nombre, $prog) {
+                    if (-not (Test-Path $progDir)) { New-Item -ItemType Directory -Path $progDir | Out-Null }
+                    $prog | ConvertTo-Json -Depth 5 | Set-Content "$progDir\$nombre.json" -Encoding UTF8
+                }
+
+                function Invoke-ApiLocal($path) {
+                    try { return Invoke-RestMethod -Uri "$srv$path" -Method GET -TimeoutSec 90 }
+                    catch { return $null }
+                }
+
+                function Wait-ChunkLocal([int]$MaxSeg = 300) {
+                    $t = 0
+                    do {
+                        Start-Sleep -Seconds 5; $t += 5
+                        $e = Invoke-ApiLocal "/api/historico/estado"
+                        if ($e -ne $null -and -not $e.esta_activo) { return $e }
+                    } while ($t -lt $MaxSeg)
+                    return $null
+                }
+
+                function Descargar-ChunkLocal($symbol, $tf, $d, $h) {
+                    $url  = "/api/historico/descargar?symbol=$symbol&timeframe=$([uri]::EscapeDataString($tf))&desde=$d&hasta=$h"
+                    $resp = Invoke-ApiLocal $url
+                    if ($resp -eq $null -or -not $resp.ok) { return $null }
+                    return Wait-ChunkLocal
+                }
+
+                function Format-EtaLocal([int]$chunks, [int]$delay) {
+                    $s = $chunks * $delay
+                    if ($s -lt 60) { return "$s seg" }
+                    if ($s -lt 3600) { return "$([int]($s/60))m $($s%60)s" }
+                    return "$([int]($s/3600))h $([int](($s%3600)/60))m"
+                }
+
+                $prog        = Load-ProgresoSimbolo $sym
+                $fechaLimite = [datetime]::ParseExact($desdeStr, "yyyy-MM-dd", $null)
+                $velasTotal  = 0
+                $errores     = 0
+                $pfx         = "[$sym]"
+
+                foreach ($combo in $combos) {
+                    $id        = $combo.Id
+                    $tf        = $combo.TF
+                    $chunkDias = $chunkTF[$tf]
+                    $delaySeg  = $delayTF[$tf]
+
+                    if ($prog.ContainsKey($id)) { $est = $prog[$id] }
+                    else { $est = @{ cursor = $hastaStr; pendientes = @() } }
+
+                    $cursor     = [datetime]::ParseExact($est.cursor, "yyyy-MM-dd", $null)
+                    $pendientes = [System.Collections.ArrayList]@($est.pendientes | ForEach-Object {
+                        @{ desde = $_.desde; hasta = $_.hasta; intentos = if ($_.intentos) { [int]$_.intentos } else { 1 } }
+                    })
+
+                    if (($cursor -le $fechaLimite) -and ($pendientes.Count -eq 0)) {
+                        Write-Output "$pfx [$id] ya completo - saltando"
+                        continue
+                    }
+
+                    $diasRest    = [Math]::Max(0, ($cursor - $fechaLimite).TotalDays)
+                    $chunksNew   = [int][Math]::Ceiling($diasRest / $chunkDias)
+                    $chunksTotal = $chunksNew + $pendientes.Count
+                    Write-Output "$pfx --- $id  chunk=${chunkDias}d  delay=${delaySeg}s  ETA=$(Format-EtaLocal $chunksTotal $delaySeg) ---"
+
+                    # Reintentar pendientes
+                    $pendientesAun = [System.Collections.ArrayList]@()
+                    foreach ($p in $pendientes) {
+                        $intentos = if ($p.intentos) { [int]$p.intentos } else { 1 }
+                        if ($intentos -gt $maxR) {
+                            Write-Output "$pfx   [DESCARTADO] $($p.desde)->$($p.hasta)"
+                            continue
+                        }
+                        $hora = Get-Date -Format "HH:mm:ss"
+                        Write-Output "$pfx [$hora] RETRY $intentos/$maxR  $id  $($p.desde)->$($p.hasta) ..."
+                        $estado = Descargar-ChunkLocal $combo.Symbol $tf $p.desde $p.hasta
+                        if ($estado -ne $null -and -not $estado.tuvo_error) {
+                            $velasTotal += $estado.velas_guardadas
+                            Write-Output "$pfx OK ($($estado.velas_guardadas) velas)"
+                        } else {
+                            $pendientesAun.Add(@{ desde = $p.desde; hasta = $p.hasta; intentos = $intentos + 1 }) | Out-Null
+                            $errores++
+                            Write-Output "$pfx FALLO retry"
+                        }
+                        Start-Sleep -Seconds $delaySeg
+                    }
+                    $est.pendientes = @($pendientesAun)
+                    $prog[$id] = $est
+                    Save-ProgresoSimbolo $sym $prog
+
+                    # Nuevos chunks
+                    while ($cursor -gt $fechaLimite) {
+                        $chunkDesde = $cursor.AddDays(-$chunkDias)
+                        if ($chunkDesde -lt $fechaLimite) { $chunkDesde = $fechaLimite }
+                        $d2 = $chunkDesde.ToString("yyyy-MM-dd")
+                        $h2 = $cursor.ToString("yyyy-MM-dd")
+                        $hora = Get-Date -Format "HH:mm:ss"
+                        Write-Output "$pfx [$hora] $id  $d2 -> $h2 ..."
+                        $estado = Descargar-ChunkLocal $combo.Symbol $tf $d2 $h2
+                        if ($estado -ne $null -and -not $estado.tuvo_error) {
+                            $velasTotal += $estado.velas_guardadas
+                            Write-Output "$pfx   OK ($($estado.velas_guardadas) velas)"
+                        } else {
+                            $est.pendientes += @{ desde = $d2; hasta = $h2; intentos = 1 }
+                            $errores++
+                            Write-Output "$pfx   FALLO"
+                        }
+                        $cursor     = $chunkDesde
+                        $est.cursor = $cursor.ToString("yyyy-MM-dd")
+                        $prog[$id]  = $est
+                        Save-ProgresoSimbolo $sym $prog
+                        if ($cursor -gt $fechaLimite) { Start-Sleep -Seconds $delaySeg }
+                    }
+                    Write-Output "$pfx [FIN] $id  pendientes=$($est.pendientes.Count)"
+                }
+                return @{ Velas = $velasTotal; Errores = $errores }
+
+            } -ArgumentList $symLocal, $combosLocal, $capturedDesde, $capturedHasta, $capturedMaxR, `
+                             $capturedServer, $capturedChunk, $capturedDelay, $capturedProgresoDir
+
+            $jobs += @{ Job = $job; Sym = $symLocal }
+            Write-Host "  Job iniciado: $symLocal (ID=$($job.Id))" -ForegroundColor Magenta
+        }
+
+        # Monitorear jobs del lote hasta que todos terminen
+        Write-Host "  Monitoreando $($jobs.Count) jobs..." -ForegroundColor DarkCyan
+        $pendingJobs = [System.Collections.ArrayList]@($jobs)
+        while ($pendingJobs.Count -gt 0) {
+            Start-Sleep -Seconds 5
+            $completados = @($pendingJobs | Where-Object { $_.Job.State -in @("Completed","Failed","Stopped") })
+            foreach ($jj in $completados) {
+                $output = Receive-Job -Job $jj.Job
+                foreach ($line in $output) {
+                    if ($line -is [hashtable]) {
+                        $totalVelas   += $line.Velas
+                        $totalErrores += $line.Errores
+                    } elseif ($line -match "OK") {
+                        Write-Host $line -ForegroundColor Green
+                    } elseif ($line -match "FALLO|ERROR") {
+                        Write-Host $line -ForegroundColor Red
+                    } elseif ($line -match "RETRY|pendiente") {
+                        Write-Host $line -ForegroundColor Yellow
+                    } elseif ($line -match "saltando|DESCARTADO") {
+                        Write-Host $line -ForegroundColor DarkGray
+                    } else {
+                        Write-Host $line -ForegroundColor Cyan
+                    }
+                }
+                Remove-Job -Job $jj.Job -Force
+                $pendingJobs.Remove($jj)
+                Write-Host "  Job completado: $($jj.Sym)" -ForegroundColor Green
+            }
+
+            # Mostrar estado de jobs aun activos
+            if ($pendingJobs.Count -gt 0) {
+                $activos = $pendingJobs | ForEach-Object { "$($_.Sym)($($_.Job.State))" }
+                Write-Host "  Activos: $($activos -join ', ')" -ForegroundColor DarkGray
+            }
+        }
+        Write-Host "  Lote completado." -ForegroundColor Magenta
+        Write-Host ""
+    }
 }
 
 # ============================================================
@@ -259,11 +713,35 @@ foreach ($combo in $combos) {
 # ============================================================
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  SESION COMPLETADA" -ForegroundColor Green
-Write-Host "  Chunks OK    : $totalChunksOk" -ForegroundColor Green
-Write-Host "  Velas nuevas : $totalVelas" -ForegroundColor Green
+Write-Host "  SESION TERMINADA" -ForegroundColor Green
+Write-Host "  Velas nuevas   : $totalVelas" -ForegroundColor Green
 if ($totalErrores -gt 0) {
-    Write-Host "  Errores      : $totalErrores" -ForegroundColor Yellow
+    Write-Host "  Chunks fallidos: $totalErrores (guardados en progreso/)" -ForegroundColor Yellow
 }
-Write-Host "  Progreso guardado en: $ProgressFile" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  Estado por simbolo:" -ForegroundColor Cyan
+foreach ($sym in $simbolos) {
+    $prog = Load-ProgresoSimbolo $sym
+    $totalPend = 0
+    $completados = 0
+    foreach ($c in $gruposSimbolo[$sym]) {
+        if ($prog.ContainsKey($c.Id)) {
+            $totalPend  += $prog[$c.Id].pendientes.Count
+            $fechaLimite = [datetime]::ParseExact($Desde, "yyyy-MM-dd", $null)
+            $cursor      = [datetime]::ParseExact($prog[$c.Id].cursor, "yyyy-MM-dd", $null)
+            if ($cursor -le $fechaLimite) { $completados++ }
+        }
+    }
+    $estado = if ($totalPend -eq 0 -and $completados -eq $gruposSimbolo[$sym].Count) {
+        "[OK]"
+    } elseif ($totalPend -gt 0) {
+        "[!$totalPend pend]"
+    } else {
+        "[incompleto]"
+    }
+    Write-Host ("    {0,-10} {1}" -f $sym, $estado) -ForegroundColor $(if ($totalPend -eq 0) { "Green" } else { "Yellow" })
+}
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "  .\descargar_masivo.ps1 -VerPendientes   para ver rangos fallidos" -ForegroundColor DarkGray
+Write-Host "  .\reporte_bd.ps1                        para ver cobertura en BD" -ForegroundColor DarkGray
 Write-Host "============================================================" -ForegroundColor Cyan

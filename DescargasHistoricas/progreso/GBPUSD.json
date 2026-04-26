@@ -1,0 +1,26 @@
+﻿{
+    "GBPUSD-5m":  {
+                      "pendientes":  [
+
+                                     ],
+                      "cursor":  "2025-04-08"
+                  },
+    "GBPUSD-1h":  {
+                      "cursor":  "2025-04-08",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "GBPUSD-1d":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "GBPUSD-4h":  {
+                      "cursor":  "2019-04-11",
+                      "pendientes":  [
+
+                                     ]
+                  }
+}

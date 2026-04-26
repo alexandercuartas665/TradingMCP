@@ -1,0 +1,26 @@
+﻿{
+    "USDCHF-4h":  {
+                      "cursor":  "2025-04-09",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "USDCHF-1h":  {
+                      "cursor":  "2025-04-09",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "USDCHF-1d":  {
+                      "cursor":  "2025-04-09",
+                      "pendientes":  [
+
+                                     ]
+                  },
+    "USDCHF-5m":  {
+                      "pendientes":  [
+
+                                     ],
+                      "cursor":  "2025-04-09"
+                  }
+}
