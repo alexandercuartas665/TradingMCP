@@ -64,50 +64,15 @@ $CHUNK_POR_TF  = @{ "1d" = 2000; "4h" = 1000; "1h" = 400; "5m" = 55 }
 $DELAY_POR_TF  = @{ "1d" = 3;    "4h" = 5;    "1h" = 10;  "5m" = 30 }
 
 # ============================================================
-# CATALOGO DE COMBINACIONES
+# CATALOGO: se consulta al servidor en tiempo de ejecucion
+# El servidor expone GET /api/activos  (lee activos_descarga.json
+# o devuelve el catalogo por defecto si el archivo no existe).
+# Para editar el catalogo: modificar activos_descarga.json en el
+# directorio del exe, o hacer POST /api/activos con el nuevo JSON.
+# La variable $COMBINACIONES se construye dinamicamente mas abajo,
+# despues de verificar la conexion con el servidor.
 # ============================================================
-$COMBINACIONES = @(
-    @{ Id="EURUSD-1d";  Symbol="frxEURUSD"; TF="1d"; Nombre="EURUSD" }
-    @{ Id="EURUSD-4h";  Symbol="frxEURUSD"; TF="4h"; Nombre="EURUSD" }
-    @{ Id="EURUSD-1h";  Symbol="frxEURUSD"; TF="1h"; Nombre="EURUSD" }
-    @{ Id="EURUSD-5m";  Symbol="frxEURUSD"; TF="5m"; Nombre="EURUSD" }
-    @{ Id="GBPUSD-1d";  Symbol="frxGBPUSD"; TF="1d"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-4h";  Symbol="frxGBPUSD"; TF="4h"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-1h";  Symbol="frxGBPUSD"; TF="1h"; Nombre="GBPUSD" }
-    @{ Id="GBPUSD-5m";  Symbol="frxGBPUSD"; TF="5m"; Nombre="GBPUSD" }
-    @{ Id="USDCHF-1d";  Symbol="frxUSDCHF"; TF="1d"; Nombre="USDCHF" }
-    @{ Id="USDCHF-4h";  Symbol="frxUSDCHF"; TF="4h"; Nombre="USDCHF" }
-    @{ Id="USDCHF-1h";  Symbol="frxUSDCHF"; TF="1h"; Nombre="USDCHF" }
-    @{ Id="USDCHF-5m";  Symbol="frxUSDCHF"; TF="5m"; Nombre="USDCHF" }
-    @{ Id="USDJPY-1d";  Symbol="frxUSDJPY"; TF="1d"; Nombre="USDJPY" }
-    @{ Id="USDJPY-4h";  Symbol="frxUSDJPY"; TF="4h"; Nombre="USDJPY" }
-    @{ Id="USDJPY-1h";  Symbol="frxUSDJPY"; TF="1h"; Nombre="USDJPY" }
-    @{ Id="USDJPY-5m";  Symbol="frxUSDJPY"; TF="5m"; Nombre="USDJPY" }
-    @{ Id="GBPJPY-1d";  Symbol="frxGBPJPY"; TF="1d"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-4h";  Symbol="frxGBPJPY"; TF="4h"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-1h";  Symbol="frxGBPJPY"; TF="1h"; Nombre="GBPJPY" }
-    @{ Id="GBPJPY-5m";  Symbol="frxGBPJPY"; TF="5m"; Nombre="GBPJPY" }
-    @{ Id="XAUUSD-1d";  Symbol="frxXAUUSD"; TF="1d"; Nombre="XAUUSD" }
-    @{ Id="XAUUSD-4h";  Symbol="frxXAUUSD"; TF="4h"; Nombre="XAUUSD" }
-    @{ Id="XAUUSD-1h";  Symbol="frxXAUUSD"; TF="1h"; Nombre="XAUUSD" }
-    @{ Id="XAUUSD-5m";  Symbol="frxXAUUSD"; TF="5m"; Nombre="XAUUSD" }
-    @{ Id="XAGUSD-1d";  Symbol="frxXAGUSD"; TF="1d"; Nombre="XAGUSD" }
-    @{ Id="XAGUSD-4h";  Symbol="frxXAGUSD"; TF="4h"; Nombre="XAGUSD" }
-    @{ Id="XAGUSD-1h";  Symbol="frxXAGUSD"; TF="1h"; Nombre="XAGUSD" }
-    @{ Id="XAGUSD-5m";  Symbol="frxXAGUSD"; TF="5m"; Nombre="XAGUSD" }
-    @{ Id="OIL-1d";     Symbol="frxUSOIL";  TF="1d"; Nombre="OIL_US" }
-    @{ Id="OIL-4h";     Symbol="frxUSOIL";  TF="4h"; Nombre="OIL_US" }
-    @{ Id="OIL-1h";     Symbol="frxUSOIL";  TF="1h"; Nombre="OIL_US" }
-    @{ Id="OIL-5m";     Symbol="frxUSOIL";  TF="5m"; Nombre="OIL_US" }
-    @{ Id="NAS100-1d";  Symbol="OTC_NDX";   TF="1d"; Nombre="NAS100" }
-    @{ Id="NAS100-4h";  Symbol="OTC_NDX";   TF="4h"; Nombre="NAS100" }
-    @{ Id="NAS100-1h";  Symbol="OTC_NDX";   TF="1h"; Nombre="NAS100" }
-    @{ Id="NAS100-5m";  Symbol="OTC_NDX";   TF="5m"; Nombre="NAS100" }
-    @{ Id="SP500-1d";   Symbol="OTC_SPC";   TF="1d"; Nombre="SP500"  }
-    @{ Id="SP500-4h";   Symbol="OTC_SPC";   TF="4h"; Nombre="SP500"  }
-    @{ Id="SP500-1h";   Symbol="OTC_SPC";   TF="1h"; Nombre="SP500"  }
-    @{ Id="SP500-5m";   Symbol="OTC_SPC";   TF="5m"; Nombre="SP500"  }
-)
+$COMBINACIONES = @()   # se llena despues del ping al servidor
 
 # ============================================================
 # HELPERS DE PROGRESO (archivos por simbolo)
@@ -388,7 +353,47 @@ if ($Resetear) {
     }
 }
 
-# Filtrar combinaciones
+# ============================================================
+# Verificar servidor y obtener catalogo de activos
+# (debe hacerse antes de filtrar combinaciones)
+# ============================================================
+$ping = Invoke-Api "/api/indicadores"
+if ($ping -eq $null) {
+    Write-Host ""
+    Write-Host "  [ERROR] No se puede conectar a $Server" -ForegroundColor Red
+    Write-Host "          Abre la aplicacion WpfDerivClientVB primero." -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "  Servidor API: OK" -ForegroundColor Green
+
+$catalogo = Invoke-Api "/api/activos"
+if ($catalogo -eq $null -or $catalogo.activos -eq $null) {
+    Write-Host "  [ERROR] No se pudo obtener el catalogo desde $Server/api/activos" -ForegroundColor Red
+    exit 1
+}
+
+$activosList = @($catalogo.activos)
+$tfList      = @($catalogo.timeframes)
+
+Write-Host ("  Catalogo ({0}): {1} activos x {2} TFs  [{3}]" -f `
+    $catalogo.fuente,
+    $activosList.Count,
+    $tfList.Count,
+    ($tfList -join ", ")) -ForegroundColor Green
+
+# Construir combinaciones: producto cartesiano activos x TFs
+foreach ($activo in $activosList) {
+    foreach ($tf in $tfList) {
+        $COMBINACIONES += @{
+            Id     = "$($activo.nombre)-$tf"
+            Symbol = $activo.symbol
+            TF     = $tf
+            Nombre = $activo.nombre
+        }
+    }
+}
+
+# Filtrar combinaciones segun parametros -SoloActivo / -SoloTF
 $combos = $COMBINACIONES
 if ($SoloActivo -ne "") { $combos = $combos | Where-Object { $_.Symbol -eq $SoloActivo -or $_.Nombre -eq $SoloActivo } }
 if ($SoloTF     -ne "") { $combos = $combos | Where-Object { $_.TF -eq $SoloTF } }
@@ -425,16 +430,6 @@ if ($VerPendientes) {
     if (-not $hayPend) { Write-Host "  Sin rangos pendientes." -ForegroundColor Green }
     exit 0
 }
-
-# Verificar servidor
-$ping = Invoke-Api "/api/indicadores"
-if ($ping -eq $null) {
-    Write-Host ""
-    Write-Host "  [ERROR] No se puede conectar a $Server" -ForegroundColor Red
-    Write-Host "          Abre la aplicacion WpfDerivClientVB primero." -ForegroundColor Yellow
-    exit 1
-}
-Write-Host "  Servidor API: OK" -ForegroundColor Green
 Write-Host ""
 
 # Mostrar ETA estimada

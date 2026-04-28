@@ -72,6 +72,13 @@ Namespace WpfDerivClientVB
         Private _pendingApiTrade As System.Threading.Tasks.TaskCompletionSource(Of JObject)
         Private _pendingApiSell As System.Threading.Tasks.TaskCompletionSource(Of JObject)
 
+        ' ===== Evento de vela cerrada (Live Test Motor) =====
+        ''' <summary>
+        ''' Se dispara cada vez que una vela se cierra en el streaming activo.
+        ''' El LiveTestMotor se suscribe a este evento para procesar senales.
+        ''' </summary>
+        Public Event OnCandleCerrada As Action(Of CandleModel)
+
         ' ===================================================
         '  CONSTRUCTOR
         ' ===================================================
@@ -103,6 +110,7 @@ Namespace WpfDerivClientVB
 
             CargarAppIdDeriv()
             CargarClientesTrading()
+            InicializarTabDinamicas()
         End Sub
 
         Protected Overrides Sub OnSourceInitialized(e As EventArgs)

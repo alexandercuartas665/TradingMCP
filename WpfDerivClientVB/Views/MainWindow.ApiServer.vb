@@ -16,6 +16,7 @@ Imports System.Threading.Tasks
 Imports System.Windows.Media
 Imports Newtonsoft.Json.Linq
 Imports WpfDerivClientVB.WpfDerivClientVB.Estrategias
+Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
 
 Namespace WpfDerivClientVB
 
@@ -26,6 +27,10 @@ Namespace WpfDerivClientVB
         ' ===================================================
         Private Sub btnApiServer_Click(sender As Object, e As System.Windows.RoutedEventArgs)
             If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then
+                ' Desconectar el handler de vela cerrada antes de detener
+                If _apiServer.LiveTestMotor IsNot Nothing Then
+                    RemoveHandler Me.OnCandleCerrada, AddressOf _apiServer.LiveTestMotor.ProcesarCandleCerrada
+                End If
                 _apiServer.Stop()
                 _apiServer = Nothing
                 btnApiServer.Content = "▶ Iniciar Servidor"
@@ -36,12 +41,18 @@ Namespace WpfDerivClientVB
                 Dim port As Integer = 8765
                 Integer.TryParse(txtApiPort.Text.Trim(), port)
                 _apiServer = New TradingApiServer(port)
-                _apiServer.GetStatus      = AddressOf ApiGetStatus
-                _apiServer.GetOperations  = AddressOf ApiGetOperations
-                _apiServer.ExecuteTrade   = AddressOf ApiExecuteTrade
-                _apiServer.ExecuteSell    = AddressOf ApiExecuteSell
-                _apiServer.LogAction      = AddressOf AgregarLogApi
+                _apiServer.GetStatus       = AddressOf ApiGetStatus
+                _apiServer.GetOperations   = AddressOf ApiGetOperations
+                _apiServer.ExecuteTrade    = AddressOf ApiExecuteTrade
+                _apiServer.ExecuteSell     = AddressOf ApiExecuteSell
+                _apiServer.LogAction       = AddressOf AgregarLogApi
                 _apiServer.DescargaService = _descargaService
+                ' Conectar el LiveTestMotor al evento de vela cerrada del streaming
+                _apiServer.LiveTestMotor = New LiveTestMotor()
+                _apiServer.LiveTestMotor.ExecuteTrade = AddressOf ApiExecuteTrade
+                AddHandler Me.OnCandleCerrada, AddressOf _apiServer.LiveTestMotor.ProcesarCandleCerrada
+                ' Inicializar el registry de estrategias dinamicas
+                EstrategiasDinamicasRegistry.Inicializar()
                 Try
                     _apiServer.Start()
                     btnApiServer.Content = "⏹ Detener Servidor"

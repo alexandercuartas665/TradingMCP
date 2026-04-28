@@ -1,0 +1,29 @@
+{
+  "nombre": "DonchianMacd",
+  "descripcion": "Ruptura del canal de Donchian confirmada por MACD. CALL cuando precio supera banda superior Donchian y MACD histogram positivo. PUT cuando precio rompe banda inferior y histogram negativo.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "dc",   "tipo": "DonchianChannel", "params": { "periodo": 20 } },
+    { "id": "macd", "tipo": "MACD",            "params": { "rapido": 12, "lento": 26, "senal": 9 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",          "op": "mayor_igual", "valor": "dc.Upper" },
+      { "campo": "macd.Histogram", "op": "mayor_que",   "valor": 0 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",          "op": "menor_igual", "valor": "dc.Lower" },
+      { "campo": "macd.Histogram", "op": "menor_que",   "valor": 0 }
+    ]
+  },
+  "confianza_base": 65,
+  "ajustes_confianza": [
+    { "si": { "campo": "macd",           "op": "mayor_que", "valor": 0 }, "sumar": 10 },
+    { "si": { "campo": "macd",           "op": "menor_que", "valor": 0 }, "sumar": 10 },
+    { "si": { "campo": "macd.Histogram", "op": "mayor_que", "valor": "macd" }, "sumar": -10 }
+  ]
+}

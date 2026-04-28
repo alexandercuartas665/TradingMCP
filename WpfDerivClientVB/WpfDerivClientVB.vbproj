@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <Reference Include="mscorlib" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +42,13 @@
     <Folder Include="CandleManager\" />
     <Folder Include="Funciones\" />
     <Folder Include="EstrategiasDinamicas\" />
+  </ItemGroup>
+
+  <!-- Estrategias JSON: se copian al output para que el registry las encuentre -->
+  <ItemGroup>
+    <Content Include="EstrategiasDinamicas\estrategias\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

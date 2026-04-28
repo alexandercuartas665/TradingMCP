@@ -36,7 +36,7 @@ Namespace WpfDerivClientVB.Backtesting
     Public Class BacktestConfig
         Public Property Symbol              As String
         Public Property Timeframe           As String
-        Public Property Platform            As String  = "deriv"
+        Public Property Platform            As String  = "Deriv"
         Public Property DesdeEpoch          As Long
         Public Property HastaEpoch          As Long
         ''' <summary>Cuantas velas esperar antes de evaluar el resultado del trade.</summary>

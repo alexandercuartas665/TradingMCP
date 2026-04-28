@@ -1,7 +1,7 @@
 <Window x:Class="WpfDerivClientVB.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-Title="Deriv Trading - Live Streaming" Height="620" Width="960"
+Title="Deriv Trading - Live Streaming" Height="901" Width="960"
         Background="#1E1E2E">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -94,7 +94,8 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                             <TextBox x:Name="PART_EditableTextBox"
                                      Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"
                                      Background="Transparent" Foreground="#CDD6F4"
-                                     Margin="6,0,24,0" VerticalContentAlignment="Center"/>
+                                     Margin="6,0,24,0" VerticalAlignment="Center"
+                                     VerticalContentAlignment="Center" BorderThickness="0"/>
 
                             <Popup x:Name="PART_Popup"
                                    Placement="Bottom"
@@ -115,6 +116,14 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                                 </Border>
                             </Popup>
                         </Grid>
+
+                        <!-- Trigger clave: cuando IsEditable=True, mostrar TextBox y ocultar ContentPresenter -->
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="contentSite"          Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -817,6 +826,205 @@ Title="Deriv Trading - Live Streaming" Height="620" Width="960"
                                  AcceptsReturn="True" TextWrapping="NoWrap"
                                  Text="[Sistema] API Server listo. Pulsa ▶ Iniciar Servidor para comenzar."
                                  BorderBrush="#45475A" BorderThickness="1"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 7: Estrategias Dinamicas -->
+            <TabItem Header="🤖  Estrategias" Height="29" VerticalAlignment="Top">
+                <Grid Margin="8" Background="#1E1E2E">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>  <!-- Fila 0: lista estrategias + config -->
+                        <RowDefinition Height="Auto"/>  <!-- Fila 1: log BD -->
+                        <RowDefinition Height="Auto"/>  <!-- Fila 2: barra de metricas -->
+                        <RowDefinition Height="*"/>     <!-- Fila 3: tabla operaciones -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Fila 1: Lista de estrategias + controles de gestion -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Lista de estrategias -->
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                            <TextBlock Text="ESTRATEGIAS JSON" Foreground="#89B4FA" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                            <ListBox x:Name="lstEstrategias" Height="120"
+                                     Background="#313244" Foreground="#CDD6F4"
+                                     BorderBrush="#45475A" BorderThickness="1"
+                                     SelectionChanged="lstEstrategias_SelectionChanged"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Button x:Name="btnRecargarEstrategias" Content="↺ Recargar"
+                                        Padding="6,3" FontSize="11" Margin="0,0,4,0"
+                                        Click="btnRecargarEstrategias_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Configuracion de backtest/live -->
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Fila 1: Fuente, Activo, TF, Payout%, Confianza% -->
+                            <Grid Grid.Row="0" Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="55"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="55"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Fuente:" VerticalAlignment="Center"
+                                           Foreground="#89B4FA" FontWeight="Bold" Margin="0,0,4,0"/>
+                                <ComboBox Grid.Column="1" x:Name="cmbDinFuente" Margin="0,0,10,0"
+                                          SelectionChanged="cmbDinFuente_SelectionChanged"
+                                          ToolTip="Replay BD: usa velas historicas de PostgreSQL (sin trades reales).&#x0a;Streaming: usa velas en tiempo real del WebSocket activo.">
+                                    <ComboBoxItem Content="Replay BD" IsSelected="True" Tag="replay"/>
+                                    <ComboBoxItem Content="Streaming" Tag="streaming"/>
+                                </ComboBox>
+                                <TextBlock Grid.Column="2" Text="Activo:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox Grid.Column="3" x:Name="cmbDinSymbol" IsEditable="True"
+                                          Text="R_100" Margin="0,0,8,0"
+                                          ToolTip="En modo Replay BD se carga automaticamente con los activos disponibles."/>
+                                <TextBlock Grid.Column="4" Text="TF:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox Grid.Column="5" x:Name="cmbDinTimeframe" Margin="0,0,8,0">
+                                    <ComboBoxItem Content="1h" IsSelected="True" Tag="1h"/>
+                                    <ComboBoxItem Content="4h" Tag="4h"/>
+                                    <ComboBoxItem Content="1d" Tag="1d"/>
+                                    <ComboBoxItem Content="5m" Tag="5m"/>
+                                    <ComboBoxItem Content="1m" Tag="1m"/>
+                                </ComboBox>
+                                <TextBlock Grid.Column="6" Text="Payout%:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBox Grid.Column="7" x:Name="txtDinPayout" Text="85" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="8" Text="Confianza%:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBox Grid.Column="9" x:Name="txtDinConfianza" Text="55"/>
+                            </Grid>
+
+                            <!-- Fila 2: DuracionV, Monto, Desde, Hasta -->
+                            <Grid Grid.Row="1" Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="55"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="55"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="110"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Duracion V:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBox Grid.Column="1" x:Name="txtDinDuracion" Text="5" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="2" Text="Monto:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBox Grid.Column="3" x:Name="txtDinMonto" Text="1" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="4" Text="Desde:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <DatePicker Grid.Column="5" x:Name="dpDinDesde" Margin="0,0,8,0"
+                                            Background="#313244" Foreground="#CDD6F4"/>
+                                <TextBlock Grid.Column="6" Text="Hasta:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <DatePicker Grid.Column="7" x:Name="dpDinHasta"
+                                            Background="#313244" Foreground="#CDD6F4"/>
+                            </Grid>
+
+                            <!-- Fila 3: Botones de accion -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,0">
+                                <Button x:Name="btnDinBacktest" Content="▶ Backtest (BD)"
+                                        Style="{StaticResource SuccessBtn}" Padding="8,4" Margin="0,0,6,0"
+                                        Click="btnDinBacktest_Click"/>
+                                <Button x:Name="btnDinLiveIniciar" Content="🔴 Iniciar Live"
+                                        Padding="8,4" Margin="0,0,6,0"
+                                        Click="btnDinLiveIniciar_Click"/>
+                                <Button x:Name="btnDinLiveDetener" Content="⬛ Detener" IsEnabled="False"
+                                        Padding="8,4"
+                                        Click="btnDinLiveDetener_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!-- Fila 1: Log conexion BD -->
+                    <Border Grid.Row="1" Background="#1A1A2E" CornerRadius="3"
+                            Padding="8,5" Margin="0,6,0,4">
+                        <TextBlock x:Name="txtDinLogBD"
+                                   Text="BD: —  (selecciona Replay BD para cargar activos disponibles)"
+                                   Foreground="#6C7086" FontSize="10" FontFamily="Consolas"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Fila 2: Barra de metricas de resultado -->
+                    <Border Grid.Row="2" Background="#313244" CornerRadius="4"
+                            Padding="10,7" Margin="0,0,0,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="RESULTADO: "
+                                       Foreground="#89B4FA" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" x:Name="txtDinEstado"
+                                       Text="Selecciona una estrategia y ejecuta Backtest."
+                                       Foreground="#A6ADC8" VerticalAlignment="Center" TextWrapping="NoWrap"/>
+                            <TextBlock Grid.Column="2" x:Name="txtDinWinRate" Text=""
+                                       Foreground="#A6E3A1" FontWeight="Bold"
+                                       Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" x:Name="txtDinPnl" Text=""
+                                       FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" x:Name="txtDinOps" Text=""
+                                       Foreground="#A6ADC8" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" x:Name="txtDinDrawdown" Text=""
+                                       Foreground="#FAB387" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" x:Name="txtDinSesionId" Text=""
+                                       Foreground="#6C7086" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="7" x:Name="txtDinVersion" Text=""
+                                       Foreground="#CBA6F7" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="8" x:Name="txtDinBalance" Text=""
+                                       Foreground="#89DCEB" FontWeight="Bold"
+                                       Margin="16,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Fila 3: Tabla de operaciones -->
+                    <Grid Grid.Row="3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="OPERACIONES" Foreground="#89B4FA"
+                                   FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                        <DataGrid Grid.Row="1" x:Name="dgDinOperaciones"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserSortColumns="True" Background="#1E1E2E"
+                                  RowBackground="#252535" AlternatingRowBackground="#1E1E2E"
+                                  Foreground="#CDD6F4" GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#45475A" BorderBrush="#45475A">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Estrategia"  Binding="{Binding Estrategia}"  Width="130"/>
+                                <DataGridTextColumn Header="Version"      Binding="{Binding Version}"     Width="60"/>
+                                <DataGridTextColumn Header="Tipo"         Binding="{Binding Tipo}"        Width="55"/>
+                                <DataGridTextColumn Header="Apertura"     Binding="{Binding Epoch}"       Width="120"/>
+                                <DataGridTextColumn Header="Entrada"      Binding="{Binding Entrada}"     Width="90"/>
+                                <DataGridTextColumn Header="Salida"       Binding="{Binding Salida}"      Width="90"/>
+                                <DataGridTextColumn Header="Estado"       Binding="{Binding Estado}"      Width="80"/>
+                                <DataGridTextColumn Header="PnL"          Binding="{Binding Pnl}"         Width="80"/>
+                                <DataGridTextColumn Header="Confianza"    Binding="{Binding Confianza}"   Width="80"/>
+                                <DataGridTextColumn Header="Saldo Inicio" Binding="{Binding BalanceInicio}" Width="100"/>
+                                <DataGridTextColumn Header="Saldo Post"   Binding="{Binding Balance}"     Width="100"/>
+                                <DataGridTextColumn Header="Cuenta"       Binding="{Binding Cuenta}"      Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </Grid>
                 </Grid>
             </TabItem>

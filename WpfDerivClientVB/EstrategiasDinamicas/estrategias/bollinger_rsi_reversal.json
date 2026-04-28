@@ -1,0 +1,32 @@
+{
+  "nombre": "BollingerRsiReversal",
+  "descripcion": "Estrategia de reversal en bandas de Bollinger con confirmacion RSI. CALL cuando precio toca banda inferior y RSI sobrevendido (<35). PUT cuando precio toca banda superior y RSI sobrecomprado (>65).",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.0 } },
+    { "id": "rsi", "tipo": "RSI",            "params": { "periodo": 14 } },
+    { "id": "atr", "tipo": "ATR",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_igual", "valor": "bb.Lower" },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 35 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_igual", "valor": "bb.Upper" },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 65 }
+    ]
+  },
+  "confianza_base": 62,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "menor_que",  "valor": 25 }, "sumar": 15 },
+    { "si": { "campo": "rsi", "op": "mayor_que",  "valor": 75 }, "sumar": 15 },
+    { "si": { "campo": "rsi", "op": "mayor_igual", "valor": 35 }, "sumar": -5 },
+    { "si": { "campo": "rsi", "op": "menor_igual", "valor": 65 }, "sumar": -5 },
+    { "si": { "campo": "bb.BandWidth", "op": "menor_que", "valor": 3 }, "sumar": -10 }
+  ]
+}

@@ -13,6 +13,7 @@
 param(
     [string]$Symbol         = "",
     [string]$Timeframe      = "",
+    [string]$Servidor       = "http://localhost:8765",
     [switch]$DetallePendientes
 )
 
@@ -172,50 +173,51 @@ Write-Host "[OK] Conexion exitosa a PostgreSQL" -ForegroundColor Green
 Write-Host ""
 
 # ============================================================
-# Catalogo esperado de combinaciones
+# Catalogo esperado: se consulta al servidor (GET /api/activos)
+# Si el servidor no esta disponible, se usa el catalogo de respaldo.
 # ============================================================
-$CATALOGO = @(
-    @{ Id="EURUSD-1d";  Symbol="frxEURUSD"; TF="1d";  Nombre="EURUSD"  }
-    @{ Id="EURUSD-4h";  Symbol="frxEURUSD"; TF="4h";  Nombre="EURUSD"  }
-    @{ Id="EURUSD-1h";  Symbol="frxEURUSD"; TF="1h";  Nombre="EURUSD"  }
-    @{ Id="EURUSD-5m";  Symbol="frxEURUSD"; TF="5m";  Nombre="EURUSD"  }
-    @{ Id="GBPUSD-1d";  Symbol="frxGBPUSD"; TF="1d";  Nombre="GBPUSD"  }
-    @{ Id="GBPUSD-4h";  Symbol="frxGBPUSD"; TF="4h";  Nombre="GBPUSD"  }
-    @{ Id="GBPUSD-1h";  Symbol="frxGBPUSD"; TF="1h";  Nombre="GBPUSD"  }
-    @{ Id="GBPUSD-5m";  Symbol="frxGBPUSD"; TF="5m";  Nombre="GBPUSD"  }
-    @{ Id="USDCHF-1d";  Symbol="frxUSDCHF"; TF="1d";  Nombre="USDCHF"  }
-    @{ Id="USDCHF-4h";  Symbol="frxUSDCHF"; TF="4h";  Nombre="USDCHF"  }
-    @{ Id="USDCHF-1h";  Symbol="frxUSDCHF"; TF="1h";  Nombre="USDCHF"  }
-    @{ Id="USDCHF-5m";  Symbol="frxUSDCHF"; TF="5m";  Nombre="USDCHF"  }
-    @{ Id="USDJPY-1d";  Symbol="frxUSDJPY"; TF="1d";  Nombre="USDJPY"  }
-    @{ Id="USDJPY-4h";  Symbol="frxUSDJPY"; TF="4h";  Nombre="USDJPY"  }
-    @{ Id="USDJPY-1h";  Symbol="frxUSDJPY"; TF="1h";  Nombre="USDJPY"  }
-    @{ Id="USDJPY-5m";  Symbol="frxUSDJPY"; TF="5m";  Nombre="USDJPY"  }
-    @{ Id="GBPJPY-1d";  Symbol="frxGBPJPY"; TF="1d";  Nombre="GBPJPY"  }
-    @{ Id="GBPJPY-4h";  Symbol="frxGBPJPY"; TF="4h";  Nombre="GBPJPY"  }
-    @{ Id="GBPJPY-1h";  Symbol="frxGBPJPY"; TF="1h";  Nombre="GBPJPY"  }
-    @{ Id="GBPJPY-5m";  Symbol="frxGBPJPY"; TF="5m";  Nombre="GBPJPY"  }
-    @{ Id="XAUUSD-1d";  Symbol="frxXAUUSD"; TF="1d";  Nombre="XAUUSD"  }
-    @{ Id="XAUUSD-4h";  Symbol="frxXAUUSD"; TF="4h";  Nombre="XAUUSD"  }
-    @{ Id="XAUUSD-1h";  Symbol="frxXAUUSD"; TF="1h";  Nombre="XAUUSD"  }
-    @{ Id="XAUUSD-5m";  Symbol="frxXAUUSD"; TF="5m";  Nombre="XAUUSD"  }
-    @{ Id="XAGUSD-1d";  Symbol="frxXAGUSD"; TF="1d";  Nombre="XAGUSD"  }
-    @{ Id="XAGUSD-4h";  Symbol="frxXAGUSD"; TF="4h";  Nombre="XAGUSD"  }
-    @{ Id="XAGUSD-1h";  Symbol="frxXAGUSD"; TF="1h";  Nombre="XAGUSD"  }
-    @{ Id="XAGUSD-5m";  Symbol="frxXAGUSD"; TF="5m";  Nombre="XAGUSD"  }
-    @{ Id="OILUSD-1d";  Symbol="frxUSOIL";  TF="1d";  Nombre="OIL_US"  }
-    @{ Id="OILUSD-4h";  Symbol="frxUSOIL";  TF="4h";  Nombre="OIL_US"  }
-    @{ Id="OILUSD-1h";  Symbol="frxUSOIL";  TF="1h";  Nombre="OIL_US"  }
-    @{ Id="OILUSD-5m";  Symbol="frxUSOIL";  TF="5m";  Nombre="OIL_US"  }
-    @{ Id="NAS100-1d";  Symbol="OTC_NDX";   TF="1d";  Nombre="NAS100"  }
-    @{ Id="NAS100-4h";  Symbol="OTC_NDX";   TF="4h";  Nombre="NAS100"  }
-    @{ Id="NAS100-1h";  Symbol="OTC_NDX";   TF="1h";  Nombre="NAS100"  }
-    @{ Id="NAS100-5m";  Symbol="OTC_NDX";   TF="5m";  Nombre="NAS100"  }
-    @{ Id="SP500-1d";   Symbol="OTC_SPC";   TF="1d";  Nombre="SP500"   }
-    @{ Id="SP500-4h";   Symbol="OTC_SPC";   TF="4h";  Nombre="SP500"   }
-    @{ Id="SP500-1h";   Symbol="OTC_SPC";   TF="1h";  Nombre="SP500"   }
-    @{ Id="SP500-5m";   Symbol="OTC_SPC";   TF="5m";  Nombre="SP500"   }
+$CATALOGO_RESPALDO = @(
+    @{ Nombre="EURUSD"; Symbol="frxEURUSD"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="GBPUSD"; Symbol="frxGBPUSD"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="USDCHF"; Symbol="frxUSDCHF"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="USDJPY"; Symbol="frxUSDJPY"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="GBPJPY"; Symbol="frxGBPJPY"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="XAUUSD"; Symbol="frxXAUUSD"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="XAGUSD"; Symbol="frxXAGUSD"; TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="OIL_US"; Symbol="frxUSOIL";  TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="NAS100"; Symbol="OTC_NDX";   TFs=@("1d","4h","1h","5m") }
+    @{ Nombre="SP500";  Symbol="OTC_SPC";   TFs=@("1d","4h","1h","5m") }
 )
+
+# Intentar obtener catalogo del servidor
+$activosRaw = @()
+$tfList     = @("1d","4h","1h","5m")
+try {
+    $resp = Invoke-RestMethod -Uri "$Servidor/api/activos" -Method GET -TimeoutSec 5 -ErrorAction Stop
+    if ($resp -and $resp.activos) {
+        $activosRaw = @($resp.activos)
+        $tfList     = @($resp.timeframes)
+        Write-Host ("  Catalogo ({0}): {1} activos desde $Servidor" -f $resp.fuente, $activosRaw.Count) -ForegroundColor Green
+    }
+} catch {
+    Write-Host "  [INFO] Servidor no disponible - usando catalogo de respaldo." -ForegroundColor DarkYellow
+}
+
+# Construir combinaciones (producto cartesiano activos x TFs)
+$CATALOGO = @()
+if ($activosRaw.Count -gt 0) {
+    foreach ($a in $activosRaw) {
+        foreach ($tf in $tfList) {
+            $CATALOGO += @{ Id="$($a.nombre)-$tf"; Symbol=$a.symbol; TF=$tf; Nombre=$a.nombre }
+        }
+    }
+} else {
+    foreach ($a in $CATALOGO_RESPALDO) {
+        foreach ($tf in $a.TFs) {
+            $CATALOGO += @{ Id="$($a.Nombre)-$tf"; Symbol=$a.Symbol; TF=$tf; Nombre=$a.Nombre }
+        }
+    }
+}
 
 # Filtros opcionales
 if ($Symbol -ne "") {
@@ -392,7 +394,7 @@ Write-Host "============================================================" -Foreg
 Write-Host " RESUMEN GLOBAL" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ("  Total velas en BD   : {0:N0}" -f $totalVelasGlobal) -ForegroundColor White
-Write-Host ("  Combinaciones       : {0} de {1}" -f $CATALOGO.Count, 40) -ForegroundColor White
+Write-Host ("  Combinaciones       : {0}" -f $CATALOGO.Count) -ForegroundColor White
 Write-Host ("  Completas (>= 90%%) : {0}" -f $totalCompletosGlobal) -ForegroundColor Green
 Write-Host ("  Parciales           : {0}" -f $totalParciales) -ForegroundColor Yellow
 Write-Host ("  Sin datos           : {0}" -f $totalVacios) -ForegroundColor DarkGray

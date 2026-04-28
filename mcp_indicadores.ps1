@@ -46,6 +46,15 @@ function Invoke-Api($path) {
     }
 }
 
+function Invoke-ApiPost($path, $body) {
+    try {
+        $json = $body | ConvertTo-Json -Depth 10 -Compress
+        return Invoke-RestMethod -Uri "$SERVER$path" -Method POST -Body $json -ContentType "application/json; charset=utf-8" -TimeoutSec 60
+    } catch {
+        return $null
+    }
+}
+
 # ── Definicion de herramientas ───────────────────────────────
 $TOOLS = @(
     @{
@@ -166,6 +175,150 @@ $TOOLS = @(
             }
             required = @("nombre")
         }
+    },
+    @{
+        name        = "dinamicas_listar"
+        description = "Lista todas las estrategias dinamicas JSON disponibles. Cada una puede usarse en backtest o live test."
+        inputSchema = @{ type = "object"; properties = @{}; required = @() }
+    },
+    @{
+        name        = "dinamicas_leer"
+        description = "Lee el contenido JSON completo de una estrategia dinamica. Util para ver o modificar indicadores y condiciones."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre = @{ type = "string"; description = "Nombre de la estrategia (ej: EmaRsiCruce)" }
+            }
+            required = @("nombre")
+        }
+    },
+    @{
+        name        = "dinamicas_guardar"
+        description = "Crea o actualiza una estrategia dinamica como archivo JSON. El archivo se guarda como nombre.json en el directorio de estrategias."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre    = @{ type = "string"; description = "Nombre de la estrategia" }
+                contenido = @{ type = "string"; description = "Contenido JSON completo de la estrategia" }
+            }
+            required = @("nombre", "contenido")
+        }
+    },
+    @{
+        name        = "dinamicas_eliminar"
+        description = "Elimina una estrategia dinamica del directorio de estrategias."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre = @{ type = "string"; description = "Nombre de la estrategia a eliminar" }
+            }
+            required = @("nombre")
+        }
+    },
+    @{
+        name        = "dinamicas_backtest"
+        description = "Ejecuta un backtest sobre datos historicos en BD. Devuelve metricas: win_rate, profit_loss, max_drawdown, profit_factor y sesion_id guardado en BD."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre         = @{ type = "string";  description = "Nombre de la estrategia JSON (ej: EmaRsiCruce)" }
+                symbol         = @{ type = "string";  description = "Simbolo del activo. Default: R_100" }
+                timeframe      = @{ type = "string";  description = "Temporalidad: 1m, 5m, 1h, 4h, 1d. Default: 1h" }
+                desde_epoch    = @{ type = "integer"; description = "Epoch Unix de inicio. Si se omite, usa todo el historial disponible en BD." }
+                hasta_epoch    = @{ type = "integer"; description = "Epoch Unix de fin (default: ahora)" }
+                duracion_velas = @{ type = "integer"; description = "Velas de duracion de cada trade (default: 5)" }
+                payout         = @{ type = "number";  description = "Payout en % para binarias (default: 85)" }
+                min_confianza  = @{ type = "integer"; description = "Confianza minima 0-100 (default: 55)" }
+                monto          = @{ type = "number";  description = "Monto simulado por operacion (default: 10)" }
+                ventana        = @{ type = "integer"; description = "Velas de historia que recibe la estrategia en cada paso (default: 100)" }
+            }
+            required = @("nombre")
+        }
+    },
+    @{
+        name        = "dinamicas_sesiones"
+        description = "Lista sesiones de backtest guardadas en la BD. Puede filtrar por nombre de estrategia para ver solo sus ejecuciones."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                limite     = @{ type = "integer"; description = "Maximo de sesiones (default: 20)" }
+                estrategia = @{ type = "string";  description = "Filtrar por nombre de estrategia (ej: EmaRsiCruce). Omitir para ver todas." }
+            }
+            required = @()
+        }
+    },
+    @{
+        name        = "dinamicas_historial"
+        description = "Muestra la evolucion temporal de una estrategia: todas sus sesiones ordenadas cronologicamente con deltas de win_rate y PnL entre ejecuciones. Util para ver si los ajustes mejoran o degradan la estrategia."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre = @{ type = "string";  description = "Nombre de la estrategia (ej: EmaRsiCruce)" }
+                limite = @{ type = "integer"; description = "Maximo de sesiones a mostrar (default: 50)" }
+            }
+            required = @("nombre")
+        }
+    },
+    @{
+        name        = "dinamicas_comparar"
+        description = "Compara dos sesiones de backtest lado a lado: win_rate, PnL, drawdown, profit_factor con deltas y veredicto (A_mejor/B_mejor/similar). Ideal para evaluar si un cambio en la estrategia mejora los resultados."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                sesion_a = @{ type = "integer"; description = "ID de la sesion base (antes del cambio)" }
+                sesion_b = @{ type = "integer"; description = "ID de la sesion a comparar (despues del cambio)" }
+            }
+            required = @("sesion_a", "sesion_b")
+        }
+    },
+    @{
+        name        = "dinamicas_operaciones"
+        description = "Devuelve todas las operaciones de una sesion con tipo, precios, estado (Ganado/Perdido) y PnL."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                sesion_id = @{ type = "integer"; description = "ID de la sesion (obtenido con dinamicas_sesiones)" }
+            }
+            required = @("sesion_id")
+        }
+    },
+    @{
+        name        = "dinamicas_perdidas"
+        description = "Devuelve solo las operaciones perdidas de una sesion con contexto de velas previas y datos de indicadores para analisis."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                sesion_id = @{ type = "integer"; description = "ID de la sesion" }
+            }
+            required = @("sesion_id")
+        }
+    },
+    @{
+        name        = "dinamicas_live_iniciar"
+        description = "Inicia un live test con trades reales en la cuenta demo de Deriv. El streaming de la app debe estar activo para el mismo symbol/timeframe."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                nombre         = @{ type = "string";  description = "Nombre de la estrategia JSON a usar" }
+                symbol         = @{ type = "string";  description = "Simbolo del activo. Default: R_100" }
+                timeframe      = @{ type = "string";  description = "Temporalidad. Default: 1h" }
+                duracion_velas = @{ type = "integer"; description = "Duracion de cada trade en velas (default: 5)" }
+                payout         = @{ type = "number";  description = "Payout esperado en % (default: 85)" }
+                min_confianza  = @{ type = "integer"; description = "Confianza minima (default: 55)" }
+                monto          = @{ type = "number";  description = "Monto real en USD por operacion (default: 1)" }
+            }
+            required = @("nombre")
+        }
+    },
+    @{
+        name        = "dinamicas_live_detener"
+        description = "Detiene el live test activo y guarda metricas finales en BD."
+        inputSchema = @{ type = "object"; properties = @{}; required = @() }
+    },
+    @{
+        name        = "dinamicas_live_estado"
+        description = "Estado del live test: activo, buffer de velas, trades pendientes, operaciones ganadas/perdidas y PnL acumulado."
+        inputSchema = @{ type = "object"; properties = @{}; required = @() }
     }
 )
 
@@ -291,6 +444,134 @@ function Invoke-Tool($name, $p) {
             if ($data -eq $null) {
                 return @{ error = "No se pudo conectar al servidor en $SERVER. Asegurate de que la app este corriendo." }
             }
+            return $data
+        }
+
+        "dinamicas_listar" {
+            $data = Invoke-Api "/api/dinamicas/listar"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_leer" {
+            $nombre = $p.nombre
+            if ([string]::IsNullOrWhiteSpace($nombre)) { return @{ error = "Parametro 'nombre' requerido." } }
+            $data = Invoke-Api "/api/dinamicas/leer?nombre=$([uri]::EscapeDataString($nombre))"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_guardar" {
+            $nombre    = $p.nombre
+            $contenido = $p.contenido
+            if ([string]::IsNullOrWhiteSpace($nombre))    { return @{ error = "Parametro 'nombre' requerido." } }
+            if ([string]::IsNullOrWhiteSpace($contenido)) { return @{ error = "Parametro 'contenido' requerido." } }
+            $body = @{ nombre = $nombre; contenido = $contenido }
+            $data = Invoke-ApiPost "/api/dinamicas/guardar" $body
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_eliminar" {
+            $nombre = $p.nombre
+            if ([string]::IsNullOrWhiteSpace($nombre)) { return @{ error = "Parametro 'nombre' requerido." } }
+            $body = @{ nombre = $nombre }
+            $data = Invoke-ApiPost "/api/dinamicas/eliminar" $body
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_backtest" {
+            $nombre = $p.nombre
+            if ([string]::IsNullOrWhiteSpace($nombre)) { return @{ error = "Parametro 'nombre' requerido." } }
+            $symbol         = if ($p.symbol)         { $p.symbol }         else { "R_100" }
+            $timeframe      = if ($p.timeframe)       { $p.timeframe }      else { "1h" }
+            $duracion_velas = if ($p.duracion_velas)  { $p.duracion_velas } else { 5 }
+            $payout         = if ($p.payout)          { $p.payout }         else { 85 }
+            $min_confianza  = if ($p.min_confianza)   { $p.min_confianza }  else { 55 }
+            $monto          = if ($p.monto)           { $p.monto }          else { 10 }
+
+            $url = "/api/dinamicas/backtest?nombre=$([uri]::EscapeDataString($nombre))&symbol=$symbol&timeframe=$([uri]::EscapeDataString($timeframe))&duracion_velas=$duracion_velas&payout=$payout&min_confianza=$min_confianza&monto=$monto"
+            if ($p.desde_epoch) { $url += "&desde_epoch=$($p.desde_epoch)" }
+            if ($p.hasta_epoch) { $url += "&hasta_epoch=$($p.hasta_epoch)" }
+            if ($p.ventana)     { $url += "&ventana=$($p.ventana)" }
+
+            $data = Invoke-Api $url
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_sesiones" {
+            $limite = if ($p.limite) { $p.limite } else { 20 }
+            $url = "/api/dinamicas/sesiones?limite=$limite"
+            if (-not [string]::IsNullOrWhiteSpace($p.estrategia)) {
+                $url += "&estrategia=$([uri]::EscapeDataString($p.estrategia))"
+            }
+            $data = Invoke-Api $url
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_historial" {
+            $nombre = $p.nombre
+            if ([string]::IsNullOrWhiteSpace($nombre)) { return @{ error = "Parametro 'nombre' requerido." } }
+            $limite = if ($p.limite) { $p.limite } else { 50 }
+            $data = Invoke-Api "/api/dinamicas/historial?nombre=$([uri]::EscapeDataString($nombre))&limite=$limite"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_comparar" {
+            if ($null -eq $p.sesion_a -or $null -eq $p.sesion_b) {
+                return @{ error = "Parametros 'sesion_a' y 'sesion_b' requeridos." }
+            }
+            $data = Invoke-Api "/api/dinamicas/comparar?sesion_a=$($p.sesion_a)&sesion_b=$($p.sesion_b)"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_operaciones" {
+            $sesion_id = $p.sesion_id
+            if ($null -eq $sesion_id) { return @{ error = "Parametro 'sesion_id' requerido." } }
+            $data = Invoke-Api "/api/dinamicas/operaciones?sesion_id=$sesion_id"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_perdidas" {
+            $sesion_id = $p.sesion_id
+            if ($null -eq $sesion_id) { return @{ error = "Parametro 'sesion_id' requerido." } }
+            $data = Invoke-Api "/api/dinamicas/perdidas?sesion_id=$sesion_id"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_live_iniciar" {
+            $nombre = $p.nombre
+            if ([string]::IsNullOrWhiteSpace($nombre)) { return @{ error = "Parametro 'nombre' requerido." } }
+            $body = @{
+                nombre         = $nombre
+                symbol         = if ($p.symbol)         { $p.symbol }         else { "R_100" }
+                timeframe      = if ($p.timeframe)       { $p.timeframe }      else { "1h" }
+                duracion_velas = if ($p.duracion_velas)  { $p.duracion_velas } else { 5 }
+                payout         = if ($p.payout)          { $p.payout }         else { 85 }
+                min_confianza  = if ($p.min_confianza)   { $p.min_confianza }  else { 55 }
+                monto          = if ($p.monto)           { $p.monto }          else { 1 }
+            }
+            $data = Invoke-ApiPost "/api/dinamicas/live/iniciar" $body
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_live_detener" {
+            $data = Invoke-ApiPost "/api/dinamicas/live/detener" @{}
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "dinamicas_live_estado" {
+            $data = Invoke-Api "/api/dinamicas/live/estado"
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
             return $data
         }
 

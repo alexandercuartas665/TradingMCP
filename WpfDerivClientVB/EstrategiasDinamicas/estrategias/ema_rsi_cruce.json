@@ -1,0 +1,33 @@
+{
+  "nombre": "EmaRsiCruce",
+  "descripcion": "Cruce de EMA rapida/lenta con confirmacion RSI. CALL cuando EMA9 > EMA21 y RSI entre 45-70. PUT cuando EMA9 < EMA21 y RSI entre 30-55.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "ema_rapida", "tipo": "EMA", "params": { "periodo": 9 } },
+    { "id": "ema_lenta",  "tipo": "EMA", "params": { "periodo": 21 } },
+    { "id": "rsi",        "tipo": "RSI", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "ema_rapida", "op": "mayor_que",  "valor": "ema_lenta" },
+      { "campo": "rsi",        "op": "mayor_que",  "valor": 45 },
+      { "campo": "rsi",        "op": "menor_que",  "valor": 70 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "ema_rapida", "op": "menor_que",  "valor": "ema_lenta" },
+      { "campo": "rsi",        "op": "menor_que",  "valor": 55 },
+      { "campo": "rsi",        "op": "mayor_que",  "valor": 30 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 60 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 40 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 68 }, "sumar": -15 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 32 }, "sumar": -15 }
+  ]
+}

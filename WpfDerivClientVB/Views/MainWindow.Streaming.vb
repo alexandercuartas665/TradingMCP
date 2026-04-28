@@ -340,6 +340,8 @@ Namespace WpfDerivClientVB
                 Task.Run(Function() As Task
                              Return _repo.SaveCandleAsync(PLATFORM, sym, tf, snap, isClosed:=True)
                          End Function)
+                ' Notificar al LiveTestMotor (si hay sesion activa)
+                RaiseEvent OnCandleCerrada(snap)
             End If
         End Sub
 

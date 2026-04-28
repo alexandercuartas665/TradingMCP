@@ -198,7 +198,8 @@ Namespace WpfDerivClientVB.Backtesting
             ' Profit factor (ganancias brutas / perdidas brutas) sobre primera cuenta
             Dim ganancias = CDec(opsFiltradas.Where(Function(o) o.ProfitLoss > 0).Sum(Function(o) o.ProfitLoss))
             Dim perdidas  = Math.Abs(CDec(opsFiltradas.Where(Function(o) o.ProfitLoss < 0).Sum(Function(o) o.ProfitLoss)))
-            Dim profitFactor = If(perdidas > 0, Math.Round(ganancias / perdidas, 4), Decimal.MaxValue)
+            ' Cap a 999.9999 para no desbordar DECIMAL(10,4) en BD cuando no hay perdidas
+            Dim profitFactor = If(perdidas > 0, Math.Min(Math.Round(ganancias / perdidas, 4), 999.9999D), 999.9999D)
 
             ' Max drawdown sobre primera cuenta (pico a valle en porcentaje)
             Dim maxDD = CalcularMaxDrawdown(cuentas(0).BalanceInicial, opsFiltradas)

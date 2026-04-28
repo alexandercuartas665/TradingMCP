@@ -37,7 +37,28 @@
       "mcp__indicadores-deriv__descargar_historico",
       "Bash(docker exec *)",
       "Bash(powershell -ExecutionPolicy Bypass -File reporte_bd.ps1)",
-      "PowerShell(Set-Location \"C:\\\\DesarrolloIA\\\\Traiding\\\\DescargasHistoricas\"; powershell -ExecutionPolicy Bypass -File \"reporte_bd.ps1\" 2>&1)"
+      "PowerShell(Set-Location \"C:\\\\DesarrolloIA\\\\Traiding\\\\DescargasHistoricas\"; powershell -ExecutionPolicy Bypass -File \"reporte_bd.ps1\" 2>&1)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\EstrategiasDinamicas\\\\estrategias\")",
+      "Bash(Out-Null)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\EstrategiasDinamicas\\\\estrategias\")",
+      "Bash(grep -E \"error BC|error MSB3021|error MSB3027|0 Errores|Errores$\")",
+      "Bash(dir \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Debug\\\\net48\\\\EstrategiasDinamicas\\\\estrategias\\\\\" 2>&1)",
+      "Bash(grep -E \"error BC|error MSB[^3]|0 Errores|Errores$\")",
+      "Bash(grep -E \"error BC|0 Errores|Errores$\")",
+      "PowerShell(cd C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB && dotnet build 2>&1 | Where-Object { $_ -match \"error BC|warning BC\" } | Select-Object -First 20)",
+      "Bash(curl -s http://localhost:5050/api/status)",
+      "Bash(curl -s http://localhost:5051/api/status)",
+      "Bash(curl -s http://localhost:5050/api/help)",
+      "mcp__indicadores-deriv__dinamicas_listar",
+      "mcp__indicadores-deriv__dinamicas_backtest",
+      "mcp__indicadores-deriv__dinamicas_leer",
+      "mcp__indicadores-deriv__dinamicas_guardar",
+      "Bash(dir \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Debug\")",
+      "Bash(dir \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Debug\\\\net48\")",
+      "Bash(powershell -Command \"& 'C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe' 'C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\WpfDerivClientVB.vbproj' /t:Clean,Build /p:Configuration=Debug /nologo 2>&1\")",
+      "mcp__indicadores-deriv__dinamicas_operaciones",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" WpfDerivClientVB.vbproj /p:Configuration=Debug /p:Platform=\"Any CPU\" /t:Build /v:minimal)",
+      "PowerShell(\\(Get-Item \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Any CPU\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe\"\\).LastWriteTime)"
     ]
   }
 }

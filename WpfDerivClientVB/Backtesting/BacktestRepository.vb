@@ -217,10 +217,121 @@ Namespace WpfDerivClientVB.Backtesting
         End Function
 
         ''' <summary>
+        ''' Todas las sesiones de una estrategia en orden cronologico (para analisis de evolucion).
+        ''' </summary>
+        Public Async Function GetSesionesPorEstrategiaAsync(estrategia As String, Optional limite As Integer = 50) As Task(Of List(Of BacktestSesion))
+            Dim lista As New List(Of BacktestSesion)()
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql =
+                        "SELECT id, estrategia, symbol, timeframe, desde_epoch, hasta_epoch, " &
+                        "       duracion_velas, payout_pct, min_confianza, total_senales, " &
+                        "       total_operaciones, win_rate, profit_loss_total, max_drawdown, " &
+                        "       profit_factor, created_at, notas " &
+                        "FROM public.backtest_sesiones " &
+                        "WHERE estrategia = @est " &
+                        "ORDER BY created_at ASC " &
+                        "LIMIT @lim;"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("est", estrategia)
+                        cmd.Parameters.AddWithValue("lim", limite)
+                        Using reader = Await cmd.ExecuteReaderAsync()
+                            Do While Await reader.ReadAsync()
+                                lista.Add(MapSesion(reader))
+                            Loop
+                        End Using
+                    End Using
+                End Using
+            Catch ex As Exception
+                Console.WriteLine("[BacktestRepository.GetSesionesPorEstrategiaAsync] Error: " & ex.Message)
+            End Try
+            Return lista
+        End Function
+
+        ''' <summary>
+        ''' Una sesion especifica por ID.
+        ''' </summary>
+        Public Async Function GetSesionPorIdAsync(sesionId As Integer) As Task(Of BacktestSesion)
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql =
+                        "SELECT id, estrategia, symbol, timeframe, desde_epoch, hasta_epoch, " &
+                        "       duracion_velas, payout_pct, min_confianza, total_senales, " &
+                        "       total_operaciones, win_rate, profit_loss_total, max_drawdown, " &
+                        "       profit_factor, created_at, notas " &
+                        "FROM public.backtest_sesiones WHERE id = @id;"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("id", sesionId)
+                        Using reader = Await cmd.ExecuteReaderAsync()
+                            If Await reader.ReadAsync() Then Return MapSesion(reader)
+                        End Using
+                    End Using
+                End Using
+            Catch ex As Exception
+                Console.WriteLine("[BacktestRepository.GetSesionPorIdAsync] Error: " & ex.Message)
+            End Try
+            Return Nothing
+        End Function
+
+        ''' <summary>
         ''' Todas las operaciones de una sesion, ordenadas por epoch de entrada.
         ''' </summary>
         Public Async Function GetOperacionesPorSesionAsync(sesionId As Integer) As Task(Of List(Of BacktestOperacion))
             Return Await GetOperacionesInternoAsync(sesionId, Nothing)
+        End Function
+
+        ''' <summary>
+        ''' Devuelve las ultimas N operaciones de una sesion (ORDER BY epoch DESC LIMIT n).
+        ''' Util para mostrar en UI sin cargar cientos de miles de filas.
+        ''' </summary>
+        Public Async Function GetUltimasOperacionesAsync(sesionId As Integer, limite As Integer) As Task(Of List(Of BacktestOperacion))
+            Dim lista As New List(Of BacktestOperacion)()
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql =
+                        "SELECT id, sesion_id, cuenta_nombre, tipo, epoch_entrada, precio_entrada, " &
+                        "       epoch_salida, precio_salida, monto, payout_pct, estado, profit_loss, " &
+                        "       balance_post, confianza, motivo_senal, datos_indicadores, contexto_velas " &
+                        "FROM public.backtest_operaciones " &
+                        "WHERE sesion_id = @sid " &
+                        "ORDER BY epoch_entrada DESC LIMIT @lim;"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("sid", sesionId)
+                        cmd.Parameters.AddWithValue("lim", limite)
+                        Using reader = Await cmd.ExecuteReaderAsync()
+                            While Await reader.ReadAsync()
+                                lista.Add(MapOperacion(reader))
+                            End While
+                        End Using
+                    End Using
+                End Using
+                ' Invertir para mostrar orden cronologico
+                lista.Reverse()
+            Catch ex As Exception
+                Console.WriteLine("[BacktestRepository.GetUltimasOperacionesAsync] Error: " & ex.Message)
+            End Try
+            Return lista
+        End Function
+
+        ''' <summary>
+        ''' Cuenta total de operaciones de una sesion (sin traer los datos).
+        ''' </summary>
+        Public Async Function ContarOperacionesAsync(sesionId As Integer) As Task(Of Long)
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Using cmd As New NpgsqlCommand(
+                        "SELECT COUNT(*) FROM public.backtest_operaciones WHERE sesion_id = @sid;", conn)
+                        cmd.Parameters.AddWithValue("sid", sesionId)
+                        Return CLng(Await cmd.ExecuteScalarAsync())
+                    End Using
+                End Using
+            Catch
+                Return 0
+            End Try
         End Function
 
         ''' <summary>

@@ -22,6 +22,7 @@ param(
     [string]$Desde       = "2019-01-01",
     [string]$Hasta       = (Get-Date -Format "yyyy-MM-dd"),
     [int]$DelaySegundos  = 2,
+    [string]$Servidor    = "http://localhost:8765",   # GET /api/activos para el catalogo
     [switch]$Forzar,      # Forzar descarga aunque la cobertura ya sea completa
     [switch]$SoloVer
 )
@@ -54,20 +55,55 @@ $ErrorActionPreference = "Continue"
 $ConfigFile = "C:\DesarrolloIA\Traiding\WpfDerivClientVB\bin\Debug\net48\db_config.json"
 
 # ============================================================
-# CATALOGO: Yahoo symbol, Stooq symbol, DB symbol
+# CATALOGO: se consulta al servidor (GET /api/activos)
+# Si el servidor no esta disponible, se usa el catalogo de respaldo.
+# Para personalizar el catalogo edita activos_descarga.json en el
+# directorio del exe, o usa POST /api/activos con el nuevo JSON.
 # ============================================================
-$CATALOGO = @(
-    @{ Nombre="EURUSD"; Stooq="eurusd";   Yahoo="EURUSD=X"; DbSymbol="frxEURUSD" }
-    @{ Nombre="GBPUSD"; Stooq="gbpusd";   Yahoo="GBPUSD=X"; DbSymbol="frxGBPUSD" }
-    @{ Nombre="USDCHF"; Stooq="usdchf";   Yahoo="USDCHF=X"; DbSymbol="frxUSDCHF" }
-    @{ Nombre="USDJPY"; Stooq="usdjpy";   Yahoo="USDJPY=X"; DbSymbol="frxUSDJPY" }
-    @{ Nombre="GBPJPY"; Stooq="gbpjpy";   Yahoo="GBPJPY=X"; DbSymbol="frxGBPJPY" }
-    @{ Nombre="XAUUSD"; Stooq="xauusd";   Yahoo="GC=F";     DbSymbol="frxXAUUSD" }
-    @{ Nombre="XAGUSD"; Stooq="xagusd";   Yahoo="SI=F";     DbSymbol="frxXAGUSD" }
-    @{ Nombre="OIL_US"; Stooq="cl.f";     Yahoo="CL=F";     DbSymbol="frxUSOIL"  }
-    @{ Nombre="NAS100"; Stooq="^ndx";     Yahoo="NQ=F";     DbSymbol="OTC_NDX"   }
-    @{ Nombre="SP500";  Stooq="^spx";     Yahoo="ES=F";     DbSymbol="OTC_SPC"   }
+
+# Catalogo de respaldo (usado cuando el servidor no esta corriendo)
+$CATALOGO_RESPALDO = @(
+    @{ Nombre="EURUSD"; Stooq="eurusd"; Yahoo="EURUSD=X"; DbSymbol="frxEURUSD" }
+    @{ Nombre="GBPUSD"; Stooq="gbpusd"; Yahoo="GBPUSD=X"; DbSymbol="frxGBPUSD" }
+    @{ Nombre="USDCHF"; Stooq="usdchf"; Yahoo="USDCHF=X"; DbSymbol="frxUSDCHF" }
+    @{ Nombre="USDJPY"; Stooq="usdjpy"; Yahoo="USDJPY=X"; DbSymbol="frxUSDJPY" }
+    @{ Nombre="GBPJPY"; Stooq="gbpjpy"; Yahoo="GBPJPY=X"; DbSymbol="frxGBPJPY" }
+    @{ Nombre="XAUUSD"; Stooq="xauusd"; Yahoo="GC=F";     DbSymbol="frxXAUUSD" }
+    @{ Nombre="XAGUSD"; Stooq="xagusd"; Yahoo="SI=F";     DbSymbol="frxXAGUSD" }
+    @{ Nombre="OIL_US"; Stooq="cl.f";   Yahoo="CL=F";     DbSymbol="frxUSOIL"  }
+    @{ Nombre="NAS100"; Stooq="^ndx";   Yahoo="NQ=F";     DbSymbol="OTC_NDX"   }
+    @{ Nombre="SP500";  Stooq="^spx";   Yahoo="ES=F";     DbSymbol="OTC_SPC"   }
 )
+
+# Intentar obtener el catalogo del servidor
+$CATALOGO = @()
+try {
+    $resp = Invoke-RestMethod -Uri "$Servidor/api/activos" -Method GET -TimeoutSec 5 -ErrorAction Stop
+    if ($resp -and $resp.activos) {
+        foreach ($a in $resp.activos) {
+            # Validar que tenga los campos necesarios para Yahoo/Stooq
+            if (-not $a.yahoo -or -not $a.stooq) {
+                Write-Host "  [WARN] Activo '$($a.nombre)' sin yahoo/stooq en el catalogo del servidor - omitido." -ForegroundColor DarkYellow
+                continue
+            }
+            $CATALOGO += @{
+                Nombre    = $a.nombre
+                Stooq     = $a.stooq
+                Yahoo     = $a.yahoo
+                DbSymbol  = $a.symbol
+            }
+        }
+        Write-Host ("  Catalogo ({0}): {1} activos desde $Servidor" -f $resp.fuente, $CATALOGO.Count) -ForegroundColor Green
+    }
+} catch {
+    Write-Host "  [INFO] Servidor no disponible ($Servidor) - usando catalogo de respaldo." -ForegroundColor DarkYellow
+}
+
+# Fallback si el servidor no respondio o devolvio catalogo vacio
+if ($CATALOGO.Count -eq 0) {
+    $CATALOGO = $CATALOGO_RESPALDO
+    Write-Host "  Catalogo (respaldo): $($CATALOGO.Count) activos." -ForegroundColor DarkGray
+}
 
 if ($SoloActivo -ne "") {
     $CATALOGO = $CATALOGO | Where-Object { $_.Nombre -eq $SoloActivo -or $_.DbSymbol -eq $SoloActivo }
@@ -362,14 +398,19 @@ function Aggregate-4h($candles1h) {
 
     $candles4h = @()
     foreach ($key in ($grupos.Keys | Sort-Object)) {
-        $g = $grupos[$key] | Sort-Object { $_.Epoch }
+        # @() fuerza array aunque Sort-Object devuelva un solo objeto
+        $g = @($grupos[$key] | Sort-Object { $_.Epoch })
         if ($g.Count -lt 2) { continue }   # descartar si muy pocos candles en el bloque
+
+        # Extraer escalares antes de Measure-Object: funciona con hashtables Y PSObjects
+        $highMax = ($g | ForEach-Object { $_.High } | Measure-Object -Maximum).Maximum
+        $lowMin  = ($g | ForEach-Object { $_.Low  } | Measure-Object -Minimum).Minimum
 
         $candles4h += @{
             Epoch = $key
             Open  = $g[0].Open
-            High  = ($g | Measure-Object -Property High -Maximum).Maximum
-            Low   = ($g | Measure-Object -Property Low  -Minimum).Minimum
+            High  = $highMax
+            Low   = $lowMin
             Close = $g[-1].Close
         }
     }

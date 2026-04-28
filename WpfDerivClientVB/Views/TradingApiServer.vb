@@ -17,12 +17,15 @@ Imports System.Net
 Imports System.Net.WebSockets
 Imports System.IO
 Imports System.Text
+Imports System.Collections.Generic
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
 Imports WpfDerivClientVB.WpfDerivClientVB.Indicators
 Imports WpfDerivClientVB.WpfDerivClientVB.Estrategias
+Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
+Imports WpfDerivClientVB.WpfDerivClientVB.Backtesting
 
 Namespace WpfDerivClientVB
 
@@ -44,6 +47,9 @@ Namespace WpfDerivClientVB
         Public Property ExecuteSell As Func(Of String, Task(Of JObject))
         Public Property LogAction As Action(Of String)
         Public Property DescargaService As DescargaService
+
+        ''' <summary>Motor de live testing. Inyectado por MainWindow al arrancar el servidor.</summary>
+        Public Property LiveTestMotor As LiveTestMotor = Nothing
 
         Public Sub New(port As Integer)
             _Port = port
@@ -457,6 +463,501 @@ Namespace WpfDerivClientVB
                             End If
                         End If
 
+                    ' ─────────────────────────────────────────────────────────
+                    '  ESTRATEGIAS DINAMICAS  /api/dinamicas/*
+                    ' ─────────────────────────────────────────────────────────
+                    Case "/api/dinamicas/listar"
+                        Dim cat = EstrategiasDinamicasRegistry.GetCatalog()
+                        result = New JObject From {
+                            {"ok", True},
+                            {"total", cat.Count},
+                            {"directorio", EstrategiasDinamicasRegistry.Directorio},
+                            {"estrategias", cat}
+                        }
+
+                    Case "/api/dinamicas/leer"
+                        Dim nomLeer = If(qs("nombre"), "")
+                        If String.IsNullOrWhiteSpace(nomLeer) Then
+                            result = ErrorJson("Parametro requerido: nombre")
+                        Else
+                            Dim estLeer = EstrategiasDinamicasRegistry.GetByNombre(nomLeer)
+                            If estLeer Is Nothing Then
+                                result = ErrorJson("Estrategia no encontrada: " & nomLeer)
+                            Else
+                                Dim pathJson = estLeer.Definicion.ArchivoOrigen
+                                Dim contenido = If(File.Exists(pathJson), File.ReadAllText(pathJson, Encoding.UTF8), "{}")
+                                result = New JObject From {
+                                    {"ok", True},
+                                    {"nombre", estLeer.Nombre},
+                                    {"archivo", System.IO.Path.GetFileName(pathJson)},
+                                    {"contenido", contenido}
+                                }
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/guardar"
+                        If method <> "POST" Then
+                            result = ErrorJson("Use POST /api/dinamicas/guardar")
+                        ElseIf body Is Nothing OrElse body("nombre") Is Nothing OrElse body("contenido") Is Nothing Then
+                            result = ErrorJson("Body requerido: {nombre, contenido}")
+                        Else
+                            Dim nomGuardar = body("nombre").ToString().Trim()
+                            Dim contenidoGuardar = body("contenido").ToString()
+                            If String.IsNullOrWhiteSpace(nomGuardar) Then
+                                result = ErrorJson("nombre no puede estar vacio")
+                            Else
+                                Dim dirGuardar = EstrategiasDinamicasRegistry.Directorio
+                                If Not Directory.Exists(dirGuardar) Then Directory.CreateDirectory(dirGuardar)
+                                ' Nombre de archivo = nombre.json (sanitizar)
+                                Dim nombreArchivo = nomGuardar.Replace(" ", "_").Replace("/", "_").Replace("\", "_") & ".json"
+                                Dim pathGuardar = System.IO.Path.Combine(dirGuardar, nombreArchivo)
+                                File.WriteAllText(pathGuardar, contenidoGuardar, Encoding.UTF8)
+                                ' El FileSystemWatcher recargara automaticamente
+                                result = New JObject From {
+                                    {"ok", True},
+                                    {"nombre", nomGuardar},
+                                    {"archivo", nombreArchivo},
+                                    {"path", pathGuardar}
+                                }
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/eliminar"
+                        If method <> "POST" Then
+                            result = ErrorJson("Use POST /api/dinamicas/eliminar")
+                        ElseIf body Is Nothing OrElse body("nombre") Is Nothing Then
+                            result = ErrorJson("Body requerido: {nombre}")
+                        Else
+                            Dim nomEliminar = body("nombre").ToString()
+                            Dim estElim = EstrategiasDinamicasRegistry.GetByNombre(nomEliminar)
+                            If estElim Is Nothing Then
+                                result = ErrorJson("Estrategia no encontrada: " & nomEliminar)
+                            Else
+                                Dim pathElim = estElim.Definicion.ArchivoOrigen
+                                If File.Exists(pathElim) Then File.Delete(pathElim)
+                                result = New JObject From {
+                                    {"ok", True},
+                                    {"nombre", nomEliminar},
+                                    {"mensaje", "Estrategia eliminada"}
+                                }
+                            End If
+                        End If
+
+                    ' ── DEBUG: evalua estrategia sobre ultimas velas de BD ─────────────────
+                    Case "/api/dinamicas/debug"
+                        Dim nomDbg = If(qs("nombre"), "")
+                        Dim symDbg = If(qs("symbol"), "R_100")
+                        Dim tfDbg  = If(qs("timeframe"), "1m")
+                        Dim limDbg As Integer = 100 : Integer.TryParse(qs("ventana"), limDbg)
+                        If String.IsNullOrWhiteSpace(nomDbg) Then
+                            result = ErrorJson("Parametro requerido: nombre")
+                        Else
+                            Dim estDbg = EstrategiasDinamicasRegistry.GetByNombre(nomDbg)
+                            If estDbg Is Nothing Then
+                                result = ErrorJson("Estrategia no encontrada: " & nomDbg)
+                            Else
+                                Try
+                                    Dim repoDbg As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
+                                    Dim candlesDbg = Await repoDbg.GetCandlesAsync("Deriv", symDbg, tfDbg, limDbg)
+                                    Dim resDbg = estDbg.Analizar(candlesDbg)
+                                    Dim datosArr As New JObject()
+                                    For Each kv In resDbg.Datos
+                                        datosArr(kv.Key) = CDbl(kv.Value)
+                                    Next
+                                    result = New JObject From {
+                                        {"ok",         True},
+                                        {"estrategia", nomDbg},
+                                        {"symbol",     symDbg},
+                                        {"timeframe",  tfDbg},
+                                        {"velas",      candlesDbg.Count},
+                                        {"senal",      resDbg.Senal},
+                                        {"confianza",  resDbg.Confianza},
+                                        {"motivo",     resDbg.Motivo},
+                                        {"datos",      datosArr}
+                                    }
+                                Catch ex As Exception
+                                    result = ErrorJson("Error debug: " & ex.Message)
+                                End Try
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/backtest"
+                        Dim nomBt = If(qs("nombre"), "")
+                        If String.IsNullOrWhiteSpace(nomBt) Then
+                            result = ErrorJson("Parametro requerido: nombre")
+                        Else
+                            Dim estBt = EstrategiasDinamicasRegistry.GetByNombre(nomBt)
+                            If estBt Is Nothing Then
+                                result = ErrorJson("Estrategia no encontrada: " & nomBt)
+                            Else
+                                Try
+                                    Dim symBt   = If(qs("symbol"), "R_100")
+                                    Dim tfBt    = If(qs("timeframe"), "1h")
+                                    ' Usar If(..., "0") para que TryParse no aplaste el default cuando el param es Nothing
+                                    Dim desdeBt As Long = 0    : Long.TryParse(If(qs("desde_epoch"), "0"), desdeBt)
+                                    Dim hastaBt As Long = 0    : Long.TryParse(If(qs("hasta_epoch"), "0"), hastaBt)
+                                    Dim durBt   As Integer = 5 : Integer.TryParse(If(qs("duracion_velas"), "5"), durBt)
+                                    Dim payBt   As Decimal = 85D : Decimal.TryParse(If(qs("payout"), "85"), payBt)
+                                    Dim confBt  As Integer = 55  : Integer.TryParse(If(qs("min_confianza"), "55"), confBt)
+                                    Dim montoBt As Decimal = 10D : Decimal.TryParse(If(qs("monto"), "10"), montoBt)
+                                    Dim ventanaBt As Integer = 100 : Integer.TryParse(If(qs("ventana"), "100"), ventanaBt)
+
+                                    If hastaBt = 0 Then hastaBt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                                    ' Si no se especifica desde_epoch, usar 0 para cargar todo el historial disponible
+                                    ' (evita el error de 0 velas cuando los datos son mas antiguos que 30 dias)
+
+                                    Dim configBt As New BacktestConfig With {
+                                        .Symbol             = symBt,
+                                        .Timeframe          = tfBt,
+                                        .DesdeEpoch         = desdeBt,
+                                        .HastaEpoch         = hastaBt,
+                                        .DuracionVelas      = durBt,
+                                        .PayoutPct          = payBt,
+                                        .MinConfianza       = confBt,
+                                        .VentanaIndicadores = ventanaBt,
+                                        .Cuentas = New List(Of BacktestCuenta) From {
+                                            New BacktestCuenta With {
+                                                .NombreCuenta      = "Simulacion",
+                                                .BalanceInicial    = 10000D,
+                                                .BalanceActual     = 10000D,
+                                                .MontoPorOperacion = montoBt
+                                            }
+                                        }
+                                    }
+
+                                    Dim motorBt As New BacktestMotor()
+                                    Dim resBt = Await motorBt.EjecutarAsync(configBt, estBt)
+
+                                    ' BacktestMotor ya guarda en BD y setea resBt.Sesion.Id
+                                    ' No guardar de nuevo para evitar sesiones duplicadas
+                                    Dim s = resBt.Sesion
+                                    result = New JObject From {
+                                        {"ok",               True},
+                                        {"sesion_id",        s.Id},
+                                        {"estrategia",       s.Estrategia},
+                                        {"symbol",           s.Symbol},
+                                        {"timeframe",        s.Timeframe},
+                                        {"total_senales",    s.TotalSenales},
+                                        {"total_ops",        s.TotalOperaciones},
+                                        {"win_rate",         Math.Round(s.WinRate, 4)},
+                                        {"profit_loss",      Math.Round(s.ProfitLossTotal, 4)},
+                                        {"max_drawdown",     Math.Round(s.MaxDrawdown, 4)},
+                                        {"profit_factor",    Math.Round(s.ProfitFactor, 4)},
+                                        {"ganadas",          resBt.OperacionesGanadas.Count},
+                                        {"perdidas",         resBt.OperacionesPerdidas.Count}
+                                    }
+                                Catch ex As Exception
+                                    result = ErrorJson("Error en backtest: " & ex.Message)
+                                End Try
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/sesiones"
+                        Dim limSes As Integer = 20 : Integer.TryParse(qs("limite"), limSes)
+                        Dim filtroEst = If(qs("estrategia"), "")
+                        Dim repoSes As New BacktestRepository()
+                        Dim sesionesSes = If(String.IsNullOrWhiteSpace(filtroEst),
+                                             Await repoSes.GetSesionesAsync(limSes),
+                                             Await repoSes.GetSesionesPorEstrategiaAsync(filtroEst, limSes))
+                        Dim arrSes As New JArray()
+                        For Each ss In sesionesSes
+                            arrSes.Add(New JObject From {
+                                {"id",            ss.Id},
+                                {"estrategia",    ss.Estrategia},
+                                {"symbol",        ss.Symbol},
+                                {"timeframe",     ss.Timeframe},
+                                {"duracion_velas",ss.DuracionVelas},
+                                {"min_confianza", ss.MinConfianza},
+                                {"total_senales", ss.TotalSenales},
+                                {"total_ops",     ss.TotalOperaciones},
+                                {"win_rate",      Math.Round(ss.WinRate * 100D, 2)},
+                                {"profit_loss",   Math.Round(ss.ProfitLossTotal, 4)},
+                                {"max_drawdown",  Math.Round(ss.MaxDrawdown, 4)},
+                                {"profit_factor", Math.Round(ss.ProfitFactor, 4)},
+                                {"created_at",    ss.CreatedAt.ToString("yyyy-MM-dd HH:mm")}
+                            })
+                        Next
+                        result = New JObject From {{"ok", True}, {"total", arrSes.Count},
+                                                   {"filtro_estrategia", filtroEst}, {"sesiones", arrSes}}
+
+                    Case "/api/dinamicas/historial"
+                        ' Evolucion temporal de una estrategia: sesiones ordenadas ASC con deltas
+                        Dim nomHist = If(qs("nombre"), "")
+                        If String.IsNullOrWhiteSpace(nomHist) Then
+                            result = ErrorJson("Parametro requerido: nombre")
+                        Else
+                            Dim limHist As Integer = 50 : Integer.TryParse(qs("limite"), limHist)
+                            Dim repoHist As New BacktestRepository()
+                            Dim sesHist = Await repoHist.GetSesionesPorEstrategiaAsync(nomHist, limHist)
+                            Dim arrHist As New JArray()
+                            Dim prevWr As Decimal = -1D
+                            Dim prevPnl As Decimal = 0D
+                            For i = 0 To sesHist.Count - 1
+                                Dim ss = sesHist(i)
+                                Dim wrPct = Math.Round(ss.WinRate * 100D, 2)
+                                Dim deltaWr  = If(prevWr < 0, 0D, Math.Round(wrPct  - prevWr,  2))
+                                Dim deltaPnl = If(i = 0,      0D, Math.Round(ss.ProfitLossTotal - prevPnl, 4))
+                                Dim tendencia = If(deltaWr > 1, "mejora", If(deltaWr < -1, "degrada", "estable"))
+                                arrHist.Add(New JObject From {
+                                    {"sesion",         i + 1},
+                                    {"id",             ss.Id},
+                                    {"symbol",         ss.Symbol},
+                                    {"timeframe",      ss.Timeframe},
+                                    {"total_ops",      ss.TotalOperaciones},
+                                    {"win_rate",       wrPct},
+                                    {"delta_win_rate", deltaWr},
+                                    {"profit_loss",    Math.Round(ss.ProfitLossTotal, 4)},
+                                    {"delta_pnl",      deltaPnl},
+                                    {"max_drawdown",   Math.Round(ss.MaxDrawdown, 4)},
+                                    {"profit_factor",  Math.Round(ss.ProfitFactor, 4)},
+                                    {"min_confianza",  ss.MinConfianza},
+                                    {"tendencia",      tendencia},
+                                    {"created_at",     ss.CreatedAt.ToString("yyyy-MM-dd HH:mm")}
+                                })
+                                prevWr  = wrPct
+                                prevPnl = ss.ProfitLossTotal
+                            Next
+                            ' Resumen de tendencia global
+                            Dim resumen As String = "sin_datos"
+                            If sesHist.Count >= 2 Then
+                                Dim primeraWr = CDec(sesHist(0).WinRate * 100D)
+                                Dim ultimaWr  = CDec(sesHist(sesHist.Count - 1).WinRate * 100D)
+                                Dim diff = ultimaWr - primeraWr
+                                resumen = If(diff > 2, "mejorando", If(diff < -2, "degradando", "estable"))
+                            End If
+                            result = New JObject From {
+                                {"ok",        True},
+                                {"estrategia",nomHist},
+                                {"total",     sesHist.Count},
+                                {"tendencia_global", resumen},
+                                {"mejor_win_rate",   If(sesHist.Count > 0, Math.Round(sesHist.Max(Function(x) x.WinRate) * 100D, 2), 0)},
+                                {"peor_win_rate",    If(sesHist.Count > 0, Math.Round(sesHist.Min(Function(x) x.WinRate) * 100D, 2), 0)},
+                                {"historial",  arrHist}
+                            }
+                        End If
+
+                    Case "/api/dinamicas/comparar"
+                        ' Comparacion lado a lado de dos sesiones
+                        Dim idA As Integer = 0 : Integer.TryParse(qs("sesion_a"), idA)
+                        Dim idB As Integer = 0 : Integer.TryParse(qs("sesion_b"), idB)
+                        If idA = 0 OrElse idB = 0 Then
+                            result = ErrorJson("Parametros requeridos: sesion_a, sesion_b")
+                        Else
+                            Dim repoCmp As New BacktestRepository()
+                            Dim sA = Await repoCmp.GetSesionPorIdAsync(idA)
+                            Dim sB = Await repoCmp.GetSesionPorIdAsync(idB)
+                            If sA Is Nothing OrElse sB Is Nothing Then
+                                result = ErrorJson("Una o ambas sesiones no encontradas")
+                            Else
+                                Dim wrA = Math.Round(sA.WinRate * 100D, 2)
+                                Dim wrB = Math.Round(sB.WinRate * 100D, 2)
+                                result = New JObject From {
+                                    {"ok", True},
+                                    {"sesion_a", New JObject From {
+                                        {"id",            sA.Id},
+                                        {"estrategia",    sA.Estrategia},
+                                        {"symbol",        sA.Symbol},
+                                        {"timeframe",     sA.Timeframe},
+                                        {"total_ops",     sA.TotalOperaciones},
+                                        {"win_rate",      wrA},
+                                        {"profit_loss",   Math.Round(sA.ProfitLossTotal, 4)},
+                                        {"max_drawdown",  Math.Round(sA.MaxDrawdown, 4)},
+                                        {"profit_factor", Math.Round(sA.ProfitFactor, 4)},
+                                        {"min_confianza", sA.MinConfianza},
+                                        {"created_at",    sA.CreatedAt.ToString("yyyy-MM-dd HH:mm")}
+                                    }},
+                                    {"sesion_b", New JObject From {
+                                        {"id",            sB.Id},
+                                        {"estrategia",    sB.Estrategia},
+                                        {"symbol",        sB.Symbol},
+                                        {"timeframe",     sB.Timeframe},
+                                        {"total_ops",     sB.TotalOperaciones},
+                                        {"win_rate",      wrB},
+                                        {"profit_loss",   Math.Round(sB.ProfitLossTotal, 4)},
+                                        {"max_drawdown",  Math.Round(sB.MaxDrawdown, 4)},
+                                        {"profit_factor", Math.Round(sB.ProfitFactor, 4)},
+                                        {"min_confianza", sB.MinConfianza},
+                                        {"created_at",    sB.CreatedAt.ToString("yyyy-MM-dd HH:mm")}
+                                    }},
+                                    {"delta", New JObject From {
+                                        {"win_rate",      Math.Round(wrB - wrA, 2)},
+                                        {"profit_loss",   Math.Round(sB.ProfitLossTotal - sA.ProfitLossTotal, 4)},
+                                        {"max_drawdown",  Math.Round(sB.MaxDrawdown - sA.MaxDrawdown, 4)},
+                                        {"profit_factor", Math.Round(sB.ProfitFactor - sA.ProfitFactor, 4)},
+                                        {"total_ops",     sB.TotalOperaciones - sA.TotalOperaciones},
+                                        {"veredicto",     If(wrB > wrA + 2, "B_mejor", If(wrA > wrB + 2, "A_mejor", "similar"))}
+                                    }}
+                                }
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/operaciones"
+                        Dim sidOps As Integer = 0 : Integer.TryParse(If(qs("sesion_id"), "0"), sidOps)
+                        If sidOps = 0 Then
+                            result = ErrorJson("Parametro requerido: sesion_id")
+                        Else
+                            Dim limOps As Integer = 500 : Integer.TryParse(If(qs("limite"), "500"), limOps)
+                            Dim repoOps As New BacktestRepository()
+                            ' Sesion para nombre de estrategia y total real
+                            Dim sesionOps = Await repoOps.GetSesionPorIdAsync(sidOps)
+                            Dim estNombreOps = If(sesionOps IsNot Nothing, sesionOps.Estrategia, "")
+                            Dim totalRealOps = If(sesionOps IsNot Nothing, CLng(sesionOps.TotalOperaciones), 0L)
+                            Dim estVersionOps = ""
+                            If estNombreOps <> "" Then
+                                Dim estRegOps = EstrategiasDinamicasRegistry.GetByNombre(estNombreOps)
+                                If estRegOps IsNot Nothing Then estVersionOps = "v" & estRegOps.Definicion.Version
+                            End If
+                            ' Cargar solo las ultimas N para no saturar la respuesta
+                            Dim opsList = Await repoOps.GetUltimasOperacionesAsync(sidOps, limOps)
+                            Dim arrOps As New JArray()
+                            For Each op In opsList
+                                arrOps.Add(New JObject From {
+                                    {"estrategia",   estNombreOps},
+                                    {"version",      estVersionOps},
+                                    {"tipo",         op.Tipo},
+                                    {"epoch",        op.EpochEntrada},
+                                    {"entrada",      op.PrecioEntrada},
+                                    {"salida",       op.PrecioSalida},
+                                    {"estado",       op.Estado},
+                                    {"pnl",          op.ProfitLoss},
+                                    {"confianza",    op.Confianza},
+                                    {"balance_post", op.BalancePost},
+                                    {"cuenta",       op.CuentaNombre}
+                                })
+                            Next
+                            result = New JObject From {
+                                {"ok",           True},
+                                {"sesion_id",    sidOps},
+                                {"total",        totalRealOps},
+                                {"mostrando",    arrOps.Count},
+                                {"operaciones",  arrOps}
+                            }
+                        End If
+
+                    Case "/api/dinamicas/perdidas"
+                        Dim sidPerd As Integer = 0 : Integer.TryParse(qs("sesion_id"), sidPerd)
+                        If sidPerd = 0 Then
+                            result = ErrorJson("Parametro requerido: sesion_id")
+                        Else
+                            Dim repoPerd As New BacktestRepository()
+                            Dim perdList = Await repoPerd.GetPerdidasConContextoAsync(sidPerd)
+                            Dim arrPerd As New JArray()
+                            For Each op In perdList
+                                arrPerd.Add(New JObject From {
+                                    {"tipo",              op.Tipo},
+                                    {"epoch",             op.EpochEntrada},
+                                    {"confianza",         op.Confianza},
+                                    {"motivo",            op.MotivoSenal},
+                                    {"datos_indicadores", op.DatosIndicadores},
+                                    {"contexto_velas",    op.ContextoVelas}
+                                })
+                            Next
+                            result = New JObject From {{"ok", True}, {"sesion_id", sidPerd}, {"total", arrPerd.Count}, {"perdidas", arrPerd}}
+                        End If
+
+                    Case "/api/dinamicas/live/iniciar"
+                        If method <> "POST" Then
+                            result = ErrorJson("Use POST /api/dinamicas/live/iniciar")
+                        ElseIf body Is Nothing OrElse body("nombre") Is Nothing Then
+                            result = ErrorJson("Body requerido: {nombre, symbol, timeframe, ...}")
+                        Else
+                            Dim nomLive = body("nombre").ToString()
+                            Dim estLive = EstrategiasDinamicasRegistry.GetByNombre(nomLive)
+                            If estLive Is Nothing Then
+                                result = ErrorJson("Estrategia no encontrada: " & nomLive)
+                            Else
+                                If LiveTestMotor Is Nothing Then
+                                    LiveTestMotor = New LiveTestMotor()
+                                    LiveTestMotor.ExecuteTrade = ExecuteTrade
+                                End If
+                                Dim cfgLive As New LiveTestConfig With {
+                                    .Symbol           = If(body("symbol")?.ToString(), "R_100"),
+                                    .Timeframe        = If(body("timeframe")?.ToString(), "1h"),
+                                    .DuracionVelas    = If(body("duracion_velas") IsNot Nothing, CInt(body("duracion_velas")), 5),
+                                    .PayoutPct        = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                                    .MinConfianza     = If(body("min_confianza") IsNot Nothing, CInt(body("min_confianza")), 55),
+                                    .MontoOperacion   = If(body("monto") IsNot Nothing, CDec(body("monto")), 1D),
+                                    .VentanaIndicadores = If(body("ventana") IsNot Nothing, CInt(body("ventana")), 100)
+                                }
+                                Dim sesIdLive = Await LiveTestMotor.IniciarAsync(cfgLive, estLive)
+                                result = New JObject From {
+                                    {"ok",         True},
+                                    {"sesion_id",  sesIdLive},
+                                    {"estrategia", nomLive},
+                                    {"symbol",     cfgLive.Symbol},
+                                    {"timeframe",  cfgLive.Timeframe},
+                                    {"mensaje",    "Live test iniciado. Conecta el streaming para empezar a recibir velas."}
+                                }
+                            End If
+                        End If
+
+                    Case "/api/dinamicas/live/detener"
+                        If LiveTestMotor IsNot Nothing AndAlso LiveTestMotor.EstaActivo Then
+                            Await LiveTestMotor.DetenerAsync()
+                            result = New JObject From {{"ok", True}, {"mensaje", "Live test detenido."}}
+                        Else
+                            result = New JObject From {{"ok", False}, {"mensaje", "No hay live test activo."}}
+                        End If
+
+                    Case "/api/dinamicas/live/estado"
+                        If LiveTestMotor IsNot Nothing Then
+                            Dim estadoLive = LiveTestMotor.GetEstado()
+                            estadoLive("ok") = True
+                            result = estadoLive
+                        Else
+                            result = New JObject From {{"ok", True}, {"activo", False}, {"mensaje", "Motor no inicializado."}}
+                        End If
+
+                    ' ── Catalogo de activos para descarga masiva ──────────────────
+                    Case "/api/activos"
+                        Dim activosFile = IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "activos_descarga.json")
+                        If method = "POST" Then
+                            ' Guardar catalogo recibido en el body
+                            If body Is Nothing Then
+                                result = ErrorJson("Body JSON requerido.")
+                            Else
+                                Try
+                                    IO.File.WriteAllText(activosFile, body.ToString(Formatting.Indented), System.Text.Encoding.UTF8)
+                                    result = New JObject From {{"ok", True}, {"mensaje", "Catalogo guardado."}}
+                                Catch exW As Exception
+                                    result = ErrorJson("Error guardando: " & exW.Message)
+                                End Try
+                            End If
+                        Else
+                            ' Devolver catalogo: desde archivo si existe, sino el default integrado
+                            Dim catalogoJson As JObject = Nothing
+                            If IO.File.Exists(activosFile) Then
+                                Try
+                                    catalogoJson = JObject.Parse(IO.File.ReadAllText(activosFile, System.Text.Encoding.UTF8))
+                                Catch
+                                    catalogoJson = Nothing
+                                End Try
+                            End If
+                            If catalogoJson Is Nothing Then
+                                ' Catalogo por defecto — incluye symbol (Deriv), yahoo y stooq
+                                ' para que tanto descargar_masivo.ps1 como importar_historico.ps1
+                                ' puedan usar el mismo endpoint como fuente de verdad.
+                                catalogoJson = JObject.Parse("{
+                                    ""timeframes"": [""1d"",""4h"",""1h"",""5m""],
+                                    ""activos"": [
+                                        {""nombre"":""EURUSD"",""symbol"":""frxEURUSD"",""yahoo"":""EURUSD=X"",""stooq"":""eurusd""},
+                                        {""nombre"":""GBPUSD"",""symbol"":""frxGBPUSD"",""yahoo"":""GBPUSD=X"",""stooq"":""gbpusd""},
+                                        {""nombre"":""USDCHF"",""symbol"":""frxUSDCHF"",""yahoo"":""USDCHF=X"",""stooq"":""usdchf""},
+                                        {""nombre"":""USDJPY"",""symbol"":""frxUSDJPY"",""yahoo"":""USDJPY=X"",""stooq"":""usdjpy""},
+                                        {""nombre"":""GBPJPY"",""symbol"":""frxGBPJPY"",""yahoo"":""GBPJPY=X"",""stooq"":""gbpjpy""},
+                                        {""nombre"":""XAUUSD"",""symbol"":""frxXAUUSD"",""yahoo"":""GC=F"",   ""stooq"":""xauusd""},
+                                        {""nombre"":""XAGUSD"",""symbol"":""frxXAGUSD"",""yahoo"":""SI=F"",   ""stooq"":""xagusd""},
+                                        {""nombre"":""OIL_US"",""symbol"":""frxUSOIL"", ""yahoo"":""CL=F"",   ""stooq"":""cl.f""},
+                                        {""nombre"":""NAS100"",""symbol"":""OTC_NDX"",  ""yahoo"":""NQ=F"",   ""stooq"":""\^ndx""},
+                                        {""nombre"":""SP500"", ""symbol"":""OTC_SPC"",  ""yahoo"":""ES=F"",   ""stooq"":""\^spx""}
+                                    ]
+                                }")
+                            End If
+                            catalogoJson("ok") = True
+                            catalogoJson("fuente") = If(IO.File.Exists(activosFile), "archivo", "default")
+                            result = catalogoJson
+                        End If
+
                     Case Else
                         result = BuildHelp()
                 End Select
@@ -728,6 +1229,18 @@ Namespace WpfDerivClientVB
             ep("GET  /api/historico/datos") = "Velas de BD. Params: ?symbol=R_100&timeframe=1h&limit=100"
             ep("GET  /api/historico/contar") = "Total de registros. Params: ?symbol=R_100&timeframe=1h"
             ep("GET  /api/historico/detener") = "Cancelar descarga en curso"
+            ' ── Estrategias dinamicas
+            ep("GET  /api/dinamicas/listar") = "Catalogo de estrategias JSON disponibles"
+            ep("GET  /api/dinamicas/leer") = "Leer JSON de estrategia. Params: ?nombre=EmaRsiCruce"
+            ep("POST /api/dinamicas/guardar") = "Crear/actualizar JSON. Body: {nombre, contenido}"
+            ep("POST /api/dinamicas/eliminar") = "Eliminar JSON. Body: {nombre}"
+            ep("GET  /api/dinamicas/backtest") = "Ejecutar backtest. Params: ?nombre=EmaRsiCruce&symbol=R_100&timeframe=1h&desde_epoch=...&hasta_epoch=...&duracion_velas=5&payout=85&min_confianza=55&monto=10"
+            ep("GET  /api/dinamicas/sesiones") = "Listar sesiones. Params: ?limite=20"
+            ep("GET  /api/dinamicas/operaciones") = "Operaciones de sesion. Params: ?sesion_id=1"
+            ep("GET  /api/dinamicas/perdidas") = "Perdidas con contexto. Params: ?sesion_id=1"
+            ep("POST /api/dinamicas/live/iniciar") = "Iniciar live test. Body: {nombre, symbol, timeframe, duracion_velas, payout, min_confianza, monto}"
+            ep("POST /api/dinamicas/live/detener") = "Detener live test activo"
+            ep("GET  /api/dinamicas/live/estado") = "Estado del live test activo"
             ep("GET  /api/help") = "Esta ayuda"
             h("endpoints") = ep
 
