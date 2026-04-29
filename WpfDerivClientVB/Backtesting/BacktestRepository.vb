@@ -374,6 +374,27 @@ Namespace WpfDerivClientVB.Backtesting
             Return lista
         End Function
 
+        ''' <summary>
+        ''' Elimina una sesion y todas sus operaciones asociadas.
+        ''' </summary>
+        Public Async Function EliminarSesionAsync(sesionId As Integer) As Task
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    ' Borrar operaciones primero (FK constraint) luego la sesion
+                    Using cmd As New NpgsqlCommand(
+                        "DELETE FROM public.backtest_operaciones WHERE sesion_id = @sid;" &
+                        "DELETE FROM public.backtest_sesiones    WHERE id        = @sid;", conn)
+                        cmd.Parameters.AddWithValue("sid", sesionId)
+                        Await cmd.ExecuteNonQueryAsync()
+                    End Using
+                End Using
+            Catch ex As Exception
+                Console.WriteLine("[BacktestRepository.EliminarSesionAsync] Error: " & ex.Message)
+                Throw
+            End Try
+        End Function
+
         Private Shared Function MapSesion(reader As Npgsql.NpgsqlDataReader) As BacktestSesion
             Return New BacktestSesion With {
                 .Id               = CInt(reader("id")),

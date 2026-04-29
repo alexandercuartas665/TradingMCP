@@ -661,13 +661,22 @@ Namespace WpfDerivClientVB
                                              Await repoSes.GetSesionesPorEstrategiaAsync(filtroEst, limSes))
                         Dim arrSes As New JArray()
                         For Each ss In sesionesSes
+                            Dim desdeStr = If(ss.DesdeEpoch > 0,
+                                             DateTimeOffset.FromUnixTimeSeconds(ss.DesdeEpoch).ToString("dd/MM/yy"), "")
+                            Dim hastaStr = If(ss.HastaEpoch > 0,
+                                             DateTimeOffset.FromUnixTimeSeconds(ss.HastaEpoch).ToString("dd/MM/yy"), "")
                             arrSes.Add(New JObject From {
                                 {"id",            ss.Id},
                                 {"estrategia",    ss.Estrategia},
                                 {"symbol",        ss.Symbol},
                                 {"timeframe",     ss.Timeframe},
                                 {"duracion_velas",ss.DuracionVelas},
+                                {"payout_pct",    ss.PayoutPct},
                                 {"min_confianza", ss.MinConfianza},
+                                {"desde_epoch",   ss.DesdeEpoch},
+                                {"hasta_epoch",   ss.HastaEpoch},
+                                {"desde_str",     desdeStr},
+                                {"hasta_str",     hastaStr},
                                 {"total_senales", ss.TotalSenales},
                                 {"total_ops",     ss.TotalOperaciones},
                                 {"win_rate",      Math.Round(ss.WinRate * 100D, 2)},
@@ -906,6 +915,24 @@ Namespace WpfDerivClientVB
                             result = estadoLive
                         Else
                             result = New JObject From {{"ok", True}, {"activo", False}, {"mensaje", "Motor no inicializado."}}
+                        End If
+
+                    ' ── Eliminar sesion + operaciones ────────────────────────────
+                    Case "/api/dinamicas/sesiones/eliminar"
+                        If method <> "POST" Then
+                            result = ErrorJson("Use POST /api/dinamicas/sesiones/eliminar")
+                        ElseIf body Is Nothing OrElse body("sesion_id") Is Nothing Then
+                            result = ErrorJson("Parametro requerido: sesion_id")
+                        Else
+                            Dim sidDel As Integer = CInt(body("sesion_id"))
+                            Try
+                                Dim repoDel As New BacktestRepository()
+                                Await repoDel.EliminarSesionAsync(sidDel)
+                                result = New JObject From {{"ok", True}, {"sesion_id", sidDel},
+                                                           {"mensaje", String.Format("Sesion #{0} eliminada.", sidDel)}}
+                            Catch exDel As Exception
+                                result = ErrorJson("Error eliminando sesion: " & exDel.Message)
+                            End Try
                         End If
 
                     ' ── Catalogo de activos para descarga masiva ──────────────────

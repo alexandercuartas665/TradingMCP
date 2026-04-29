@@ -19,7 +19,7 @@
 param(
     [string]$SoloActivo  = "",
     [string]$SoloTF      = "",
-    [string]$Desde       = "2019-01-01",
+    [string]$Desde       = "2012-01-01",
     [string]$Hasta       = (Get-Date -Format "yyyy-MM-dd"),
     [int]$DelaySegundos  = 2,
     [string]$Servidor    = "http://localhost:8765",   # GET /api/activos para el catalogo
@@ -52,7 +52,10 @@ $COBERTURA = @{
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $ErrorActionPreference = "Continue"
 
-$ConfigFile = "C:\DesarrolloIA\Traiding\WpfDerivClientVB\bin\Debug\net48\db_config.json"
+$ConfigFile = "C:\DesarrolloIA\Traiding\WpfDerivClientVB\bin\Any CPU\Debug\net48\db_config.json"
+if (-not (Test-Path $ConfigFile)) {
+    $ConfigFile = "C:\DesarrolloIA\Traiding\WpfDerivClientVB\bin\Debug\net48\db_config.json"
+}
 
 # ============================================================
 # CATALOGO: se consulta al servidor (GET /api/activos)
@@ -73,6 +76,7 @@ $CATALOGO_RESPALDO = @(
     @{ Nombre="OIL_US"; Stooq="cl.f";   Yahoo="CL=F";     DbSymbol="frxUSOIL"  }
     @{ Nombre="NAS100"; Stooq="^ndx";   Yahoo="NQ=F";     DbSymbol="OTC_NDX"   }
     @{ Nombre="SP500";  Stooq="^spx";   Yahoo="ES=F";     DbSymbol="OTC_SPC"   }
+    @{ Nombre="DJ30";   Stooq="^dji";   Yahoo="YM=F";     DbSymbol="OTC_DJI"   }
 )
 
 # Intentar obtener el catalogo del servidor
@@ -109,13 +113,16 @@ if ($SoloActivo -ne "") {
     $CATALOGO = $CATALOGO | Where-Object { $_.Nombre -eq $SoloActivo -or $_.DbSymbol -eq $SoloActivo }
 }
 
-# Timeframes a importar por fuente
-$TFS_STOOQ = @("1d")
-$TFS_YAHOO = @("1h", "4h")   # 4h se agrega a partir de 1h
+# Timeframes a importar (todos via Yahoo Finance)
+$TFS_DIARIO  = @("1d")           # Yahoo range=10y
+$TFS_HORARIO = @("1h", "4h")     # Yahoo max 730d; 4h se agrega desde 1h
 if ($SoloTF -ne "") {
-    $TFS_STOOQ = @($TFS_STOOQ | Where-Object { $_ -eq $SoloTF })
-    $TFS_YAHOO = @($TFS_YAHOO | Where-Object { $_ -eq $SoloTF -or ($SoloTF -eq "4h" -and $_ -eq "1h") })
+    $TFS_DIARIO  = @($TFS_DIARIO  | Where-Object { $_ -eq $SoloTF })
+    $TFS_HORARIO = @($TFS_HORARIO | Where-Object { $_ -eq $SoloTF -or ($SoloTF -eq "4h" -and $_ -eq "1h") })
 }
+# Compatibilidad con codigo existente
+$TFS_STOOQ = $TFS_DIARIO
+$TFS_YAHOO  = $TFS_HORARIO
 
 # ============================================================
 # CONEXION A POSTGRESQL (igual que reporte_bd.ps1)
@@ -172,7 +179,7 @@ function Import-Candles {
 
     if ($Candles.Count -eq 0) { return 0 }
 
-    $platform = "deriv"    # misma plataforma para que el backtesting los encuentre
+    $platform = "Deriv"    # misma plataforma para que el backtesting los encuentre
     $inserted  = 0
     $batchSize = 500
     $idx       = 0
@@ -441,6 +448,39 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  [OK] Conexion PostgreSQL" -ForegroundColor Green
 Write-Host ""
 
+# ============================================================
+# -SoloVer: muestra tabla de cobertura actual y sale
+# ============================================================
+if ($SoloVer) {
+    Write-Host ""
+    Write-Host "  COBERTURA ACTUAL EN BD (solo lectura, sin descargar)" -ForegroundColor Cyan
+    Write-Host ("  {0,-10} {1,-5} {2,10} {3,12} {3,12} {5,6} {6,-12}" -f `
+        "ACTIVO","TF","VELAS","DESDE","HASTA","DIAS","ESTADO")
+    Write-Host ("  " + "-" * 72)
+    foreach ($activo in $CATALOGO) {
+        foreach ($tf in (@("1d","1h","4h") | Where-Object { $_ -in ($TFS_DIARIO + $TFS_HORARIO) })) {
+            $cob    = Get-Cobertura $activo.DbSymbol $tf
+            $minStr = if ($cob.MinFecha) { $cob.MinFecha.ToString("yyyy-MM-dd") } else { "---" }
+            $maxStr = if ($cob.MaxFecha) { $cob.MaxFecha.ToString("yyyy-MM-dd") } else { "---" }
+            $diasStr= if ($cob.MinFecha -and $cob.MaxFecha) { [int]($cob.MaxFecha - $cob.MinFecha).TotalDays } else { 0 }
+            $nec    = Test-NecesitaDescarga $tf $cob
+            $estado = if ($cob.Count -eq 0) { "[SIN DATOS]" } elseif ($nec) { "[INCOMPLETO]" } else { "[COMPLETO]" }
+            $color  = if ($cob.Count -eq 0) { "DarkGray" } elseif ($nec) { "Yellow" } else { "Green" }
+            Write-Host ("  {0,-10} {1,-5} {2,10} {3,12} {4,12} {5,6} {6,-12}" -f `
+                $activo.Nombre, $tf, ("{0:N0}" -f $cob.Count),
+                $minStr, $maxStr, $diasStr, $estado) -ForegroundColor $color
+        }
+    }
+    Write-Host ""
+    exit 0
+}
+
+# ============================================================
+# Tabla de seguimiento por activo (para el resumen final)
+# ============================================================
+$resumenActivos = [ordered]@{}
+foreach ($activo in $CATALOGO) { $resumenActivos[$activo.Nombre] = @{ Nuevas=0; Saltados=0; Errores=0 } }
+
 $totalInsertado = 0
 
 foreach ($activo in $CATALOGO) {
@@ -468,8 +508,10 @@ foreach ($activo in $CATALOGO) {
                 $nuevas  = $despues - $cob1d.Count
                 Write-Host "        $($candles.Count) recibidas / $nuevas nuevas (total BD: $despues)" -ForegroundColor Green
                 $totalInsertado += $nuevas
+                $resumenActivos[$activo.Nombre].Nuevas += $nuevas
             } else {
                 Write-Host "        Sin datos de Yahoo." -ForegroundColor Yellow
+                $resumenActivos[$activo.Nombre].Errores++
             }
             Start-Sleep -Seconds $DelaySegundos
         }
@@ -493,17 +535,19 @@ foreach ($activo in $CATALOGO) {
             $candles1h = @(Get-YahooHorario $activo.Yahoo)
 
             if ($candles1h.Count -gt 0) {
-                if ("1h" -in $TFS_YAHOO) {
+                if ("1h" -in $TFS_HORARIO) {
                     $n       = Import-Candles $activo.DbSymbol "1h" $candles1h
                     $despues = Get-Count $activo.DbSymbol "1h"
                     $nuevas  = $despues - $cob1h.Count
                     Write-Host "        $($candles1h.Count) recibidas / $nuevas nuevas (total BD: $despues)" -ForegroundColor Green
                     $totalInsertado += $nuevas
+                    $resumenActivos[$activo.Nombre].Nuevas += $nuevas
                 } else {
                     Write-Host "        $($candles1h.Count) recibidas (base para 4h)" -ForegroundColor DarkGray
                 }
             } else {
                 Write-Host "        Sin datos de Yahoo." -ForegroundColor Yellow
+                $resumenActivos[$activo.Nombre].Errores++
             }
             Start-Sleep -Seconds $DelaySegundos
         }
@@ -529,6 +573,7 @@ foreach ($activo in $CATALOGO) {
                 $nuevas  = $despues - $cob4h.Count
                 Write-Host "        $($candles4h.Count) velas 4h / $nuevas nuevas (total BD: $despues)" -ForegroundColor Green
                 $totalInsertado += $nuevas
+                $resumenActivos[$activo.Nombre].Nuevas += $nuevas
             } else {
                 Write-Host "        Sin velas 4h." -ForegroundColor Yellow
             }
@@ -563,6 +608,7 @@ ON CONFLICT (platform, symbol, timeframe, epoch) DO NOTHING;
             $nuevas  = $despues - $cob4h.Count
             Write-Host "        $nuevas nuevas velas 4h (total BD: $despues)" -ForegroundColor Green
             $totalInsertado += $nuevas
+            $resumenActivos[$activo.Nombre].Nuevas += $nuevas
         }
     }
 
@@ -570,15 +616,38 @@ ON CONFLICT (platform, symbol, timeframe, epoch) DO NOTHING;
 }
 
 # ============================================================
-# RESUMEN FINAL
+# RESUMEN FINAL - tabla por activo
 # ============================================================
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "  IMPORTACION COMPLETADA" -ForegroundColor Green
 Write-Host "  Total nuevas velas en BD: $totalInsertado" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Cobertura por fuente:" -ForegroundColor DarkGray
+Write-Host "  RESULTADO POR ACTIVO:" -ForegroundColor Cyan
+Write-Host ("  {0,-10} {1,-5} {2,10} {3,12} {4,12} {5,6} {6,-12}" -f `
+    "ACTIVO","TF","VELAS BD","DESDE","HASTA","DIAS","ESTADO") -ForegroundColor Cyan
+Write-Host ("  " + "-" * 72)
+
+foreach ($activo in $CATALOGO) {
+    foreach ($tf in ($TFS_DIARIO + ($TFS_HORARIO | Where-Object { $_ -ne "4h" -or "4h" -in $TFS_HORARIO }))) {
+        $cob    = Get-Cobertura $activo.DbSymbol $tf
+        $minStr = if ($cob.MinFecha) { $cob.MinFecha.ToString("yyyy-MM-dd") } else { "---" }
+        $maxStr = if ($cob.MaxFecha) { $cob.MaxFecha.ToString("yyyy-MM-dd") } else { "---" }
+        $dias   = if ($cob.MinFecha -and $cob.MaxFecha) { [int]($cob.MaxFecha - $cob.MinFecha).TotalDays } else { 0 }
+        $nec    = Test-NecesitaDescarga $tf $cob
+        $estado = if ($cob.Count -eq 0) { "[SIN DATOS]" } elseif ($nec) { "[INCOMPLETO]" } else { "[COMPLETO]" }
+        $color  = if ($cob.Count -eq 0) { "DarkGray" } elseif ($nec) { "Yellow" } else { "Green" }
+        Write-Host ("  {0,-10} {1,-5} {2,10} {3,12} {4,12} {5,6} {6,-12}" -f `
+            $activo.Nombre, $tf, ("{0:N0}" -f $cob.Count),
+            $minStr, $maxStr, $dias, $estado) -ForegroundColor $color
+    }
+}
+
+Write-Host ""
+Write-Host "  Fuentes utilizadas:" -ForegroundColor DarkGray
 Write-Host "    1d  -> Yahoo Finance, hasta 10 anos de historia" -ForegroundColor DarkGray
 Write-Host "    1h  -> Yahoo Finance, ultimos 730 dias (2 bloques de 365d)" -ForegroundColor DarkGray
-Write-Host "    4h  -> Agregado desde 1h (misma cobertura)" -ForegroundColor DarkGray
-Write-Host "    5m  -> Solo via Deriv (~380 dias). Ejecuta descargar_masivo.ps1" -ForegroundColor DarkGray
+Write-Host "    4h  -> Agregado desde 1h (misma cobertura que 1h)" -ForegroundColor DarkGray
+Write-Host "    5m  -> Solo via Deriv API (~380 dias). Usa descargar_masivo.ps1" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  Para ver cobertura sin descargar: .\importar_historico.ps1 -SoloVer" -ForegroundColor DarkGray
 Write-Host "============================================================" -ForegroundColor Cyan

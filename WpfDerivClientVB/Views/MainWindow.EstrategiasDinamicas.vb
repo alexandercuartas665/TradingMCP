@@ -42,6 +42,7 @@ Namespace WpfDerivClientVB
             _dinTabListo = True
             Dispatcher.BeginInvoke(New Action(Async Sub()
                                                   Await CargarActivosBDAsync()
+                                                  Await CargarSesionesAsync()
                                               End Sub), System.Windows.Threading.DispatcherPriority.Loaded)
             ' ── Polling: detecta sesiones nuevas creadas via API/MCP cada 5s ──
             _dinPollTimer = New System.Windows.Threading.DispatcherTimer()
@@ -87,7 +88,9 @@ Namespace WpfDerivClientVB
                         txtDinVersion.Text = s.Estrategia
                     End If
                     txtDinBalance.Text = ""
-                    ' Cargar operaciones en el grid
+                    ' Refrescar lista de sesiones y cargar operaciones de la nueva
+                    Dim filtro = If(lstEstrategias.SelectedItem?.ToString(), "")
+                    Await CargarSesionesAsync(filtro)
                     Await CargarOperacionesSesionAsync(ultimaId)
                     ActualizarLogBD(String.Format(
                         "Sesion #{0} cargada automaticamente | {1} | Win:{2:F1}% | PnL:{3:F2}",
@@ -212,7 +215,11 @@ Namespace WpfDerivClientVB
         End Function
 
         ' ── Eventos de UI ───────────────────────────────────────────────
-        Private Sub lstEstrategias_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+        Private Async Sub lstEstrategias_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+            If Not _dinTabListo Then Return
+            Dim nombre = If(lstEstrategias.SelectedItem?.ToString(), "")
+            dgDinOperaciones.ItemsSource = Nothing
+            Await CargarSesionesAsync(nombre)
         End Sub
 
         Private Async Sub btnRecargarEstrategias_Click(sender As Object, e As System.Windows.RoutedEventArgs)
@@ -357,6 +364,9 @@ Namespace WpfDerivClientVB
                     s.ProfitLossTotal, totalOps, sw.Elapsed.TotalSeconds),
                     If(wr >= 50, Colors.LightGreen, Colors.Orange))
 
+                ' ── Refrescar lista de sesiones ─────────────────────────────
+                Await CargarSesionesAsync(nombre)
+
                 ' ── Poblar tabla de operaciones ──────────────────────────────
                 Dim filas = resultado.Operaciones.
                                 OrderBy(Function(o) o.EpochEntrada).
@@ -399,6 +409,161 @@ Namespace WpfDerivClientVB
             txtDinPnl.Foreground = New SolidColorBrush(If(pnl >= 0, Color.FromRgb(&HA6, &HE3, &HA1), Color.FromRgb(&HF3, &H8B, &HA8)))
         End Sub
 
+        ' ── Cargar lista de sesiones (filtrada por estrategia) ───────────
+        Private Async Function CargarSesionesAsync(Optional estrategia As String = "") As Task
+            If _apiServer Is Nothing OrElse Not _apiServer.IsRunning Then Return
+            Try
+                Dim url = String.Format("http://localhost:{0}/api/dinamicas/sesiones?limite=100", _apiServer.Port)
+                If Not String.IsNullOrWhiteSpace(estrategia) Then
+                    url &= "&estrategia=" & Uri.EscapeDataString(estrategia)
+                End If
+                Using client As New HttpClient()
+                    client.Timeout = TimeSpan.FromSeconds(15)
+                    Dim resp = Await client.GetStringAsync(url)
+                    Dim json = JObject.Parse(resp)
+                    Dim arr = TryCast(json("sesiones"), JArray)
+                    If arr Is Nothing Then Return
+
+                    Dim lista As New List(Of SesionRow)()
+                    Dim verde = Color.FromRgb(&HA6, &HE3, &HA1)
+                    Dim rojo  = Color.FromRgb(&HF3, &H8B, &HA8)
+                    For Each item As JObject In arr
+                        Dim wr      = CDec(item("win_rate"))
+                        Dim pnl     = CDec(item("profit_loss"))
+                        Dim pf      = CDec(item("profit_factor"))
+                        Dim ops     = CLng(item("total_ops"))
+                        Dim senales = CLng(item("total_senales"))
+                        Dim sid     = CInt(item("id"))
+                        Dim est     = If(item("estrategia")?.ToString(), "")
+                        Dim sym     = If(item("symbol")?.ToString(), "")
+                        Dim tf      = If(item("timeframe")?.ToString(), "")
+                        Dim dur     = CInt(If(item("duracion_velas"), 0))
+                        Dim pay     = CDec(If(item("payout_pct"), 85))
+                        Dim conf    = CInt(If(item("min_confianza"), 55))
+                        Dim desde   = If(item("desde_str")?.ToString(), "")
+                        Dim hasta   = If(item("hasta_str")?.ToString(), "")
+                        Dim fecha   = If(item("created_at")?.ToString(), "")
+                        Dim fechaCorta As String = fecha
+                        Try
+                            Dim dt = DateTime.ParseExact(fecha, "yyyy-MM-dd HH:mm",
+                                         System.Globalization.CultureInfo.InvariantCulture)
+                            fechaCorta = dt.ToString("dd/MM HH:mm")
+                        Catch
+                        End Try
+                        Dim pnlStr = String.Format("{0:+0.00;-0.00;0.00}", pnl)
+                        lista.Add(New SesionRow With {
+                            .Id           = sid,
+                            .IdCorto      = String.Format("#{0}", sid),
+                            .FechaHora    = fechaCorta,
+                            .WinRate      = String.Format("{0:F1}%", wr),
+                            .WinRateNum   = wr,
+                            .WinBrush     = New SolidColorBrush(If(wr >= 54.05, verde, rojo)),
+                            .Resumen      = String.Format("{0} · {1}/{2} · {3}ops · {4}",
+                                                          est, sym, tf, ops, pnlStr),
+                            .Estrategia   = est,
+                            .Symbol       = sym,
+                            .Timeframe    = tf,
+                            .DuracionV    = dur,
+                            .PayoutPct    = pay,
+                            .MinConf      = conf,
+                            .DesdeStr     = desde,
+                            .HastaStr     = hasta,
+                            .TotalSenales = senales,
+                            .TotalOps     = ops,
+                            .ProfitLoss   = pnl,
+                            .ProfitFactor = pf
+                        })
+                    Next
+                    lstDinSesiones.ItemsSource = lista
+                End Using
+            Catch ex As Exception
+                ActualizarLogBD("Error cargando sesiones: " & ex.Message, Colors.Salmon)
+            End Try
+        End Function
+
+        ' ── Seleccion de sesion → barra config + operaciones ─────────────
+        Private Async Sub lstDinSesiones_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs)
+            Dim row = TryCast(lstDinSesiones.SelectedItem, SesionRow)
+            If row Is Nothing Then
+                brdDinConfig.Visibility = System.Windows.Visibility.Collapsed
+                btnDinEliminar.IsEnabled = False
+                Return
+            End If
+            _dinUltimoSesionId = row.Id
+            txtDinSesionId.Text = row.IdCorto
+
+            ' Poblar barra de configuracion
+            Dim estReg = EstrategiasDinamicasRegistry.GetByNombre(row.Estrategia)
+            Dim version = If(estReg IsNot Nothing, " v" & estReg.Definicion.Version, "")
+            txtDinCfgId.Text         = row.IdCorto
+            txtDinCfgEstrategia.Text = row.Estrategia & version
+            txtDinCfgSymbol.Text     = String.Format("{0} / {1}", row.Symbol, row.Timeframe)
+            txtDinCfgDuracion.Text   = String.Format("{0} velas", row.DuracionV)
+            txtDinCfgPayout.Text     = String.Format("{0}%", row.PayoutPct)
+            txtDinCfgConfianza.Text  = String.Format("{0}%", row.MinConf)
+            txtDinCfgRango.Text      = If(row.DesdeStr <> "" AndAlso row.HastaStr <> "",
+                                          String.Format("{0} -> {1}", row.DesdeStr, row.HastaStr), "completo")
+            txtDinCfgSenales.Text    = String.Format("{0:N0}", row.TotalSenales)
+            txtDinCfgOps.Text        = String.Format("{0:N0}", row.TotalOps)
+            txtDinCfgWin.Text        = String.Format("{0:F1}%", row.WinRateNum)
+            txtDinCfgWin.Foreground  = New SolidColorBrush(
+                If(row.WinRateNum >= 54.05, Color.FromRgb(&HA6, &HE3, &HA1), Color.FromRgb(&HF3, &H8B, &HA8)))
+            txtDinCfgPnl.Text        = String.Format("{0:+0.00;-0.00;0.00}", row.ProfitLoss)
+            txtDinCfgPnl.Foreground  = New SolidColorBrush(
+                If(row.ProfitLoss >= 0, Color.FromRgb(&HA6, &HE3, &HA1), Color.FromRgb(&HF3, &H8B, &HA8)))
+            txtDinCfgPf.Text         = String.Format("{0:F3}", row.ProfitFactor)
+            brdDinConfig.Visibility  = System.Windows.Visibility.Visible
+            btnDinEliminar.IsEnabled = True
+
+            ' Actualizar barra de metricas superior
+            MostrarWinRate(row.WinRateNum)
+            MostrarPnl(row.ProfitLoss)
+            txtDinOps.Text      = String.Format("{0:N0} ops", row.TotalOps)
+            txtDinDrawdown.Text = ""
+            txtDinEstado.Text   = String.Format("{0} | {1} / {2}", row.Estrategia, row.Symbol, row.Timeframe)
+            txtDinVersion.Text  = row.Estrategia & version
+
+            Await CargarOperacionesSesionAsync(row.Id)
+        End Sub
+
+        ' ── Eliminar sesion seleccionada ──────────────────────────────────
+        Private Async Sub btnDinEliminar_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Dim row = TryCast(lstDinSesiones.SelectedItem, SesionRow)
+            If row Is Nothing Then Return
+            Dim confirm = System.Windows.MessageBox.Show(
+                String.Format("Eliminar sesion {0}?{1}{2}{1}Esta accion borrara {3:N0} operaciones de la BD.",
+                              row.IdCorto, Environment.NewLine, row.Resumen, row.TotalOps),
+                "Confirmar eliminacion",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning)
+            If confirm <> System.Windows.MessageBoxResult.Yes Then Return
+            Try
+                btnDinEliminar.IsEnabled = False
+                Using client As New HttpClient()
+                    client.Timeout = TimeSpan.FromSeconds(30)
+                    Dim body = New JObject From {{"sesion_id", row.Id}}
+                    Dim content As New StringContent(body.ToString(), Text.Encoding.UTF8, "application/json")
+                    Dim resp = Await client.PostAsync(
+                        String.Format("http://localhost:{0}/api/dinamicas/sesiones/eliminar", _apiServer.Port), content)
+                    Dim json = JObject.Parse(Await resp.Content.ReadAsStringAsync())
+                    If json("ok")?.ToObject(Of Boolean)() = True Then
+                        ActualizarLogBD(String.Format("Sesion {0} eliminada correctamente.", row.IdCorto), Colors.LightGreen)
+                        dgDinOperaciones.ItemsSource = Nothing
+                        brdDinConfig.Visibility = System.Windows.Visibility.Collapsed
+                        ' Refrescar la lista
+                        Dim filtro = If(lstEstrategias.SelectedItem?.ToString(), "")
+                        Await CargarSesionesAsync(filtro)
+                    Else
+                        ActualizarLogBD("Error: " & json("error")?.ToString(), Colors.Salmon)
+                        btnDinEliminar.IsEnabled = True
+                    End If
+                End Using
+            Catch ex As Exception
+                ActualizarLogBD("Error eliminando: " & ex.Message, Colors.Salmon)
+                btnDinEliminar.IsEnabled = True
+            End Try
+        End Sub
+
         ' ── Cargar operaciones de sesion (ultimas 500) ───────────────────
         Private Async Function CargarOperacionesSesionAsync(sesionId As Integer) As Task
             If _apiServer Is Nothing OrElse Not _apiServer.IsRunning Then Return
@@ -412,7 +577,7 @@ Namespace WpfDerivClientVB
                     Dim json = JObject.Parse(resp)
                     Dim arr = TryCast(json("operaciones"), JArray)
                     If arr IsNot Nothing Then
-                        Dim totalBD  As Long = If(json("total")    IsNot Nothing, CLng(json("total")),    CLng(arr.Count))
+                        Dim totalBD As Long = If(json("total") IsNot Nothing, CLng(json("total")), CLng(arr.Count))
                         Dim mostrando As Integer = If(json("mostrando") IsNot Nothing, CInt(json("mostrando")), arr.Count)
                         Dim lista As New List(Of OperacionRow)()
                         For Each item As JObject In arr
@@ -420,18 +585,18 @@ Namespace WpfDerivClientVB
                             Dim balPost = If(item("balance_post") IsNot Nothing AndAlso item("balance_post").Type <> JTokenType.Null,
                                              CDec(item("balance_post")), 0D)
                             lista.Add(New OperacionRow With {
-                                .Estrategia   = item("estrategia")?.ToString(),
-                                .Version      = item("version")?.ToString(),
-                                .Tipo         = item("tipo")?.ToString(),
-                                .Epoch        = DateTimeOffset.FromUnixTimeSeconds(CLng(item("epoch"))).ToString("dd/MM HH:mm"),
-                                .Entrada      = String.Format("{0:F5}", CDec(item("entrada"))),
-                                .Salida       = String.Format("{0:F5}", CDec(item("salida"))),
-                                .Estado       = item("estado")?.ToString(),
-                                .Pnl          = String.Format("{0:+0.00;-0.00;0.00}", pnlVal),
-                                .Confianza    = String.Format("{0}%", CInt(item("confianza"))),
+                                .Estrategia = item("estrategia")?.ToString(),
+                                .Version = item("version")?.ToString(),
+                                .Tipo = item("tipo")?.ToString(),
+                                .Epoch = DateTimeOffset.FromUnixTimeSeconds(CLng(item("epoch"))).ToString("dd/MM HH:mm"),
+                                .Entrada = String.Format("{0:F5}", CDec(item("entrada"))),
+                                .Salida = String.Format("{0:F5}", CDec(item("salida"))),
+                                .Estado = item("estado")?.ToString(),
+                                .Pnl = String.Format("{0:+0.00;-0.00;0.00}", pnlVal),
+                                .Confianza = String.Format("{0}%", CInt(item("confianza"))),
                                 .BalanceInicio = "",
-                                .Balance      = If(balPost > 0, String.Format("${0:N2}", balPost), ""),
-                                .Cuenta       = item("cuenta")?.ToString()
+                                .Balance = If(balPost > 0, String.Format("${0:N2}", balPost), ""),
+                                .Cuenta = item("cuenta")?.ToString()
                             })
                         Next
                         dgDinOperaciones.ItemsSource = lista
@@ -715,6 +880,30 @@ Namespace WpfDerivClientVB
             End Try
         End Sub
 
+    End Class
+
+    ' ── DTO para la lista de sesiones ────────────────────────────────────
+    Public Class SesionRow
+        Public Property Id           As Integer
+        Public Property IdCorto      As String          ' "#38"
+        Public Property FechaHora    As String          ' "28/04 14:32"
+        Public Property WinRate      As String          ' "62.5%"
+        Public Property WinBrush     As SolidColorBrush
+        Public Property Resumen      As String          ' "EmaRsiCruce · R_100/1h · 142ops · +$85.20"
+        ' Campos de configuracion (para la barra de detalle al seleccionar)
+        Public Property Estrategia   As String
+        Public Property Symbol       As String
+        Public Property Timeframe    As String
+        Public Property DuracionV    As Integer
+        Public Property PayoutPct    As Decimal
+        Public Property MinConf      As Integer
+        Public Property DesdeStr     As String
+        Public Property HastaStr     As String
+        Public Property TotalSenales As Long
+        Public Property TotalOps     As Long
+        Public Property ProfitLoss   As Decimal
+        Public Property ProfitFactor As Decimal
+        Public Property WinRateNum   As Decimal         ' valor numerico para colorear
     End Class
 
     ' ── DTO para el DataGrid ─────────────────────────────────────────────

@@ -58,7 +58,11 @@
       "Bash(powershell -Command \"& 'C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe' 'C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\WpfDerivClientVB.vbproj' /t:Clean,Build /p:Configuration=Debug /nologo 2>&1\")",
       "mcp__indicadores-deriv__dinamicas_operaciones",
       "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" WpfDerivClientVB.vbproj /p:Configuration=Debug /p:Platform=\"Any CPU\" /t:Build /v:minimal)",
-      "PowerShell(\\(Get-Item \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Any CPU\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe\"\\).LastWriteTime)"
+      "PowerShell(\\(Get-Item \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Any CPU\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe\"\\).LastWriteTime)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" WpfDerivClientVB.vbproj /p:Configuration=Debug \"/p:Platform=Any CPU\" /t:Build /v:minimal)",
+      "mcp__indicadores-deriv__dinamicas_sesiones",
+      "Bash(Get-Content \"C:\\\\DesarrolloIA\\\\Traiding\\\\DescargasHistoricas\\\\logs\\\\optimizar_bb4h_20260429_180006.log\")",
+      "Bash(Select-Object -Last 80)"
     ]
   }
 }

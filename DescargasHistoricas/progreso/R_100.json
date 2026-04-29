@@ -1,0 +1,38 @@
+{
+  "R_100-1m": {
+    "cursor": "2025-04-14",
+    "pendientes": [
+      {
+        "desde": "2025-10-31",
+        "hasta": "2025-11-10",
+        "intentos": 2
+      },
+      {
+        "desde": "2025-08-02",
+        "hasta": "2025-08-12",
+        "intentos": 2
+      },
+      {
+        "desde": "2025-07-23",
+        "hasta": "2025-08-02",
+        "intentos": 2
+      }
+    ]
+  },
+  "R_100-4h": {
+    "pendientes": [],
+    "cursor": "2025-04-14"
+  },
+  "R_100-5m": {
+    "pendientes": [],
+    "cursor": "2025-04-14"
+  },
+  "R_100-1d": {
+    "pendientes": [],
+    "cursor": "2025-04-14"
+  },
+  "R_100-1h": {
+    "pendientes": [],
+    "cursor": "2025-04-14"
+  }
+}

@@ -59,9 +59,9 @@ $ProgresoDir  = "$ScriptDir\progreso"
 $ProgresoV1   = "$ScriptDir\progreso.json"
 
 # Chunks adaptativos por TF (dias por peticion)
-$CHUNK_POR_TF  = @{ "1d" = 2000; "4h" = 1000; "1h" = 400; "5m" = 55 }
+$CHUNK_POR_TF  = @{ "1d" = 2000; "4h" = 1000; "1h" = 400; "5m" = 55; "1m" = 10 }
 # Delay en segundos entre chunks
-$DELAY_POR_TF  = @{ "1d" = 3;    "4h" = 5;    "1h" = 10;  "5m" = 30 }
+$DELAY_POR_TF  = @{ "1d" = 3;    "4h" = 5;    "1h" = 10;  "5m" = 30; "1m" = 60 }
 
 # ============================================================
 # CATALOGO: se consulta al servidor en tiempo de ejecucion
@@ -389,6 +389,18 @@ foreach ($activo in $activosList) {
             Symbol = $activo.symbol
             TF     = $tf
             Nombre = $activo.nombre
+        }
+    }
+    # Sinteticos Deriv (R_*, 1HZ*): agregar 1m automaticamente
+    # Los indices sinteticos operan 24/7 y solo tienen historia util en 1m via Deriv.
+    if ($activo.symbol -like "R_*" -or $activo.symbol -like "1HZ*") {
+        if ("1m" -notin $tfList) {
+            $COMBINACIONES += @{
+                Id     = "$($activo.nombre)-1m"
+                Symbol = $activo.symbol
+                TF     = "1m"
+                Nombre = $activo.nombre
+            }
         }
     }
 }

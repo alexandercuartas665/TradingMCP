@@ -1,4 +1,10 @@
 ﻿{
+    "OIL_US-1d":  {
+                      "pendientes":  [
+
+                                     ],
+                      "cursor":  "2025-04-13"
+                  },
     "OIL-1h":  {
                    "cursor":  "2025-04-09",
                    "pendientes":  [
@@ -19,31 +25,13 @@
                },
     "OIL_US-4h":  {
                       "pendientes":  [
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-04-28",
-                                             "desde":  "2025-04-13"
-                                         }
-                                     ],
-                      "cursor":  "2025-04-13"
-                  },
-    "OIL_US-1d":  {
-                      "pendientes":  [
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-04-28",
-                                             "desde":  "2025-04-13"
-                                         }
+
                                      ],
                       "cursor":  "2025-04-13"
                   },
     "OIL_US-1h":  {
                       "pendientes":  [
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-04-28",
-                                             "desde":  "2025-04-13"
-                                         }
+
                                      ],
                       "cursor":  "2025-04-13"
                   },
@@ -55,41 +43,7 @@
                },
     "OIL_US-5m":  {
                       "pendientes":  [
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-04-28",
-                                             "desde":  "2026-03-04"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-03-04",
-                                             "desde":  "2026-01-08"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2026-01-08",
-                                             "desde":  "2025-11-14"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2025-11-14",
-                                             "desde":  "2025-09-20"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2025-09-20",
-                                             "desde":  "2025-07-27"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2025-07-27",
-                                             "desde":  "2025-06-02"
-                                         },
-                                         {
-                                             "intentos":  1,
-                                             "hasta":  "2025-06-02",
-                                             "desde":  "2025-04-13"
-                                         }
+
                                      ],
                       "cursor":  "2025-04-13"
                   }
