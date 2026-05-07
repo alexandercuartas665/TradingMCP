@@ -25,11 +25,16 @@ Namespace WpfDerivClientVB
         ' ===================================================
         '  CONTROL DEL SERVIDOR API
         ' ===================================================
+        ' Dispatcher unico de velas: enruta cada vela cerrada a TODOS los motores live
+        ' activos. Cada motor filtra internamente si la vela aplica a su symbol/timeframe.
+        Private _candleDispatcher As Action(Of CandleModel, String, String) = Nothing
+
         Private Sub btnApiServer_Click(sender As Object, e As System.Windows.RoutedEventArgs)
             If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then
-                ' Desconectar el handler de vela cerrada antes de detener
-                If _apiServer.LiveTestMotor IsNot Nothing Then
-                    RemoveHandler Me.OnCandleCerrada, AddressOf _apiServer.LiveTestMotor.ProcesarCandleCerrada
+                ' Desconectar el dispatcher de vela cerrada antes de detener
+                If _candleDispatcher IsNot Nothing Then
+                    RemoveHandler Me.OnCandleCerrada, _candleDispatcher
+                    _candleDispatcher = Nothing
                 End If
                 _apiServer.Stop()
                 _apiServer = Nothing
@@ -47,10 +52,29 @@ Namespace WpfDerivClientVB
                 _apiServer.ExecuteSell     = AddressOf ApiExecuteSell
                 _apiServer.LogAction       = AddressOf AgregarLogApi
                 _apiServer.DescargaService = _descargaService
-                ' Conectar el LiveTestMotor al evento de vela cerrada del streaming
-                _apiServer.LiveTestMotor = New LiveTestMotor()
-                _apiServer.LiveTestMotor.ExecuteTrade = AddressOf ApiExecuteTrade
-                AddHandler Me.OnCandleCerrada, AddressOf _apiServer.LiveTestMotor.ProcesarCandleCerrada
+                _apiServer.OnTradeLiveAbierto = AddressOf TaggearOpLiveEnGrid
+                ' Dispatcher de velas: notifica a todos los motores live activos.
+                ' CRITICAL: cada motor procesa en Task.Run (thread pool) para NO bloquear
+                ' el UI thread. Con velas de 1m y multi-estrategia, procesar en UI thread
+                ' congela toda la app.
+                _candleDispatcher = Sub(c As CandleModel, sym As String, tf As String)
+                                        If _apiServer Is Nothing Then Return
+                                        Dim motoresSnapshot As List(Of LiveTestMotor)
+                                        SyncLock _apiServer.LiveMotors
+                                            motoresSnapshot = _apiServer.LiveMotors.Values.ToList()
+                                        End SyncLock
+                                        For Each motor In motoresSnapshot
+                                            Dim m = motor   ' capture para el closure
+                                            Task.Run(Sub()
+                                                         Try
+                                                             m.ProcesarCandleCerradaConContexto(c, sym, tf)
+                                                         Catch ex As Exception
+                                                             AppLogger.Warn("[CandleDispatcher] " & ex.Message)
+                                                         End Try
+                                                     End Sub)
+                                        Next
+                                    End Sub
+                AddHandler Me.OnCandleCerrada, _candleDispatcher
                 ' Inicializar el registry de estrategias dinamicas
                 EstrategiasDinamicasRegistry.Inicializar()
                 Try
@@ -59,6 +83,11 @@ Namespace WpfDerivClientVB
                     btnApiServer.Foreground = New SolidColorBrush(Color.FromRgb(&HA6, &HE3, &HA1))
                     txtApiUrl.Text = String.Format("http://localhost:{0}/api/help", port)
                     AgregarLogApi(String.Format("[Sistema] Servidor iniciado en http://localhost:{0}/", port))
+                    ' Auto-reanudar sesiones live que quedaron activas en BD (post-crash).
+                    ' La estrategia se carga del registry, el motor se recrea, se abre WS background.
+                    Dim _ignore = Dispatcher.BeginInvoke(
+                        Sub() ReanudarSesionesLiveActivasAsync(),
+                        System.Windows.Threading.DispatcherPriority.Background)
                 Catch ex As Exception
                     System.Windows.MessageBox.Show("No se pudo iniciar el servidor: " & ex.Message)
                     _apiServer = Nothing
@@ -77,6 +106,27 @@ Namespace WpfDerivClientVB
                                   txtApiLog.Text = String.Join(Environment.NewLine, lista)
                                   txtApiLog.ScrollToEnd()
                               End Sub)
+        End Sub
+
+        ''' <summary>
+        ''' Marca una operacion del grid de Trading Live como originada por una estrategia.
+        ''' Se invoca desde LiveTestMotor cuando confirma contract_id en Deriv.
+        ''' La OperacionModel ya fue creada por ProcesarMensajeTrading "buy" — solo agregamos metadatos.
+        ''' </summary>
+        Private Sub TaggearOpLiveEnGrid(contractId As String, estrategia As String, sesionId As Integer, opId As Integer)
+            If String.IsNullOrEmpty(contractId) Then Return
+            Dispatcher.BeginInvoke(Sub()
+                                       Try
+                                           Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
+                                           If op IsNot Nothing Then
+                                               op.Estrategia = estrategia
+                                               op.EsLive = True
+                                               op.SesionId = sesionId
+                                               op.OperacionLiveId = opId
+                                           End If
+                                       Catch
+                                       End Try
+                                   End Sub, System.Windows.Threading.DispatcherPriority.Background)
         End Sub
 
         Private Sub btnLimpiarLog_Click(sender As Object, e As System.Windows.RoutedEventArgs)
@@ -307,6 +357,12 @@ Namespace WpfDerivClientVB
             If String.IsNullOrEmpty(contractType) OrElse String.IsNullOrEmpty(symbol) OrElse amount <= 0 Then
                 Return New JObject From {{"ok", False}, {"error", "Requeridos: contract_type, symbol, amount > 0"}}
             End If
+
+            ' Capturar metadata de estrategia (no se envia a Deriv) para taggear la op
+            ' en el "buy" handler cuando se cree el OperacionModel.
+            _proxTradeEstrategia = If(body("_meta_estrategia")?.ToString(), "")
+            _proxTradeSesionId = If(body("_meta_sesion_id") IsNot Nothing, CInt(body("_meta_sesion_id")), 0)
+            _proxTradeOpId = If(body("_meta_op_id") IsNot Nothing, CInt(body("_meta_op_id")), 0)
             Dim req As New JObject()
             req.Add("proposal", 1)
             req.Add("amount", amount)

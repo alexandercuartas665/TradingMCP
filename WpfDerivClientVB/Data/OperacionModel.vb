@@ -105,6 +105,57 @@ Namespace WpfDerivClientVB
             End Set
         End Property
 
+        ''' <summary>Nombre de la estrategia que origino el trade. Vacio = trade manual.</summary>
+        Private _estrategia As String = ""
+        Public Property Estrategia As String
+            Get
+                Return _estrategia
+            End Get
+            Set(v As String)
+                _estrategia = v
+                Notify("Estrategia")
+                Notify("EstrategiaDisplay")
+            End Set
+        End Property
+
+        ''' <summary>True si el trade fue abierto por una estrategia live (no manual).</summary>
+        Private _esLive As Boolean = False
+        Public Property EsLive As Boolean
+            Get
+                Return _esLive
+            End Get
+            Set(v As Boolean)
+                _esLive = v
+                Notify("EsLive")
+                Notify("EstrategiaDisplay")
+            End Set
+        End Property
+
+        ''' <summary>ID de la sesion de live testing (para vincular con backtest_operaciones).</summary>
+        Public Property SesionId As Integer = 0
+
+        ''' <summary>ID de la operacion en backtest_operaciones (para actualizar al cerrar).</summary>
+        Public Property OperacionLiveId As Integer = 0
+
+        ''' <summary>Fecha corta dd/MM/yy basada en CreatedAt en hora local (para mostrar en grid).</summary>
+        Public ReadOnly Property FechaCorta As String
+            Get
+                Try
+                    Return CreatedAt.ToLocalTime().ToString("dd/MM/yy")
+                Catch
+                    Return ""
+                End Try
+            End Get
+        End Property
+
+        ''' <summary>"Estrategia" si es live, "Manual" si fue abierto por usuario en Trading Live.</summary>
+        Public ReadOnly Property EstrategiaDisplay As String
+            Get
+                If EsLive AndAlso Not String.IsNullOrEmpty(Estrategia) Then Return Estrategia
+                Return "Manual"
+            End Get
+        End Property
+
         Public ReadOnly Property PLColor As String
             Get
                 If _profitLoss > 0 Then Return "#A6E3A1"

@@ -152,6 +152,69 @@ Namespace WpfDerivClientVB
             txtStatus.Text = "Desconectado"
         End Sub
 
+        ''' <summary>
+        ''' Asegura que el streaming superior este conectado al symbol/timeframe indicados.
+        ''' Si ya esta sincronizado y abierto, no hace nada. Si no, desconecta el streaming
+        ''' actual, ajusta los controles y vuelve a conectar.
+        ''' Usado por el modo Live de Estrategias Dinamicas para que las velas que llegan
+        ''' al LiveTestMotor coincidan con la estrategia en ejecucion.
+        ''' </summary>
+        Public Async Function SincronizarStreamingAsync(symbol As String, timeframe As String) As Task(Of Boolean)
+            If String.IsNullOrWhiteSpace(symbol) OrElse String.IsNullOrWhiteSpace(timeframe) Then Return False
+            If Not TIMEFRAME_MAP.ContainsKey(timeframe) Then Return False
+
+            Dim yaSync As Boolean = (_webSocket IsNot Nothing AndAlso _webSocket.State = WebSocketState.Open _
+                                     AndAlso _currentSymbol = symbol AndAlso _currentTimeframe = timeframe)
+            If yaSync Then Return True
+
+            ' Desconectar streaming actual si esta abierto
+            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
+            If _webSocket IsNot Nothing AndAlso _webSocket.State = WebSocketState.Open Then
+                Try
+                    Await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Sync", CancellationToken.None)
+                Catch
+                End Try
+            End If
+            ResetUI()
+
+            ' Ajustar controles superiores
+            txtSymbol.Text = symbol
+            For i As Integer = 0 To cmbTimeframe.Items.Count - 1
+                Dim ci = TryCast(cmbTimeframe.Items(i), System.Windows.Controls.ComboBoxItem)
+                If ci IsNot Nothing AndAlso ci.Content?.ToString() = timeframe Then
+                    cmbTimeframe.SelectedIndex = i
+                    Exit For
+                End If
+            Next
+
+            ' Conectar al nuevo symbol/timeframe
+            btnConnect.IsEnabled = False
+            btnDisconnect.IsEnabled = True
+            txtSymbol.IsEnabled = False
+            cmbTimeframe.IsEnabled = False
+
+            _currentSymbol = symbol
+            _currentTimeframe = timeframe
+            _candles.Clear()
+            _currentOpenEpoch = 0
+            txtStatus.Text = String.Format("Conectando a {0} ({1})...", symbol, timeframe)
+
+            _cancellationTokenSource = New CancellationTokenSource()
+            Try
+                Await ConectarStreamingWsAsync(symbol, TIMEFRAME_MAP(timeframe))
+#Disable Warning BC42358
+                Task.Run(Function() As Task
+                             Return ListenLoop()
+                         End Function)
+#Enable Warning BC42358
+                Return True
+            Catch ex As Exception
+                txtStatus.Text = "Error sincronizando streaming: " & ex.Message
+                ResetUI()
+                Return False
+            End Try
+        End Function
+
         Private Shared Function BuildRequestJson(symbol As String, granularity As Integer) As String
             Dim json As New JObject()
             json.Add("ticks_history", New JValue(symbol))
@@ -204,9 +267,16 @@ Namespace WpfDerivClientVB
                         End If
 
                         If data.ContainsKey("candles") Then
-                            Dispatcher.Invoke(Sub() HandleHistoricalCandles(CType(data("candles"), JArray)))
+                            ' Historicas: BeginInvoke para no bloquear el receive
+                            Dispatcher.BeginInvoke(Sub() HandleHistoricalCandles(CType(data("candles"), JArray)),
+                                                   System.Windows.Threading.DispatcherPriority.Background)
                         ElseIf data.ContainsKey("ohlc") Then
-                            Dispatcher.Invoke(Sub() HandleLiveTick(CType(data("ohlc"), JObject)))
+                            ' Tick en vivo (cada ~1s): Background priority para que NUNCA bloquee
+                            ' Input (mouse/window drag) ni Render. Si UI esta saturada, los ticks
+                            ' simplemente esperan a que UI este idle. La app se mantiene responsive.
+                            Dim ohlcCopy = CType(data("ohlc"), JObject)
+                            Dispatcher.BeginInvoke(Sub() HandleLiveTick(ohlcCopy),
+                                                   System.Windows.Threading.DispatcherPriority.Background)
                         End If
                     Loop
                 Catch ex As OperationCanceledException
@@ -340,8 +410,10 @@ Namespace WpfDerivClientVB
                 Task.Run(Function() As Task
                              Return _repo.SaveCandleAsync(PLATFORM, sym, tf, snap, isClosed:=True)
                          End Function)
-                ' Notificar al LiveTestMotor (si hay sesion activa)
-                RaiseEvent OnCandleCerrada(snap)
+                ' Notificar a TODOS los motores live registrados (cada uno filtra por su symbol/tf)
+                ' RaiseEvent envia la cadena al dispatcher, que internamente usa Task.Run por motor.
+                ' El dispatcher en si es liviano (snapshot + queue), no bloquea la UI.
+                RaiseEvent OnCandleCerrada(snap, sym, tf)
             End If
         End Sub
 

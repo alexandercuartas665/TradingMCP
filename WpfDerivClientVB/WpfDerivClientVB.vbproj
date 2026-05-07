@@ -9,6 +9,8 @@
     <AssemblyName>WpfDerivClientVB</AssemblyName>
     <EnableDefaultPageItems>false</EnableDefaultPageItems>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +28,7 @@
     <Page Include="Dashboard\views\SettingsView.xaml" />
     <Page Include="Dashboard\views\ClientsView.xaml" />
     <Page Include="CandleManager\Modals\TradingSettingsModal.xaml" />
+    <Page Include="EstrategiasDinamicas\Controls\EstrategiasLivePanelControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>

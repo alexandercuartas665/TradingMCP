@@ -48,8 +48,27 @@ Namespace WpfDerivClientVB
         Public Property LogAction As Action(Of String)
         Public Property DescargaService As DescargaService
 
-        ''' <summary>Motor de live testing. Inyectado por MainWindow al arrancar el servidor.</summary>
-        Public Property LiveTestMotor As LiveTestMotor = Nothing
+        ''' <summary>Callback al abrirse un trade live. Permite a MainWindow taggear la op en el grid.</summary>
+        Public Property OnTradeLiveAbierto As Action(Of String, String, Integer, Integer)
+
+        ''' <summary>
+        ''' Motores live activos, indexados por sesion_id de BD.
+        ''' Permite ejecutar varias estrategias en paralelo (cada una con su propio symbol/tf).
+        ''' </summary>
+        Public ReadOnly Property LiveMotors As New Dictionary(Of Integer, LiveTestMotor)()
+
+        ''' <summary>
+        ''' Compatibilidad: devuelve el primer motor activo (None si no hay).
+        ''' Mantenido para que codigo legacy que consulta un motor unico siga funcionando.
+        ''' </summary>
+        Public ReadOnly Property LiveTestMotor As LiveTestMotor
+            Get
+                For Each m In LiveMotors.Values
+                    If m.EstaActivo Then Return m
+                Next
+                Return Nothing
+            End Get
+        End Property
 
         Public Sub New(port As Integer)
             _Port = port
@@ -825,6 +844,7 @@ Namespace WpfDerivClientVB
                                     {"version",      estVersionOps},
                                     {"tipo",         op.Tipo},
                                     {"epoch",        op.EpochEntrada},
+                                    {"epoch_salida", op.EpochSalida},
                                     {"entrada",      op.PrecioEntrada},
                                     {"salida",       op.PrecioSalida},
                                     {"estado",       op.Estado},
@@ -865,6 +885,8 @@ Namespace WpfDerivClientVB
                         End If
 
                     Case "/api/dinamicas/live/iniciar"
+                        ' Cada llamada crea un motor NUEVO y lo agrega al diccionario por sesion_id.
+                        ' Permite tener varias estrategias activas en paralelo.
                         If method <> "POST" Then
                             result = ErrorJson("Use POST /api/dinamicas/live/iniciar")
                         ElseIf body Is Nothing OrElse body("nombre") Is Nothing Then
@@ -875,10 +897,9 @@ Namespace WpfDerivClientVB
                             If estLive Is Nothing Then
                                 result = ErrorJson("Estrategia no encontrada: " & nomLive)
                             Else
-                                If LiveTestMotor Is Nothing Then
-                                    LiveTestMotor = New LiveTestMotor()
-                                    LiveTestMotor.ExecuteTrade = ExecuteTrade
-                                End If
+                                Dim motorNuevo As New LiveTestMotor()
+                                motorNuevo.ExecuteTrade = ExecuteTrade
+                                motorNuevo.OnTradeLiveAbierto = OnTradeLiveAbierto
                                 Dim cfgLive As New LiveTestConfig With {
                                     .Symbol           = If(body("symbol")?.ToString(), "R_100"),
                                     .Timeframe        = If(body("timeframe")?.ToString(), "1h"),
@@ -888,7 +909,10 @@ Namespace WpfDerivClientVB
                                     .MontoOperacion   = If(body("monto") IsNot Nothing, CDec(body("monto")), 1D),
                                     .VentanaIndicadores = If(body("ventana") IsNot Nothing, CInt(body("ventana")), 100)
                                 }
-                                Dim sesIdLive = Await LiveTestMotor.IniciarAsync(cfgLive, estLive)
+                                Dim sesIdLive = Await motorNuevo.IniciarAsync(cfgLive, estLive)
+                                SyncLock LiveMotors
+                                    LiveMotors(sesIdLive) = motorNuevo
+                                End SyncLock
                                 result = New JObject From {
                                     {"ok",         True},
                                     {"sesion_id",  sesIdLive},
@@ -901,21 +925,59 @@ Namespace WpfDerivClientVB
                         End If
 
                     Case "/api/dinamicas/live/detener"
-                        If LiveTestMotor IsNot Nothing AndAlso LiveTestMotor.EstaActivo Then
-                            Await LiveTestMotor.DetenerAsync()
-                            result = New JObject From {{"ok", True}, {"mensaje", "Live test detenido."}}
-                        Else
-                            result = New JObject From {{"ok", False}, {"mensaje", "No hay live test activo."}}
+                        ' Si viene sesion_id, detiene solo ese motor. Sin sesion_id, detiene todos.
+                        Dim sidDetener As Integer = 0
+                        If body IsNot Nothing AndAlso body("sesion_id") IsNot Nothing Then
+                            Integer.TryParse(body("sesion_id").ToString(), sidDetener)
+                        ElseIf qs("sesion_id") IsNot Nothing Then
+                            Integer.TryParse(qs("sesion_id"), sidDetener)
                         End If
+                        Dim detenidos As Integer = 0
+                        Dim aDetener As New List(Of Integer)()
+                        SyncLock LiveMotors
+                            If sidDetener > 0 Then
+                                If LiveMotors.ContainsKey(sidDetener) Then aDetener.Add(sidDetener)
+                            Else
+                                aDetener.AddRange(LiveMotors.Keys)
+                            End If
+                        End SyncLock
+                        For Each id In aDetener
+                            Try
+                                Dim m = LiveMotors(id)
+                                If m IsNot Nothing AndAlso m.EstaActivo Then Await m.DetenerAsync()
+                                detenidos += 1
+                            Catch
+                            End Try
+                            SyncLock LiveMotors
+                                LiveMotors.Remove(id)
+                            End SyncLock
+                        Next
+                        result = New JObject From {
+                            {"ok", detenidos > 0},
+                            {"detenidos", detenidos},
+                            {"mensaje", If(detenidos > 0,
+                                          String.Format("Detenidos {0} motor(es).", detenidos),
+                                          "No hay motores activos para detener.")}
+                        }
 
                     Case "/api/dinamicas/live/estado"
-                        If LiveTestMotor IsNot Nothing Then
-                            Dim estadoLive = LiveTestMotor.GetEstado()
-                            estadoLive("ok") = True
-                            result = estadoLive
-                        Else
-                            result = New JObject From {{"ok", True}, {"activo", False}, {"mensaje", "Motor no inicializado."}}
-                        End If
+                        ' Estado de todos los motores activos (o de uno especifico via ?sesion_id=)
+                        Dim sidEstado As Integer = 0
+                        If qs("sesion_id") IsNot Nothing Then Integer.TryParse(qs("sesion_id"), sidEstado)
+                        Dim arrMotores As New JArray()
+                        SyncLock LiveMotors
+                            For Each kv In LiveMotors
+                                If sidEstado > 0 AndAlso kv.Key <> sidEstado Then Continue For
+                                Dim est = kv.Value.GetEstado()
+                                est("sesion_id") = kv.Key
+                                arrMotores.Add(est)
+                            Next
+                        End SyncLock
+                        result = New JObject From {
+                            {"ok", True},
+                            {"motores_activos", arrMotores.Count},
+                            {"motores", arrMotores}
+                        }
 
                     ' ── Eliminar sesion + operaciones ────────────────────────────
                     Case "/api/dinamicas/sesiones/eliminar"

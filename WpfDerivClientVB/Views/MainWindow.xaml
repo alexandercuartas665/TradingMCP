@@ -1,7 +1,7 @@
 <Window x:Class="WpfDerivClientVB.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-Title="Deriv Trading - Live Streaming" Height="901" Width="960"
+Title="Deriv Trading - Live Streaming" Height="901" Width="1280"
         Background="#1E1E2E">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -287,7 +287,21 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
         </Style>
     </Window.Resources>
 
-    <Grid Margin="10">
+    <!-- Layout raiz: contenido principal | panel lateral siempre visible -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Panel lateral: visible en cualquier tab.
+             El control real se inyecta desde codigo (patron AdminDashboard). -->
+        <Border Grid.Column="1" Background="#11111B" BorderBrush="#313244" BorderThickness="1,0,0,0">
+            <ContentControl x:Name="panelEstrategiasLiveContainer"/>
+        </Border>
+
+        <!-- Contenido principal (tabs) -->
+    <Grid Grid.Column="0" Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -306,6 +320,7 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                     <ComboBoxItem Content="5m"/>
                     <ComboBoxItem Content="15m"/>
                     <ComboBoxItem Content="1h"/>
+                    <ComboBoxItem Content="4h"/>
                     <ComboBoxItem Content="1d"/>
                 </ComboBox>
 
@@ -589,13 +604,27 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="OPERACIONES" Foreground="#89B4FA" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <Button x:Name="btnSincronizarOps" Content="🔄 Sincronizar con Deriv"
+                                    Foreground="#89B4FA" Background="#1E2A3A"
+                                    BorderBrush="#89B4FA" BorderThickness="1"
+                                    FontSize="10" Padding="8,3" Margin="0,0,8,0"
+                                    Cursor="Hand" Click="btnSincronizarOps_Click"
+                                    ToolTip="Re-suscribe a Deriv todas las operaciones 'Abierto' para obtener su estado real"/>
+                            <Button x:Name="btnCerrarTodasAbiertas" Content="✖ Cerrar todas las Abierto"
+                                    Foreground="#F38BA8" Background="#3B1E2E"
+                                    BorderBrush="#F38BA8" BorderThickness="1"
+                                    FontSize="10" Padding="8,3" Margin="0,0,15,0"
+                                    Cursor="Hand" Click="btnCerrarTodasAbiertas_Click"
+                                    ToolTip="Vende todas las operaciones que esten 'Abierto' (con confirmacion)"/>
                             <TextBlock x:Name="txtTradingOpEstado" Text="" Foreground="#A6ADC8" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
                         <DataGrid Grid.Row="1" x:Name="gridOperaciones" AutoGenerateColumns="False" IsReadOnly="True"
                                   Background="#181825" Foreground="#CDD6F4" RowBackground="#1E1E2E"
                                   AlternatingRowBackground="#181825" GridLinesVisibility="None" BorderBrush="#45475A">
                             <DataGrid.Columns>
+                                <DataGridTextColumn Header="Fecha" Binding="{Binding FechaCorta}" Width="100"/>
                                 <DataGridTextColumn Header="Hora" Binding="{Binding Hora}" Width="80"/>
+                                <DataGridTextColumn Header="Estrategia" Binding="{Binding EstrategiaDisplay}" Width="140"/>
                                 <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="50"/>
                                 <DataGridTextColumn Header="Símbolo" Binding="{Binding Simbolo}" Width="80"/>
                                 <DataGridTextColumn Header="Monto $" Binding="{Binding Monto, StringFormat=\{0:F2\}}" Width="65"/>
@@ -626,6 +655,20 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                                                     Background="#F38BA8" Foreground="#1E1E2E"
                                                     FontSize="10" FontWeight="Bold"
                                                     Padding="3,1" BorderThickness="0" Cursor="Hand"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Quitar" Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="🗑"
+                                                    Tag="{Binding ContractId}"
+                                                    Click="BtnQuitarOperacion_Click"
+                                                    Background="#3B1E2E" Foreground="#F38BA8"
+                                                    BorderBrush="#F38BA8" BorderThickness="1"
+                                                    FontSize="11"
+                                                    Padding="3,1" Cursor="Hand"
+                                                    ToolTip="Quitar de la lista local (no toca Deriv). Util para huerfanos."/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -1007,13 +1050,37 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                         <Grid Grid.Column="0" Margin="0,0,8,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="BACKTESTS EJECUTADOS"
                                        Foreground="#89B4FA" FontWeight="Bold" FontSize="11"
                                        Margin="0,0,0,4"/>
-                            <ListView Grid.Row="1" x:Name="lstDinSesiones"
+                            <!-- Filtros: activo + ver todas las estrategias -->
+                            <StackPanel Grid.Row="1" Margin="0,0,0,4">
+                                <Grid Margin="0,0,0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Activo:" Foreground="#A6ADC8"
+                                               FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox Grid.Column="1" x:Name="cmbDinFiltroSimbolo"
+                                              SelectionChanged="cmbDinFiltroSimbolo_SelectionChanged"/>
+                                </Grid>
+                                <CheckBox x:Name="chkDinTodasEstrategias"
+                                          Content="Ver todas las estrategias"
+                                          Foreground="#A6ADC8" FontSize="11"
+                                          Checked="chkDinTodasEstrategias_Changed"
+                                          Unchecked="chkDinTodasEstrategias_Changed"/>
+                                <CheckBox x:Name="chkDinSoloGanadoras"
+                                          Content="Solo ganadoras (Win &gt; 50% y PnL &gt; 0)"
+                                          Foreground="#A6E3A1" FontSize="11" Margin="0,2,0,0"
+                                          Checked="chkDinFiltroChanged"
+                                          Unchecked="chkDinFiltroChanged"/>
+                            </StackPanel>
+                            <ListView Grid.Row="2" x:Name="lstDinSesiones"
                                       Background="#1E1E2E" BorderBrush="#45475A" BorderThickness="1"
                                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                       SelectionChanged="lstDinSesiones_SelectionChanged">
@@ -1082,7 +1149,7 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                             </ListView>
 
                             <!-- Boton eliminar sesion seleccionada -->
-                            <Button Grid.Row="2" x:Name="btnDinEliminar"
+                            <Button Grid.Row="3" x:Name="btnDinEliminar"
                                     Content="Eliminar sesion"
                                     Foreground="#F38BA8" Background="#3B1E2E"
                                     BorderBrush="#F38BA8" BorderThickness="1"
@@ -1152,7 +1219,8 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                                       HorizontalGridLinesBrush="#45475A" BorderBrush="#45475A">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Tipo"         Binding="{Binding Tipo}"        Width="50"/>
-                                    <DataGridTextColumn Header="Apertura"     Binding="{Binding Epoch}"       Width="105"/>
+                                    <DataGridTextColumn Header="Apertura"     Binding="{Binding Epoch}"       Width="135"/>
+                                    <DataGridTextColumn Header="Cierre"       Binding="{Binding EpochSalida}" Width="135"/>
                                     <DataGridTextColumn Header="Entrada"      Binding="{Binding Entrada}"     Width="85"/>
                                     <DataGridTextColumn Header="Salida"       Binding="{Binding Salida}"      Width="85"/>
                                     <DataGridTextColumn Header="Estado"       Binding="{Binding Estado}"      Width="75"/>
@@ -1179,5 +1247,6 @@ Title="Deriv Trading - Live Streaming" Height="901" Width="960"
                 <TextBlock x:Name="txtDbStatus" Text="BD: localhost:8083/traiding_db" Foreground="#6C7086" FontSize="10"/>
             </StatusBarItem>
         </StatusBar>
+    </Grid>
     </Grid>
 </Window>

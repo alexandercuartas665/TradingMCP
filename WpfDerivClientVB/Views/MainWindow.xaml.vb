@@ -53,7 +53,7 @@ Namespace WpfDerivClientVB
         Private _activeToken As String = ""
 
         Private ReadOnly TIMEFRAME_MAP As New Dictionary(Of String, Integer) From {
-            {"1m", 60}, {"5m", 300}, {"15m", 900}, {"1h", 3600}, {"1d", 86400}
+            {"1m", 60}, {"5m", 300}, {"15m", 900}, {"1h", 3600}, {"4h", 14400}, {"1d", 86400}
         }
 
         ' ===== Trading Live (Tab Trading Live) =====
@@ -72,12 +72,25 @@ Namespace WpfDerivClientVB
         Private _pendingApiTrade As System.Threading.Tasks.TaskCompletionSource(Of JObject)
         Private _pendingApiSell As System.Threading.Tasks.TaskCompletionSource(Of JObject)
 
+        ' Metadata del proximo trade que va a llegar via "buy" — usado para taggear ops live
+        ' en el handler "buy" de forma sincrona (sin race con BeginInvoke).
+        Private _proxTradeEstrategia As String = ""
+        Private _proxTradeSesionId As Integer = 0
+        Private _proxTradeOpId As Integer = 0
+
         ' ===== Evento de vela cerrada (Live Test Motor) =====
         ''' <summary>
         ''' Se dispara cada vez que una vela se cierra en el streaming activo.
         ''' El LiveTestMotor se suscribe a este evento para procesar senales.
         ''' </summary>
-        Public Event OnCandleCerrada As Action(Of CandleModel)
+        ' Firma extendida: pasa symbol/timeframe junto al candle para que cada motor
+        ' filtre si la vela aplica a su configuracion (multi-estrategia).
+        Public Event OnCandleCerrada As Action(Of CandleModel, String, String)
+
+        ' Subscriber multi-WebSocket: maneja N suscripciones background, una por
+        ' cada (symbol, timeframe) requerido por estrategias live activas.
+        ' Permite operar varios activos al tiempo sin tocar el chart visible.
+        Friend _multiSub As BackgroundStreamingSubscriber = Nothing
 
         ' ===================================================
         '  CONSTRUCTOR
@@ -110,6 +123,19 @@ Namespace WpfDerivClientVB
 
             CargarAppIdDeriv()
             CargarClientesTrading()
+
+            ' Subscriber multi-WebSocket: las velas que recibe se enrutan al
+            ' mismo evento global OnCandleCerrada que usa el foreground streaming.
+            ' BeginInvoke a Background priority para NUNCA bloquear Input/Render.
+            _multiSub = New BackgroundStreamingSubscriber()
+            _multiSub.OnCandleCerrada = Sub(c As CandleModel, sym As String, tf As String)
+                                            Try
+                                                Dispatcher.BeginInvoke(Sub() RaiseEvent OnCandleCerrada(c, sym, tf),
+                                                                       System.Windows.Threading.DispatcherPriority.Background)
+                                            Catch
+                                            End Try
+                                        End Sub
+
             InicializarTabDinamicas()
         End Sub
 

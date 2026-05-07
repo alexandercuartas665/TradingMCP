@@ -16,6 +16,7 @@ Imports System.Threading
 Imports System.Threading.Tasks
 Imports System.Windows.Media
 Imports Newtonsoft.Json.Linq
+Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
 
 Namespace WpfDerivClientVB
 
@@ -74,14 +75,11 @@ Namespace WpfDerivClientVB
             If conectado Then
                 ' Cargar historial solo la primera vez (no en reconexiones)
                 If gridOperaciones.ItemsSource Is Nothing Then
+                    ' NO cargamos historial de trading_operations (manual repo) — duplicaba con
+                    ' backtest_operaciones y traia ops eliminadas. El grid se llena solo con:
+                    '   - Ops live de estrategias (via RecuperarOperacionesLivePendientesAsync)
+                    '   - Trades manuales que el usuario haga durante la sesion actual
                     _tradingOperaciones.Clear()
-                    If _tradingClienteActual IsNot Nothing Then
-                        Dim repo As New ClientRepository()
-                        Dim historial = Await repo.ObtenerOperacionesAsync(_tradingClienteActual.Id)
-                        For Each op In historial
-                            _tradingOperaciones.Add(op)
-                        Next
-                    End If
                     gridOperaciones.ItemsSource = _tradingOperaciones
                 End If
 
@@ -89,10 +87,62 @@ Namespace WpfDerivClientVB
                 Task.Run(Function() EscucharTradingAsync())
                 Task.Run(Function() PingLoopAsync())
 #Enable Warning BC42358
+
+                ' ── Recuperar operaciones huerfanas del motor live ───────────────
+                ' Cualquier operacion live que quedo "Pendiente"/"Abierto" en BD por un
+                ' crash o cierre se reconcilia: la mostramos en el grid + nos suscribimos
+                ' al contrato en Deriv para recibir su estado final.
+                Await RecuperarOperacionesLivePendientesAsync()
+                ' Refrescar PnL HOY/SEMANA/MES del panel lateral
+                Await PanelLiveRefrescarPnlPeriodosAsync()
             Else
                 btnConectarTrading.IsEnabled = True
             End If
         End Sub
+
+        ''' <summary>
+        ''' Llama al endpoint OTP de Deriv con reintentos. Maneja caidas transitorias
+        ''' (host remoto cierra la conexion, timeout, 5xx) sin propagar la excepcion.
+        ''' Devuelve el body JSON o "" si fallaron los 3 intentos.
+        ''' </summary>
+        Private Async Function ObtenerOtpConRetryAsync(otpUrl As String, token As String, appId As String, esDemo As Boolean) As Task(Of String)
+            Dim demoras() As Integer = {0, 2000, 5000}   ' 0s, 2s, 5s
+            For intento As Integer = 0 To demoras.Length - 1
+                If demoras(intento) > 0 Then
+                    Try
+                        Await Task.Delay(demoras(intento), _tradingCts.Token)
+                    Catch
+                        Return ""
+                    End Try
+                End If
+                Try
+                    Using handler As New System.Net.Http.HttpClientHandler()
+                        Using client As New System.Net.Http.HttpClient(handler)
+                            client.Timeout = TimeSpan.FromSeconds(15)
+                            client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", "Bearer " & token)
+                            client.DefaultRequestHeaders.TryAddWithoutValidation("deriv-app-id", appId)
+                            Using content As New System.Net.Http.StringContent("", System.Text.Encoding.UTF8, "application/json")
+                                Using resp = Await client.PostAsync(otpUrl, content, _tradingCts.Token)
+                                    Dim body = Await resp.Content.ReadAsStringAsync()
+                                    If resp.IsSuccessStatusCode Then
+                                        If intento > 0 Then
+                                            LogConexion(String.Format("OTP recuperado en intento #{0}.", intento + 1))
+                                        End If
+                                        Return body
+                                    End If
+                                    LogConexion(String.Format("OTP intento #{0} fallo: HTTP {1}", intento + 1, CInt(resp.StatusCode)))
+                                End Using
+                            End Using
+                        End Using
+                    End Using
+                Catch ex As OperationCanceledException
+                    Return ""
+                Catch ex As Exception
+                    LogConexion(String.Format("OTP intento #{0} error: {1}", intento + 1, ex.Message))
+                End Try
+            Next
+            Return ""
+        End Function
 
         ''' <summary>Obtiene OTP y conecta el WebSocket de trading. Devuelve True si tuvo éxito.</summary>
         Private Async Function ConectarTradingWsAsync(esDemo As Boolean) As Task(Of Boolean)
@@ -106,15 +156,13 @@ Namespace WpfDerivClientVB
                     Return False
                 End If
 
-                ' OTP via REST
+                ' OTP via REST con retry para tolerar caidas transitorias del servidor de Deriv.
+                ' Hasta 3 intentos con backoff: 0s, 2s, 5s.
                 Dim otpUrl = String.Format("https://api.derivws.com/trading/v1/options/accounts/{0}/otp", accountId)
-                Dim responseBody As String = Await Task.Run(Function()
-                                                                Using wc As New System.Net.WebClient()
-                                                                    wc.Headers.Add("Authorization", "Bearer " & token)
-                                                                    wc.Headers.Add("deriv-app-id", appId)
-                                                                    Return wc.UploadString(otpUrl, "POST", "")
-                                                                End Using
-                                                            End Function)
+                Dim responseBody As String = Await ObtenerOtpConRetryAsync(otpUrl, token, appId, esDemo)
+                If String.IsNullOrEmpty(responseBody) Then
+                    Throw New Exception("No se pudo obtener OTP de Deriv tras 3 intentos.")
+                End If
 
                 Dim otpObj = JObject.Parse(responseBody)
                 If otpObj("data") Is Nothing OrElse otpObj("data")("url") Is Nothing Then
@@ -138,6 +186,8 @@ Namespace WpfDerivClientVB
                                       btnCotizar.IsEnabled = True
                                       btnAnalizar.IsEnabled = True
                                       btnAnalizarYOperar.IsEnabled = True
+                                      ' Reflejar estado en el panel lateral siempre visible
+                                      PanelLiveSetConexion(True)
                                   End Sub)
 
                 Await SuscribirBalanceTradingAsync()
@@ -171,11 +221,147 @@ Namespace WpfDerivClientVB
             End Try
         End Function
 
+        ''' <summary>
+        ''' Re-suscribe en Deriv todas las operaciones "Abierto" del grid para obtener su
+        ''' estado real (won/lost/abierto). Util para limpiar fantasmas que ya expiraron en
+        ''' Deriv pero el local nunca se entero.
+        ''' </summary>
+        Private Sub btnSincronizarOps_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                System.Windows.MessageBox.Show("Conecta la cuenta de trading primero.", "Sincronizar")
+                Return
+            End If
+            Dim abiertas = _tradingOperaciones.Where(
+                Function(o) Not String.IsNullOrEmpty(o.ContractId) AndAlso
+                            (o.Estado = "Abierto" OrElse o.Estado = "Pendiente")).ToList()
+            If abiertas.Count = 0 Then
+                txtTradingOpEstado.Text = "No hay operaciones Abierto/Pendiente para sincronizar."
+                Return
+            End If
+            For Each op In abiertas
+                SuscribirContratoAsync(op.ContractId)
+            Next
+            txtTradingOpEstado.Text = String.Format("Sincronizando {0} operacion(es) con Deriv...", abiertas.Count)
+            LogConexion(String.Format("Re-suscripcion enviada para {0} contrato(s).", abiertas.Count))
+        End Sub
+
+        ''' <summary>
+        ''' Vende (cierra) todas las operaciones que esten "Abierto" en el grid.
+        ''' Pide confirmacion antes de hacerlo.
+        ''' </summary>
+        Private Async Sub btnCerrarTodasAbiertas_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            If _tradingWs Is Nothing OrElse _tradingWs.State <> WebSocketState.Open Then
+                System.Windows.MessageBox.Show("Conecta la cuenta de trading primero.", "Cerrar todas")
+                Return
+            End If
+            Dim abiertas = _tradingOperaciones.Where(
+                Function(o) Not String.IsNullOrEmpty(o.ContractId) AndAlso o.Estado = "Abierto").ToList()
+            If abiertas.Count = 0 Then
+                txtTradingOpEstado.Text = "No hay operaciones Abierto para cerrar."
+                Return
+            End If
+            Dim confirm = System.Windows.MessageBox.Show(
+                String.Format("Vender {0} operacion(es) Abierto?" & Environment.NewLine & Environment.NewLine &
+                              "Cada una se vendera al precio de mercado actual de Deriv.",
+                              abiertas.Count),
+                "Confirmar cierre masivo",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning)
+            If confirm <> System.Windows.MessageBoxResult.Yes Then Return
+
+            txtTradingOpEstado.Text = String.Format("Cerrando {0} operaciones...", abiertas.Count)
+            Dim cerradas As Integer = 0
+            For Each op In abiertas
+                Try
+                    Dim req As New JObject()
+                    req.Add("sell", op.ContractId)
+                    req.Add("price", 0)   ' 0 = precio de mercado actual
+                    Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
+                    Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes),
+                                               WebSocketMessageType.Text, True, _tradingCts.Token)
+                    cerradas += 1
+                    Await Task.Delay(150)   ' espacio entre comandos para no saturar el WS
+                Catch ex As Exception
+                    LogConexion(String.Format("Error vendiendo {0}: {1}", op.ContractId, ex.Message))
+                End Try
+            Next
+            txtTradingOpEstado.Text = String.Format("Comando 'sell' enviado a {0} de {1} operaciones.", cerradas, abiertas.Count)
+        End Sub
+
+        ''' <summary>
+        ''' Tras conectar el Trading WS, carga las ultimas operaciones live (cualquier estado:
+        ''' Ganado/Perdido/Pendiente/Abierto/Expirado) en el grid de Trading Live para mantener
+        ''' visible el historial de la estrategia, y se suscribe a Deriv solo para las que
+        ''' aun esten Pendiente/Abierto (las resueltas no necesitan refresh).
+        ''' </summary>
+        Private Async Function RecuperarOperacionesLivePendientesAsync() As Task
+            Try
+                Dim repo As New LiveTestRepository()
+                Dim ops = Await repo.GetUltimasOperacionesLiveAsync(100)
+                If ops.Count = 0 Then
+                    LogConexion("Sin operaciones live previas por cargar.")
+                    Return
+                End If
+
+                Dim suscritas As Integer = 0
+                For Each p In ops
+                    ' Crear OperacionModel para mostrar en el grid
+                    Dim hora As String = ""
+                    Try
+                        hora = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) _
+                            .AddSeconds(p.EpochEntrada).ToLocalTime().ToString("HH:mm:ss")
+                    Catch
+                    End Try
+                    Dim creadoEn As DateTime = DateTime.UtcNow
+                    Try
+                        creadoEn = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(p.EpochEntrada)
+                    Catch
+                    End Try
+                    Dim tiempoRest As String = If(p.Estado = "Pendiente" OrElse p.Estado = "Abierto", "?", "—")
+                    Dim op As New OperacionModel With {
+                        .ContractId      = p.ContractId,
+                        .Hora            = hora,
+                        .CreatedAt       = creadoEn,
+                        .Tipo            = p.Tipo,
+                        .Simbolo         = p.Symbol,
+                        .Monto           = p.Monto,
+                        .Estado          = p.Estado,
+                        .ProfitLoss      = p.ProfitLoss,
+                        .TiempoRestante  = tiempoRest,
+                        .Estrategia      = p.Estrategia,
+                        .EsLive          = True,
+                        .SesionId        = p.SesionId,
+                        .OperacionLiveId = p.OperacionId
+                    }
+
+                    ' Evitar duplicados (la op manual ya cargada con el mismo contract_id)
+                    Dim yaExiste = _tradingOperaciones.Any(Function(o) o.ContractId = p.ContractId AndAlso Not String.IsNullOrEmpty(p.ContractId))
+                    If Not yaExiste Then
+                        _tradingOperaciones.Add(op)
+                    End If
+
+                    ' Solo suscribir las que aun no se resolvieron
+                    If (p.Estado = "Pendiente" OrElse p.Estado = "Abierto") AndAlso
+                       Not String.IsNullOrEmpty(p.ContractId) Then
+                        SuscribirContratoAsync(p.ContractId)
+                        suscritas += 1
+                    End If
+                Next
+                LogConexion(String.Format("Cargadas {0} ops live (de las cuales {1} aun pendientes/abiertas).",
+                                          ops.Count, suscritas))
+            Catch ex As Exception
+                LogConexion("Error cargando historial live: " & ex.Message)
+            End Try
+        End Function
+
         Private Sub btnDesconectarTrading_Click(sender As Object, e As System.Windows.RoutedEventArgs)
             If _tradingCts IsNot Nothing Then _tradingCts.Cancel()
             txtTradingEstado.Text = "Desconectado"
             txtTradingEstado.Foreground = New SolidColorBrush(Colors.OrangeRed)
             txtTradingBalance.Text = "--"
+            ' Reflejar desconexion en el panel lateral siempre visible
+            PanelLiveSetConexion(False)
+            PanelLiveLimpiarSaldo()
             btnConectarTrading.IsEnabled = True
             btnDesconectarTrading.IsEnabled = False
             btnTradingCall.IsEnabled = False
@@ -454,7 +640,11 @@ Namespace WpfDerivClientVB
                         End If
 
                         intentos = 0  ' reset contador si recibimos mensajes normales
-                        Dispatcher.Invoke(Sub() ProcesarMensajeTrading(sb.ToString()))
+                        ' BeginInvoke a Background priority: NO bloquea Input/Render del usuario.
+                        ' Cualquier mensaje del WS se procesa cuando la UI esta idle.
+                        Dim msgCopy = sb.ToString()
+                        Dispatcher.BeginInvoke(Sub() ProcesarMensajeTrading(msgCopy),
+                                               System.Windows.Threading.DispatcherPriority.Background)
                     Loop
                 Catch ex As OperationCanceledException
                     Exit Do   ' usuario desconectó — no reconectar
@@ -474,6 +664,8 @@ Namespace WpfDerivClientVB
                 Dispatcher.Invoke(Sub()
                                       txtTradingEstado.Text = String.Format("⚠ Reconectando... (#{0})", intentos)
                                       txtTradingEstado.Foreground = New SolidColorBrush(Colors.Yellow)
+                                      ' Marcar desconectado en el panel lateral hasta que reconecte
+                                      PanelLiveSetConexion(False)
                                       btnTradingCall.IsEnabled = False
                                       btnTradingPut.IsEnabled = False
                                       btnCotizar.IsEnabled = False
@@ -553,6 +745,65 @@ Namespace WpfDerivClientVB
                     Dim errMsg = obj("error")?("message")?.ToString()
                     Dim errCode = obj("error")?("code")?.ToString()
                     Dim errDetails = obj("error")?("details")?.ToString()
+
+                    ' ContractNotFound: el contrato ya cerro/expiro y no esta en open positions.
+                    ' Quitamos la op del grid + BD localmente, sin ensuciar la UI.
+                    If errCode = "ContractNotFound" Then
+                        ' Extraer el contract_id desde el echo_req. Diferentes shapes segun el tipo de request:
+                        '   - sell:  echo_req.sell = <contract_id>
+                        '   - proposal_open_contract: echo_req.contract_id = <contract_id>  (o echo_req.proposal_open_contract = <id> en API vieja)
+                        Dim ecoReq = obj("echo_req")
+                        Dim contractIdErr As String = Nothing
+                        If ecoReq IsNot Nothing Then
+                            ' Shape #1: sell
+                            Dim sellTok = ecoReq("sell")
+                            If sellTok IsNot Nothing AndAlso sellTok.Type = JTokenType.String Then
+                                contractIdErr = sellTok.ToString()
+                            End If
+                            ' Shape #2: contract_id directo
+                            If String.IsNullOrEmpty(contractIdErr) AndAlso ecoReq("contract_id") IsNot Nothing Then
+                                contractIdErr = ecoReq("contract_id").ToString()
+                            End If
+                            ' Shape #3: proposal_open_contract con valor != "1" (API vieja)
+                            If String.IsNullOrEmpty(contractIdErr) Then
+                                Dim pocTok = ecoReq("proposal_open_contract")
+                                If pocTok IsNot Nothing Then
+                                    Dim pocStr = pocTok.ToString()
+                                    If pocStr <> "1" AndAlso pocStr <> "True" AndAlso Not String.IsNullOrEmpty(pocStr) Then
+                                        contractIdErr = pocStr
+                                    End If
+                                End If
+                            End If
+                        End If
+                        ' Si encontramos el contract_id, quitar la op del grid + marcar BD
+                        If Not String.IsNullOrEmpty(contractIdErr) Then
+                            Dim opErr = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractIdErr)
+                            If opErr IsNot Nothing Then
+                                ' QUITAR de la coleccion (no solo cambiar estado) — el usuario quiere limpieza
+                                _tradingOperaciones.Remove(opErr)
+                                Dim cId = contractIdErr
+                                Dim opEsLive = opErr.EsLive
+                                Task.Run(Async Function() As Task
+                                             Try
+                                                 If opEsLive Then
+                                                     Dim repoLive As New LiveTestRepository()
+                                                     Await repoLive.MarcarOperacionExpiradaPorContractIdAsync(cId)
+                                                 End If
+                                             Catch
+                                             End Try
+                                         End Function)
+                            End If
+                        End If
+                        txtTradingOpEstado.Text = String.Format("Contrato {0} ya no existe en Deriv (expirado).",
+                                                               If(contractIdErr, "?"))
+                        LogConexion(String.Format("[Deriv] {0} (silenciado, op limpiada)", errMsg))
+                        If _pendingApiTrade IsNot Nothing Then
+                            _pendingApiTrade.TrySetResult(New JObject From {{"ok", False}, {"error", errMsg}})
+                            _pendingApiTrade = Nothing
+                        End If
+                        Return
+                    End If
+
                     Dim fullErr = "❌ " & errMsg & If(String.IsNullOrEmpty(errCode), "", " [" & errCode & "]") &
                                   If(String.IsNullOrEmpty(errDetails), "", " — " & errDetails)
                     txtTradingOpEstado.Text = fullErr
@@ -576,6 +827,8 @@ Namespace WpfDerivClientVB
                             Dim balVal As Decimal = CDec(bal("balance"))
                             Dim cur As String = bal("currency")?.ToString()
                             txtTradingBalance.Text = String.Format("{0} {1:N2}", cur, balVal)
+                            ' Reflejar saldo en el panel lateral siempre visible
+                            PanelLiveSetSaldo(balVal, If(cur, "USD"))
                         End If
 
                     Case "proposal"
@@ -621,6 +874,17 @@ Namespace WpfDerivClientVB
                             op.Hora = DateTime.Now.ToString("HH:mm:ss")
                             op.Duracion = ""
                             If _tradingClienteActual IsNot Nothing Then op.ClientId = _tradingClienteActual.Id
+                            ' Taggear como op live si viene de una estrategia (set por ApiExecuteTrade ANTES del send)
+                            If Not String.IsNullOrEmpty(_proxTradeEstrategia) Then
+                                op.EsLive = True
+                                op.Estrategia = _proxTradeEstrategia
+                                op.SesionId = _proxTradeSesionId
+                                op.OperacionLiveId = _proxTradeOpId
+                            End If
+                            ' Reset de la metadata para el proximo trade
+                            _proxTradeEstrategia = ""
+                            _proxTradeSesionId = 0
+                            _proxTradeOpId = 0
                             _tradingOperaciones.Insert(0, op)
                             Dim msgBuy = String.Format("✅ {0} abierto: {1} — ${2}", op.Tipo, op.ContractId, op.Monto)
                             txtTradingOpEstado.Text = msgBuy
@@ -651,6 +915,7 @@ Namespace WpfDerivClientVB
                             Dim profit As Decimal = If(poc("profit") IsNot Nothing, CDec(poc("profit")), 0)
                             Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
                             If op IsNot Nothing Then
+                                Dim estadoPrevio = op.Estado
                                 op.Estado = If(status = "won", "Ganado", If(status = "lost", "Perdido", "Abierto"))
                                 op.ProfitLoss = profit
                                 If poc("entry_tick") IsNot Nothing Then op.EntrySpot = poc("entry_tick").ToString()
@@ -665,6 +930,54 @@ Namespace WpfDerivClientVB
                                     Dim expDt = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(expUnix)
                                     Dim secsLeft = CInt((expDt - DateTime.UtcNow).TotalSeconds)
                                     op.TiempoRestante = If(secsLeft > 0, secsLeft & "s", "0s")
+                                End If
+
+                                ' Si la operacion live acaba de cerrar (won/lost), actualizar BD
+                                ' Y notificar al motor para que actualice sus contadores.
+                                If op.EsLive AndAlso op.OperacionLiveId > 0 _
+                                   AndAlso (status = "won" OrElse status = "lost") _
+                                   AndAlso estadoPrevio <> op.Estado Then
+                                    Dim opLiveId = op.OperacionLiveId
+                                    Dim estadoFinal = op.Estado
+                                    Dim pnlFinal = profit
+                                    Dim cIdFinal = op.ContractId
+                                    Dim ganada = (status = "won")
+                                    Dim sidMotor = op.SesionId
+                                    Dim spotSalida As Decimal = 0D
+                                    Dim epochSalidaVal As Long = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                                    If poc("exit_tick") IsNot Nothing Then
+                                        Decimal.TryParse(poc("exit_tick").ToString(),
+                                                         Globalization.NumberStyles.Any,
+                                                         Globalization.CultureInfo.InvariantCulture,
+                                                         spotSalida)
+                                    End If
+                                    If poc("exit_tick_time") IsNot Nothing Then
+                                        epochSalidaVal = CLng(poc("exit_tick_time"))
+                                    End If
+                                    ' 1) BD update (async)
+                                    Task.Run(Async Function() As Task
+                                                 Try
+                                                     Dim repoLive As New LiveTestRepository()
+                                                     Await repoLive.CerrarOperacionConResultadoAsync(
+                                                         opLiveId, estadoFinal, pnlFinal,
+                                                         spotSalida, epochSalidaVal)
+                                                 Catch ex As Exception
+                                                     AppLogger.Warn("[ProcesarMensajeTrading] Error cerrando op live: " & ex.Message)
+                                                 End Try
+                                             End Function)
+                                    ' 2) Notificar al motor (si todavia esta cargado en LiveMotors)
+                                    If _apiServer IsNot Nothing AndAlso sidMotor > 0 Then
+                                        Dim motorLive As LiveTestMotor = Nothing
+                                        SyncLock _apiServer.LiveMotors
+                                            _apiServer.LiveMotors.TryGetValue(sidMotor, motorLive)
+                                        End SyncLock
+                                        If motorLive IsNot Nothing Then
+                                            Try
+                                                motorLive.NotificarOpResueltaExterna(cIdFinal, ganada, pnlFinal)
+                                            Catch
+                                            End Try
+                                        End If
+                                    End If
                                 End If
                             End If
                         End If
@@ -710,6 +1023,47 @@ Namespace WpfDerivClientVB
                          End Try
                      End Function)
 #Enable Warning BC42358
+        End Sub
+
+        ''' <summary>
+        ''' Quita la operacion del grid SIN tocar Deriv y la oculta en BD para que
+        ''' NO vuelva a aparecer tras un reinicio.
+        '''   - Marca como 'Oculto' en backtest_operaciones via contract_id (cualquier op live)
+        '''   - Tambien borra la copia legacy en trading_operations si existe
+        ''' </summary>
+        Private Sub BtnQuitarOperacion_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Dim btn = TryCast(sender, System.Windows.Controls.Button)
+            If btn Is Nothing Then Return
+            Dim contractId = btn.Tag?.ToString()
+            If String.IsNullOrEmpty(contractId) Then Return
+            Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
+            If op Is Nothing Then Return
+            _tradingOperaciones.Remove(op)
+            txtTradingOpEstado.Text = String.Format("Contrato {0} ocultado permanentemente.", contractId)
+
+            ' Capturar valores antes del Task.Run
+            Dim cId = contractId
+            Dim opIdLive = op.OperacionLiveId
+            Dim opIdMan = op.Id
+
+            Task.Run(Async Function() As Task
+                         Try
+                             ' SIEMPRE intentar ocultar en backtest_operaciones por contract_id.
+                             ' Esto cubre las ops cuyo OperacionLiveId no se cargo correctamente.
+                             Dim repoLive As New LiveTestRepository()
+                             Await repoLive.OcultarOperacionPorContractIdAsync(cId)
+                             If opIdLive > 0 Then Await repoLive.OcultarOperacionPorIdAsync(opIdLive)
+                         Catch
+                         End Try
+                         Try
+                             ' Borrar copia legacy de trading_operations si existe
+                             If opIdMan > 0 Then
+                                 Dim repoCli As New ClientRepository()
+                                 Await repoCli.EliminarOperacionAsync(opIdMan)
+                             End If
+                         Catch
+                         End Try
+                     End Function)
         End Sub
 
         Private Async Sub BtnCerrarOperacion_Click(sender As Object, e As System.Windows.RoutedEventArgs)

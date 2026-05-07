@@ -288,5 +288,25 @@ Namespace WpfDerivClientVB
             Catch
             End Try
         End Function
+
+        ''' <summary>
+        ''' Borra definitivamente una operacion del repo de cliente. Usado por el boton
+        ''' "Quitar" en Trading Live para que la op no vuelva a aparecer al reconectar.
+        ''' </summary>
+        Public Async Function EliminarOperacionAsync(operacionId As Integer) As Task
+            If operacionId <= 0 Then Return
+            Try
+                Using conn As New NpgsqlConnection(_connectionString)
+                    Await conn.OpenAsync()
+                    Dim sql = "DELETE FROM public.trading_operations WHERE id = @id;"
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("id", operacionId)
+                        Await cmd.ExecuteNonQueryAsync()
+                    End Using
+                End Using
+            Catch ex As Exception
+                ' silencioso
+            End Try
+        End Function
     End Class
 End Namespace
