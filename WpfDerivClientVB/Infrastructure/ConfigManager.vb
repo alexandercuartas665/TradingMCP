@@ -10,6 +10,10 @@ Namespace WpfDerivClientVB
         Public Property Database As String = "traiding_db"
         Public Property Username As String = "traiding_user"
         Public Property Password As String = "traiding_pass"
+        ''' <summary>API key para servicios externos (notificaciones, integraciones, etc.).</summary>
+        Public Property ApiKey As String = ""
+        ''' <summary>Endpoint base de la API externa (ej. https://api.servicio.com).</summary>
+        Public Property Endpoint As String = ""
 
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.

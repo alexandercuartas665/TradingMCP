@@ -7,6 +7,20 @@ Imports WpfDerivClientVB.WpfDerivClientVB.Estrategias
 Namespace WpfDerivClientVB.Backtesting
 
     ''' <summary>
+    ''' Snapshot de progreso del backtest emitido cada N velas. Permite a la UI
+    ''' mostrar contadores en tiempo real (velas analizadas, ganadas/perdidas, etc.).
+    ''' </summary>
+    Public Structure BacktestProgresoMetricas
+        Public VelasAnalizadas As Integer
+        Public TotalVelas As Integer
+        Public TotalSenales As Integer
+        Public TotalOps As Integer
+        Public Ganadas As Integer
+        Public Perdidas As Integer
+        Public PnlActual As Decimal
+    End Structure
+
+    ''' <summary>
     ''' Motor de backtesting: ejecuta una estrategia sobre datos historicos,
     ''' simula multiples cuentas en paralelo y devuelve metricas completas.
     '''
@@ -20,10 +34,12 @@ Namespace WpfDerivClientVB.Backtesting
         ''' </summary>
         ''' <param name="config">Configuracion de la sesion (symbol, fechas, cuentas, etc.)</param>
         ''' <param name="estrategia">Estrategia a probar (EstrategiaEmaRsi, EstrategiaSeykota, etc.)</param>
-        ''' <param name="progreso">Progreso opcional para reportar estado a la UI.</param>
+        ''' <param name="progreso">Progreso textual opcional para reportar estado a la UI.</param>
+        ''' <param name="progresoMetricas">Progreso estructurado opcional con metricas en tiempo real (velas + ganadas/perdidas).</param>
         Public Async Function EjecutarAsync(config As BacktestConfig,
                                             estrategia As IEstrategia,
-                                            Optional progreso As IProgress(Of String) = Nothing) As Task(Of BacktestResultado)
+                                            Optional progreso As IProgress(Of String) = Nothing,
+                                            Optional progresoMetricas As IProgress(Of BacktestProgresoMetricas) = Nothing) As Task(Of BacktestResultado)
 
             ' -- FASE 0: Carga de velas ------------------------------------------
             Reportar(progreso, "Cargando velas historicas...")
@@ -58,12 +74,24 @@ Namespace WpfDerivClientVB.Backtesting
             Dim operaciones As New List(Of BacktestOperacion)()
             Dim totalSenales As Integer = 0
             Dim totalOps As Integer = 0
+            Dim totalGanadas As Integer = 0
+            Dim totalPerdidas As Integer = 0
+            Dim pnlAcumulado As Decimal = 0D
 
             Dim iMax = todasLasVelas.Count - config.DuracionVelas - 1
             For i = config.VentanaIndicadores - 1 To iMax
 
                 If i Mod 500 = 0 Then
                     Reportar(progreso, String.Format("Procesando vela {0}/{1}...", i, todasLasVelas.Count))
+                    ReportarMetricas(progresoMetricas, New BacktestProgresoMetricas With {
+                        .VelasAnalizadas = i,
+                        .TotalVelas = todasLasVelas.Count,
+                        .TotalSenales = totalSenales,
+                        .TotalOps = totalOps,
+                        .Ganadas = totalGanadas,
+                        .Perdidas = totalPerdidas,
+                        .PnlActual = pnlAcumulado
+                    })
                 End If
 
                 ' Ventana de historia para la estrategia (ultimas VentanaIndicadores velas)
@@ -115,9 +143,12 @@ Namespace WpfDerivClientVB.Backtesting
                     cuenta.BalanceActual += pnl
                     If estadoTrade = "Ganado" Then
                         cuenta.NGanadas += 1
+                        totalGanadas += 1
                     Else
                         cuenta.NPerdidas += 1
+                        totalPerdidas += 1
                     End If
+                    pnlAcumulado += pnl
 
                     operaciones.Add(New BacktestOperacion With {
                         .CuentaNombre     = cuenta.NombreCuenta,
@@ -139,6 +170,17 @@ Namespace WpfDerivClientVB.Backtesting
                     totalOps += 1
                 Next
             Next
+
+            ' Reporte final 100% de velas con metricas finales del bucle
+            ReportarMetricas(progresoMetricas, New BacktestProgresoMetricas With {
+                .VelasAnalizadas = todasLasVelas.Count,
+                .TotalVelas = todasLasVelas.Count,
+                .TotalSenales = totalSenales,
+                .TotalOps = totalOps,
+                .Ganadas = totalGanadas,
+                .Perdidas = totalPerdidas,
+                .PnlActual = pnlAcumulado
+            })
 
             ' -- FASE 2: Metricas ------------------------------------------------
             Reportar(progreso, "Calculando metricas...")
@@ -260,6 +302,15 @@ Namespace WpfDerivClientVB.Backtesting
             Next
             Return JsonConvert.SerializeObject(items)
         End Function
+
+        Private Shared Sub ReportarMetricas(progreso As IProgress(Of BacktestProgresoMetricas), m As BacktestProgresoMetricas)
+            If progreso IsNot Nothing Then
+                Try
+                    progreso.Report(m)
+                Catch
+                End Try
+            End If
+        End Sub
 
         Private Shared Sub Reportar(progreso As IProgress(Of String), mensaje As String)
             If progreso IsNot Nothing Then progreso.Report(mensaje)

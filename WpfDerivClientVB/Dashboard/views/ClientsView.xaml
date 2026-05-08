@@ -122,6 +122,12 @@
                                         <Button x:Name="btnTestRealToken" Content="Probar Token" Click="btnTestRealToken_Click" Height="30" Margin="0,2,0,0" Style="{DynamicResource PrimaryBtn}" Background="#313244" Foreground="#CDD6F4"/>
                                     </StackPanel>
                                 </Grid>
+                                <!-- Telefono cuenta real -->
+                                <StackPanel Margin="0,8,0,0" Width="280" HorizontalAlignment="Left">
+                                    <TextBlock Text="TELÉFONO" Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBox x:Name="txtRealPhone" Style="{StaticResource InputStyle}"
+                                             ToolTip="Teléfono asociado a la cuenta real (incluye código de país)"/>
+                                </StackPanel>
                                 <TextBlock x:Name="txtTestRealResult" Text="" Margin="0,5,0,0" FontSize="12" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Border>
@@ -154,6 +160,12 @@
                                         <Button x:Name="btnTestVirToken" Content="Probar Token" Click="btnTestVirToken_Click" Height="30" Margin="0,2,0,0" Style="{DynamicResource PrimaryBtn}" Background="#313244" Foreground="#CDD6F4"/>
                                     </StackPanel>
                                 </Grid>
+                                <!-- Telefono cuenta virtual -->
+                                <StackPanel Margin="0,8,0,0" Width="280" HorizontalAlignment="Left">
+                                    <TextBlock Text="TELÉFONO" Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBox x:Name="txtVirPhone" Style="{StaticResource InputStyle}"
+                                             ToolTip="Teléfono asociado a la cuenta demo (incluye código de país)"/>
+                                </StackPanel>
                                 <TextBlock x:Name="txtTestVirResult" Text="" Margin="0,5,0,0" FontSize="12" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Border>

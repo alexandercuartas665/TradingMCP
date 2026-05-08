@@ -19,13 +19,16 @@ Namespace WpfDerivClientVB
         ''' </summary>
         Private Sub CargarConfiguracion()
             Dim conf = ConfigManager.LoadDbConfig()
-            
+
             txtHost.Text = conf.Host
             txtPort.Text = conf.Port.ToString()
             txtDatabase.Text = conf.Database
             txtUsername.Text = conf.Username
             txtPassword.Password = conf.Password
             txtPasswordVisible.Text = conf.Password
+            txtEndpoint.Text = If(conf.Endpoint, "")
+            txtApiKey.Password = If(conf.ApiKey, "")
+            txtApiKeyVisible.Text = If(conf.ApiKey, "")
         End Sub
 
         ''' <summary>
@@ -40,7 +43,9 @@ Namespace WpfDerivClientVB
                 .Port = puerto,
                 .Database = txtDatabase.Text.Trim(),
                 .Username = txtUsername.Text.Trim(),
-                .Password = If(btnShowPassword.IsChecked = True, txtPasswordVisible.Text, txtPassword.Password)
+                .Password = If(btnShowPassword.IsChecked = True, txtPasswordVisible.Text, txtPassword.Password),
+                .Endpoint = txtEndpoint.Text.Trim(),
+                .ApiKey = If(btnShowApiKey.IsChecked = True, txtApiKeyVisible.Text, txtApiKey.Password)
             }
         End Function
 
@@ -70,6 +75,19 @@ Namespace WpfDerivClientVB
                 txtPassword.Password = txtPasswordVisible.Text
                 txtPasswordVisible.Visibility = Visibility.Collapsed
                 txtPassword.Visibility = Visibility.Visible
+            End If
+        End Sub
+
+        ''' <summary>Toggle show/hide del API Key (mismo patron que el password de BD).</summary>
+        Private Sub btnShowApiKey_Click(sender As Object, e As RoutedEventArgs)
+            If btnShowApiKey.IsChecked = True Then
+                txtApiKeyVisible.Text = txtApiKey.Password
+                txtApiKey.Visibility = Visibility.Collapsed
+                txtApiKeyVisible.Visibility = Visibility.Visible
+            Else
+                txtApiKey.Password = txtApiKeyVisible.Text
+                txtApiKeyVisible.Visibility = Visibility.Collapsed
+                txtApiKey.Visibility = Visibility.Visible
             End If
         End Sub
 

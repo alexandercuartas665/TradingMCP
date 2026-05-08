@@ -43,9 +43,11 @@ Namespace WpfDerivClientVB
                         txtRealAccountId.Text = creds.AccountIdReal
                         txtRealAppId.Text = creds.AppIdReal
                         txtRealToken.Text = creds.ApiTokenReal
+                        txtRealPhone.Text = creds.TelefonoReal
                         txtVirAccountId.Text = creds.AccountIdVirtual
                         txtVirAppId.Text = creds.AppIdVirtual
                         txtVirToken.Text = creds.ApiTokenVirtual
+                        txtVirPhone.Text = creds.TelefonoVirtual
                     Else
                         LimpiarCamposDeriv()
                     End If
@@ -91,9 +93,11 @@ Namespace WpfDerivClientVB
                 _selectedClient.DerivCredentials.AccountIdReal = txtRealAccountId.Text.Trim()
                 _selectedClient.DerivCredentials.AppIdReal = txtRealAppId.Text.Trim()
                 _selectedClient.DerivCredentials.ApiTokenReal = txtRealToken.Text.Trim()
+                _selectedClient.DerivCredentials.TelefonoReal = txtRealPhone.Text.Trim()
                 _selectedClient.DerivCredentials.AccountIdVirtual = txtVirAccountId.Text.Trim()
                 _selectedClient.DerivCredentials.AppIdVirtual = txtVirAppId.Text.Trim()
                 _selectedClient.DerivCredentials.ApiTokenVirtual = txtVirToken.Text.Trim()
+                _selectedClient.DerivCredentials.TelefonoVirtual = txtVirPhone.Text.Trim()
 
                 Await _repo.SaveClientAsync(_selectedClient)
 
@@ -111,9 +115,11 @@ Namespace WpfDerivClientVB
             txtRealAccountId.Text = ""
             txtRealAppId.Text = ""
             txtRealToken.Text = ""
+            txtRealPhone.Text = ""
             txtVirAccountId.Text = ""
             txtVirAppId.Text = ""
             txtVirToken.Text = ""
+            txtVirPhone.Text = ""
             txtTestRealResult.Text = ""
             txtTestVirResult.Text = ""
         End Sub

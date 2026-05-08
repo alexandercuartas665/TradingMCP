@@ -289,6 +289,92 @@ Namespace WpfDerivClientVB
         End Sub
 
         ''' <summary>
+        ''' Envia notificacion WhatsApp al cliente cuando una operacion live se cierra.
+        ''' Incluye: nombre de estrategia, tipo, activo, monto, resultado, hora apertura/cierre,
+        ''' contract id, saldo actual, PnL hoy/semana/mes.
+        ''' Se ejecuta en background (Task.Run) para no bloquear el UI thread.
+        ''' </summary>
+        Private Sub EnviarNotificacionOpCerradaAsync(op As OperacionModel, epochSalida As Long)
+            If op Is Nothing Then Return
+            If _tradingClienteActual Is Nothing Then Return
+            Dim clientId = _tradingClienteActual.Id
+            If clientId <= 0 Then Return
+
+            ' Capturar datos del UI thread (este metodo se llama desde ProcesarMensajeTrading
+            ' que ya corre en UI). Despues lanzamos Task.Run para el envio HTTP.
+            Dim saldoTxt As String = If(txtTradingBalance IsNot Nothing, txtTradingBalance.Text, "")
+            Dim cuentaTxt As String = If(_tradingEsDemo, "DEMO", "REAL")
+            Dim estrategia As String = If(String.IsNullOrEmpty(op.Estrategia), "Manual", op.Estrategia)
+            Dim tipoTxt As String = If(op.Tipo, "")
+            Dim simboloTxt As String = If(op.Simbolo, "")
+            Dim contractId As String = If(op.ContractId, "")
+            Dim estadoTxt As String = If(op.Estado, "")
+            Dim icono As String = If(estadoTxt = "Ganado", "✅", If(estadoTxt = "Perdido", "❌", "⚠"))
+            Dim montoTxt As String = String.Format("{0:F2}", op.Monto)
+            Dim pnlTxt As String = String.Format("{0:+0.00;-0.00;0.00}", op.ProfitLoss)
+
+            Dim aperturaTxt As String = ""
+            Try
+                aperturaTxt = op.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+            Catch
+            End Try
+            Dim cierreTxt As String = ""
+            Try
+                If epochSalida > 0 Then
+                    cierreTxt = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) _
+                        .AddSeconds(epochSalida).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                Else
+                    cierreTxt = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                End If
+            Catch
+            End Try
+
+            Dim preferirDemo As Boolean = _tradingEsDemo
+            Dim esLiveOp As Boolean = op.EsLive
+
+            ' Solo notificamos operaciones live (las manuales en demo opcionalmente tambien si quieres).
+            ' Aqui notificamos SOLO si es live (estrategia automatica) — los manuales no.
+            If Not esLiveOp Then Return
+
+            Task.Run(Async Function() As Task
+                         Try
+                             ' Consultar PnL hoy/semana/mes desde BD (ops live cerradas)
+                             Dim pnlHoy As Decimal = 0D, pnlSem As Decimal = 0D, pnlMes As Decimal = 0D
+                             Try
+                                 Dim repoPnl As New LiveTestRepository()
+                                 Dim r = Await repoPnl.GetPnlPeriodosAsync()
+                                 pnlHoy = r.Hoy : pnlSem = r.Semana : pnlMes = r.Mes
+                             Catch
+                             End Try
+
+                             Dim sb As New System.Text.StringBuilder()
+                             sb.AppendLine(String.Format("{0} OPERACION CERRADA — {1}", icono, estrategia))
+                             sb.AppendLine(String.Format("├ Estado: {0} {1}", icono, estadoTxt))
+                             sb.AppendLine(String.Format("├ Tipo: {0}", tipoTxt))
+                             sb.AppendLine(String.Format("├ Activo: {0}", simboloTxt))
+                             sb.AppendLine(String.Format("├ Monto: ${0}", montoTxt))
+                             sb.AppendLine(String.Format("├ Resultado: {0}", pnlTxt))
+                             sb.AppendLine(String.Format("├ Apertura: {0}", aperturaTxt))
+                             sb.AppendLine(String.Format("├ Cierre: {0}", cierreTxt))
+                             sb.AppendLine(String.Format("├ Contract ID: {0}", contractId))
+                             sb.AppendLine(String.Format("├ Cuenta: {0}", cuentaTxt))
+                             sb.AppendLine(String.Format("├ Saldo actual: {0}", saldoTxt))
+                             sb.AppendLine(String.Format("├ Ganancia HOY: {0:+$0.00;-$0.00;$0.00}", pnlHoy))
+                             sb.AppendLine(String.Format("├ Ganancia SEMANA: {0:+$0.00;-$0.00;$0.00}", pnlSem))
+                             sb.Append(String.Format("└ Ganancia MES: {0:+$0.00;-$0.00;$0.00}", pnlMes))
+
+                             Dim svc As New NotificacionService()
+                             Dim resp = Await svc.EnviarMensajeClienteAsync(clientId, sb.ToString(), preferirDemo)
+                             If Not resp.Exito Then
+                                 AppLogger.Warn("[Notif] " & resp.Mensaje)
+                             End If
+                         Catch ex As Exception
+                             AppLogger.Warn("[Notif] Error enviando: " & ex.Message)
+                         End Try
+                     End Function)
+        End Sub
+
+        ''' <summary>
         ''' Tras conectar el Trading WS, carga las ultimas operaciones live (cualquier estado:
         ''' Ganado/Perdido/Pendiente/Abierto/Expirado) en el grid de Trading Live para mantener
         ''' visible el historial de la estrategia, y se suscribe a Deriv solo para las que
@@ -978,6 +1064,9 @@ Namespace WpfDerivClientVB
                                             End Try
                                         End If
                                     End If
+
+                                    ' 3) Notificacion WhatsApp al cliente con resumen de la op cerrada
+                                    EnviarNotificacionOpCerradaAsync(op, epochSalidaVal)
                                 End If
                             End If
                         End If

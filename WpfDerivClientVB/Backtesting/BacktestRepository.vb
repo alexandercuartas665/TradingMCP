@@ -1,6 +1,7 @@
 Imports System.Collections.Generic
 Imports System.Threading.Tasks
 Imports Npgsql
+Imports NpgsqlTypes
 
 Namespace WpfDerivClientVB.Backtesting
 
@@ -135,41 +136,59 @@ Namespace WpfDerivClientVB.Backtesting
                                 sesionId = CInt(Await cmd.ExecuteScalarAsync())
                             End Using
 
-                            ' -- Insertar operaciones -------------------------------------
-                            Dim sqlOp =
-                                "INSERT INTO public.backtest_operaciones " &
-                                "  (sesion_id, cuenta_nombre, tipo, epoch_entrada, precio_entrada, " &
-                                "   epoch_salida, precio_salida, monto, payout_pct, estado, " &
-                                "   profit_loss, balance_post, confianza, motivo_senal, " &
-                                "   datos_indicadores, contexto_velas) " &
-                                "VALUES (@sid, @cn, @tipo, @ee, @pe, @es, @ps, @monto, @pay, @est, " &
-                                "        @pl, @bp, @conf, @mot, @di, @cv);"
-
-                            For Each op In resultado.Operaciones
-                                Using cmd As New NpgsqlCommand(sqlOp, conn, tx)
-                                    cmd.Parameters.AddWithValue("sid",  sesionId)
-                                    cmd.Parameters.AddWithValue("cn",   op.CuentaNombre)
-                                    cmd.Parameters.AddWithValue("tipo", op.Tipo)
-                                    cmd.Parameters.AddWithValue("ee",   op.EpochEntrada)
-                                    cmd.Parameters.AddWithValue("pe",   op.PrecioEntrada)
-                                    cmd.Parameters.AddWithValue("es",   op.EpochSalida)
-                                    cmd.Parameters.AddWithValue("ps",   op.PrecioSalida)
-                                    cmd.Parameters.AddWithValue("monto", op.Monto)
-                                    cmd.Parameters.AddWithValue("pay",  op.PayoutPct)
-                                    cmd.Parameters.AddWithValue("est",  op.Estado)
-                                    cmd.Parameters.AddWithValue("pl",   op.ProfitLoss)
-                                    cmd.Parameters.AddWithValue("bp",   op.BalancePost)
-                                    cmd.Parameters.AddWithValue("conf", op.Confianza)
-                                    cmd.Parameters.AddWithValue("mot",  If(op.MotivoSenal, CType(DBNull.Value, Object)))
-                                    cmd.Parameters.AddWithValue("di",   If(op.DatosIndicadores <> "", CType(op.DatosIndicadores, Object), DBNull.Value))
-                                    cmd.Parameters.AddWithValue("cv",   If(op.ContextoVelas <> "",    CType(op.ContextoVelas,    Object), DBNull.Value))
-                                    Await cmd.ExecuteNonQueryAsync()
-                                End Using
-                            Next
-
+                            ' -- Insertar operaciones via COPY binario (PostgreSQL) -------
+                            ' ~50x mas rapido que INSERT por fila para volumenes grandes (cientos de miles).
+                            ' Importante: el COPY requiere su propio commit; cerramos la transaccion antes
+                            ' para que el writer use la conexion sin choques de tx.
                             tx.Commit()
+
+                            Dim copySql =
+                                "COPY public.backtest_operaciones " &
+                                "(sesion_id, cuenta_nombre, tipo, epoch_entrada, precio_entrada, " &
+                                " epoch_salida, precio_salida, monto, payout_pct, estado, " &
+                                " profit_loss, balance_post, confianza, motivo_senal, " &
+                                " datos_indicadores, contexto_velas) FROM STDIN (FORMAT BINARY)"
+
+                            Using writer = conn.BeginBinaryImport(copySql)
+                                For Each op In resultado.Operaciones
+                                    writer.StartRow()
+                                    writer.Write(sesionId, NpgsqlDbType.Integer)
+                                    writer.Write(If(op.CuentaNombre, ""), NpgsqlDbType.Varchar)
+                                    writer.Write(If(op.Tipo, ""), NpgsqlDbType.Varchar)
+                                    writer.Write(op.EpochEntrada, NpgsqlDbType.Bigint)
+                                    writer.Write(op.PrecioEntrada, NpgsqlDbType.Numeric)
+                                    writer.Write(op.EpochSalida, NpgsqlDbType.Bigint)
+                                    writer.Write(op.PrecioSalida, NpgsqlDbType.Numeric)
+                                    writer.Write(op.Monto, NpgsqlDbType.Numeric)
+                                    writer.Write(op.PayoutPct, NpgsqlDbType.Numeric)
+                                    writer.Write(If(op.Estado, ""), NpgsqlDbType.Varchar)
+                                    writer.Write(op.ProfitLoss, NpgsqlDbType.Numeric)
+                                    writer.Write(op.BalancePost, NpgsqlDbType.Numeric)
+                                    writer.Write(op.Confianza, NpgsqlDbType.Integer)
+                                    If String.IsNullOrEmpty(op.MotivoSenal) Then
+                                        writer.WriteNull()
+                                    Else
+                                        writer.Write(op.MotivoSenal, NpgsqlDbType.Varchar)
+                                    End If
+                                    If String.IsNullOrEmpty(op.DatosIndicadores) Then
+                                        writer.WriteNull()
+                                    Else
+                                        writer.Write(op.DatosIndicadores, NpgsqlDbType.Text)
+                                    End If
+                                    If String.IsNullOrEmpty(op.ContextoVelas) Then
+                                        writer.WriteNull()
+                                    Else
+                                        writer.Write(op.ContextoVelas, NpgsqlDbType.Text)
+                                    End If
+                                Next
+                                writer.Complete()
+                            End Using
                         Catch ex As Exception
-                            tx.Rollback()
+                            Try
+                                tx.Rollback()
+                            Catch
+                                ' tx puede ya estar commiteada (caso COPY) — ignorar
+                            End Try
                             Throw
                         End Try
                     End Using
@@ -375,24 +394,69 @@ Namespace WpfDerivClientVB.Backtesting
         End Function
 
         ''' <summary>
-        ''' Elimina una sesion y todas sus operaciones asociadas.
+        ''' Elimina una sesion y TODAS sus operaciones asociadas, garantizando
+        ''' que no queden registros huerfanos. Usa una transaccion atomica:
+        ''' si algo falla, ni la sesion ni sus operaciones se borran.
+        ''' Devuelve (operacionesBorradas, sesionBorrada) — sesionBorrada=true si
+        ''' efectivamente existia esa fila.
+        ''' Triple proteccion contra huerfanos:
+        '''  1) DDL: backtest_operaciones.sesion_id REFERENCES ... ON DELETE CASCADE
+        '''  2) DELETE explicito de operaciones primero
+        '''  3) Verificacion post-delete: count(*) WHERE sesion_id = id == 0
         ''' </summary>
-        Public Async Function EliminarSesionAsync(sesionId As Integer) As Task
+        Public Async Function EliminarSesionAsync(sesionId As Integer) As Task(Of (OpsBorradas As Integer, SesionBorrada As Boolean))
+            Dim opsBorradas As Integer = 0
+            Dim sesionBorrada As Boolean = False
             Try
                 Using conn As New NpgsqlConnection(_connectionString)
                     Await conn.OpenAsync()
-                    ' Borrar operaciones primero (FK constraint) luego la sesion
-                    Using cmd As New NpgsqlCommand(
-                        "DELETE FROM public.backtest_operaciones WHERE sesion_id = @sid;" &
-                        "DELETE FROM public.backtest_sesiones    WHERE id        = @sid;", conn)
-                        cmd.Parameters.AddWithValue("sid", sesionId)
-                        Await cmd.ExecuteNonQueryAsync()
+                    Using tx = conn.BeginTransaction()
+                        Try
+                            ' 1) Borrar operaciones asociadas
+                            Using cmd As New NpgsqlCommand(
+                                "DELETE FROM public.backtest_operaciones WHERE sesion_id = @sid;",
+                                conn, tx)
+                                cmd.Parameters.AddWithValue("sid", sesionId)
+                                opsBorradas = Await cmd.ExecuteNonQueryAsync()
+                            End Using
+
+                            ' 2) Borrar la sesion
+                            Using cmd As New NpgsqlCommand(
+                                "DELETE FROM public.backtest_sesiones WHERE id = @sid;",
+                                conn, tx)
+                                cmd.Parameters.AddWithValue("sid", sesionId)
+                                Dim n = Await cmd.ExecuteNonQueryAsync()
+                                sesionBorrada = (n > 0)
+                            End Using
+
+                            ' 3) Verificacion: confirmar que NO quedan ops huerfanas
+                            Using cmd As New NpgsqlCommand(
+                                "SELECT COUNT(*) FROM public.backtest_operaciones WHERE sesion_id = @sid;",
+                                conn, tx)
+                                cmd.Parameters.AddWithValue("sid", sesionId)
+                                Dim huerfanos = CLng(Await cmd.ExecuteScalarAsync())
+                                If huerfanos > 0 Then
+                                    Throw New Exception(
+                                        String.Format("Quedaron {0} operaciones huerfanas para sesion #{1} — abortando.",
+                                                       huerfanos, sesionId))
+                                End If
+                            End Using
+
+                            tx.Commit()
+                        Catch
+                            Try
+                                tx.Rollback()
+                            Catch
+                            End Try
+                            Throw
+                        End Try
                     End Using
                 End Using
             Catch ex As Exception
                 Console.WriteLine("[BacktestRepository.EliminarSesionAsync] Error: " & ex.Message)
                 Throw
             End Try
+            Return (opsBorradas, sesionBorrada)
         End Function
 
         Private Shared Function MapSesion(reader As Npgsql.NpgsqlDataReader) As BacktestSesion

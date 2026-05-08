@@ -50,6 +50,8 @@ Namespace WpfDerivClientVB
                     Dim sqlMigrateTokenReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_real TYPE VARCHAR(200);"
                     Dim sqlMigrateAppIdVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN app_id_virtual TYPE VARCHAR(100);"
                     Dim sqlMigrateTokenVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_virtual TYPE VARCHAR(200);"
+                    Dim sqlMigrateTelReal = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS telefono_real VARCHAR(50);"
+                    Dim sqlMigrateTelVir  = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS telefono_virtual VARCHAR(50);"
 
                     Using cmd As New NpgsqlCommand(sqlClients, conn)
                         Await cmd.ExecuteNonQueryAsync()
@@ -57,7 +59,8 @@ Namespace WpfDerivClientVB
                     Using cmd As New NpgsqlCommand(sqlCreds, conn)
                         Await cmd.ExecuteNonQueryAsync()
                     End Using
-                    For Each migSql In {sqlMigrateReal, sqlMigrateVir, sqlMigrateAppIdReal, sqlMigrateTokenReal, sqlMigrateAppIdVir, sqlMigrateTokenVir}
+                    For Each migSql In {sqlMigrateReal, sqlMigrateVir, sqlMigrateAppIdReal, sqlMigrateTokenReal,
+                                        sqlMigrateAppIdVir, sqlMigrateTokenVir, sqlMigrateTelReal, sqlMigrateTelVir}
                         Try
                             Using cmd As New NpgsqlCommand(migSql, conn)
                                 Await cmd.ExecuteNonQueryAsync()
@@ -112,13 +115,25 @@ Namespace WpfDerivClientVB
                         cmd.Parameters.AddWithValue("clientId", clientId)
                         Using reader = Await cmd.ExecuteReaderAsync()
                             If Await reader.ReadAsync() Then
+                                ' Helper local: lee columna como string, devuelve "" si DBNull o no existe
+                                Dim safe = Function(col As String) As String
+                                               Try
+                                                   Dim v = reader(col)
+                                                   If v Is Nothing OrElse IsDBNull(v) Then Return ""
+                                                   Return v.ToString()
+                                               Catch
+                                                   Return ""
+                                               End Try
+                                           End Function
                                 Return New ClientDerivCredentials With {
-                                    .AccountIdReal = reader("account_id_real").ToString(),
-                                    .AppIdReal = reader("app_id_real").ToString(),
-                                    .ApiTokenReal = reader("api_token_real").ToString(),
-                                    .AccountIdVirtual = reader("account_id_virtual").ToString(),
-                                    .AppIdVirtual = reader("app_id_virtual").ToString(),
-                                    .ApiTokenVirtual = reader("api_token_virtual").ToString()
+                                    .AccountIdReal = safe("account_id_real"),
+                                    .AppIdReal = safe("app_id_real"),
+                                    .ApiTokenReal = safe("api_token_real"),
+                                    .TelefonoReal = safe("telefono_real"),
+                                    .AccountIdVirtual = safe("account_id_virtual"),
+                                    .AppIdVirtual = safe("app_id_virtual"),
+                                    .ApiTokenVirtual = safe("api_token_virtual"),
+                                    .TelefonoVirtual = safe("telefono_virtual")
                                 }
                             End If
                         End Using
@@ -166,17 +181,19 @@ Namespace WpfDerivClientVB
                             If client.DerivCredentials IsNot Nothing Then
                                 Dim credsSql = "
                                     DELETE FROM public.client_deriv_credentials WHERE client_id = @cid;
-                                    INSERT INTO public.client_deriv_credentials (client_id, account_id_real, app_id_real, api_token_real, account_id_virtual, app_id_virtual, api_token_virtual)
-                                    VALUES (@cid, @acir, @air, @atr, @aciv, @aiv, @atv);"
+                                    INSERT INTO public.client_deriv_credentials (client_id, account_id_real, app_id_real, api_token_real, telefono_real, account_id_virtual, app_id_virtual, api_token_virtual, telefono_virtual)
+                                    VALUES (@cid, @acir, @air, @atr, @telr, @aciv, @aiv, @atv, @telv);"
 
                                 Using cmdCreds = New NpgsqlCommand(credsSql, conn, trans)
                                     cmdCreds.Parameters.AddWithValue("cid", clientId)
                                     cmdCreds.Parameters.AddWithValue("acir", If(client.DerivCredentials.AccountIdReal, ""))
                                     cmdCreds.Parameters.AddWithValue("air", If(client.DerivCredentials.AppIdReal, ""))
                                     cmdCreds.Parameters.AddWithValue("atr", If(client.DerivCredentials.ApiTokenReal, ""))
+                                    cmdCreds.Parameters.AddWithValue("telr", If(client.DerivCredentials.TelefonoReal, ""))
                                     cmdCreds.Parameters.AddWithValue("aciv", If(client.DerivCredentials.AccountIdVirtual, ""))
                                     cmdCreds.Parameters.AddWithValue("aiv", If(client.DerivCredentials.AppIdVirtual, ""))
                                     cmdCreds.Parameters.AddWithValue("atv", If(client.DerivCredentials.ApiTokenVirtual, ""))
+                                    cmdCreds.Parameters.AddWithValue("telv", If(client.DerivCredentials.TelefonoVirtual, ""))
                                     Await cmdCreds.ExecuteNonQueryAsync()
                                 End Using
                             End If

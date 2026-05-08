@@ -22,9 +22,11 @@ Namespace WpfDerivClientVB
         Public Property AccountIdReal As String
         Public Property AppIdReal As String
         Public Property ApiTokenReal As String
+        Public Property TelefonoReal As String
         Public Property AccountIdVirtual As String
         Public Property AppIdVirtual As String
         Public Property ApiTokenVirtual As String
+        Public Property TelefonoVirtual As String
     End Class
 
 End Namespace

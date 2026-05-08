@@ -227,16 +227,51 @@
                     <!-- Actions -->
                     <Grid>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button x:Name="btnTestConnection" Style="{StaticResource SecondaryBtnStyle}" 
+                            <Button x:Name="btnTestConnection" Style="{StaticResource SecondaryBtnStyle}"
                                     Content="Test Connection" Margin="0,0,16,0" Click="btnTestConnection_Click" Width="227"/>
-                            <Button x:Name="btnSave" Style="{StaticResource PrimaryBtnStyle}" 
+                            <Button x:Name="btnSave" Style="{StaticResource PrimaryBtnStyle}"
                                     Content="Save Configuration" Click="btnSave_Click"/>
                         </StackPanel>
                     </Grid>
 
                 </StackPanel>
             </Border>
-            
+
+            <!-- ── API EXTERNA PANEL ── -->
+            <Border Style="{StaticResource GlassPanelStyle}" MaxWidth="600" HorizontalAlignment="Left" Width="600" Margin="0,24,0,0">
+                <StackPanel>
+                    <!-- Panel Title/Icon -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <Border Width="40" Height="40" CornerRadius="12" Background="#0D2A30" Margin="0,0,16,0">
+                            <TextBlock Text="🔗" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="API externa" FontSize="18" FontWeight="Bold" Foreground="{StaticResource OnSurface}"/>
+                            <TextBlock Text="Credenciales para integraciones externas (notificaciones, servicios)" FontSize="12" Foreground="#888888"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Endpoint -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="ENDPOINT" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="txtEndpoint" Style="{StaticResource InputStyle}"
+                                 ToolTip="URL base del servicio (ej. https://api.miservicio.com)"/>
+                    </StackPanel>
+
+                    <!-- API Key -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="API KEY" Style="{StaticResource FieldLabelStyle}"/>
+                        <Grid>
+                            <PasswordBox x:Name="txtApiKey" Style="{StaticResource PasswordInputStyle}"/>
+                            <TextBox x:Name="txtApiKeyVisible" Style="{StaticResource InputStyle}" Visibility="Collapsed"/>
+                            <ToggleButton x:Name="btnShowApiKey" Content="👁" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                          Margin="0,0,10,0" Background="Transparent" BorderThickness="0" Foreground="#5A6A6D"
+                                          Cursor="Hand" FontSize="14" Click="btnShowApiKey_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

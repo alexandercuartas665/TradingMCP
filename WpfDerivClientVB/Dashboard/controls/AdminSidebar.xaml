@@ -79,6 +79,13 @@
                     </StackPanel>
                 </Button>
 
+                <Button x:Name="btnNavBacktest" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="NavBtn_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🧪" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Backtest" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
                 <Button x:Name="btnTest" Style="{DynamicResource NavItem}" HorizontalAlignment="Stretch" Click="BtnTest_Click">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="⚙" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>

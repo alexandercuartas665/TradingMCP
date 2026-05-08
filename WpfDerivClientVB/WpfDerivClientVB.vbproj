@@ -29,6 +29,9 @@
     <Page Include="Dashboard\views\ClientsView.xaml" />
     <Page Include="CandleManager\Modals\TradingSettingsModal.xaml" />
     <Page Include="EstrategiasDinamicas\Controls\EstrategiasLivePanelControl.xaml" />
+    <Page Include="Backtesting\HeavyStrategyTesterWindow.xaml" />
+    <Page Include="Backtesting\HeavyOperacionesWindow.xaml" />
+    <Page Include="Backtesting\Controls\HeavyDetailDrawer.xaml" />
   </ItemGroup>
 
   <ItemGroup>

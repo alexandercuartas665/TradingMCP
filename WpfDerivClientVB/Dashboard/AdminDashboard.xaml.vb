@@ -51,6 +51,11 @@ Partial Public Class AdminDashboard
                 DashboardCanvas.Visibility = Visibility.Collapsed
                 MainContentContainer.Visibility = Visibility.Visible
                 MainContentContainer.Content = New WpfDerivClientVB.SettingsView()
+            Case "Backtest"
+                ' Ventana independiente — no se inyecta en MainContentContainer.
+                Dim w As New HeavyStrategyTesterWindow()
+                w.Owner = Me
+                w.Show()
         End Select
     End Sub
 
