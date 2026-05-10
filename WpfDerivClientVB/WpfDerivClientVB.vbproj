@@ -48,6 +48,7 @@
     <Folder Include="CandleManager\" />
     <Folder Include="Funciones\" />
     <Folder Include="EstrategiasDinamicas\" />
+    <Folder Include="Servidor\" />
   </ItemGroup>
 
   <!-- Estrategias JSON: se copian al output para que el registry las encuentre -->

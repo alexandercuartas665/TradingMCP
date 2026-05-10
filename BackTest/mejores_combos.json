@@ -1,0 +1,128 @@
+{
+  "generado": "2026-05-09",
+  "periodo_backtest": {
+    "desde": "2002-01-01",
+    "hasta": "2026-05-01",
+    "dias_totales": 8886,
+    "anios": 24.3
+  },
+  "nota": "PnL calculado con monto_base=$10. Para otros montos: PnL_real = PnL_base * (monto / 10).",
+  "combos": [
+    {
+      "id": 1,
+      "nombre": "CCI Reversal — OTC DJI 4h",
+      "estrategia": "CCIReversal_v1",
+      "symbol": "OTC_DJI",
+      "timeframe": "4h",
+      "config_optima": {
+        "duracion_velas": 2,
+        "payout_pct": 90,
+        "min_confianza": 65
+      },
+      "resultados_backtest": {
+        "sesion_id_referencia": 332,
+        "win_rate_pct": 55.18,
+        "profit_factor": 1.108,
+        "total_operaciones": 357,
+        "operaciones_por_anio": 14.7,
+        "pnl_base_10usd": 17.30,
+        "max_drawdown": 61.01
+      },
+      "pnl_escalado": {
+        "monto_50":  86.50,
+        "monto_100": 173.00,
+        "monto_200": 346.00,
+        "monto_500": 865.00
+      },
+      "ingreso_anual_estimado": {
+        "monto_50":   3.55,
+        "monto_100":  7.11,
+        "monto_200": 14.21,
+        "monto_500": 35.53
+      },
+      "notas": "La estrategia mas frecuente del portafolio. CCI mide desviacion ciclica extrema del DJI. Funciona SOLO en 4h; falla en 1h (WR < 50%)."
+    },
+    {
+      "id": 2,
+      "nombre": "ADX Reversal — XAUUSD 1h",
+      "estrategia": "ADXReversal_v1",
+      "symbol": "frxXAUUSD",
+      "timeframe": "1h",
+      "config_optima": {
+        "duracion_velas": 2,
+        "payout_pct": 90,
+        "min_confianza": 65
+      },
+      "resultados_backtest": {
+        "sesion_id_referencia": 297,
+        "win_rate_pct": 56.38,
+        "profit_factor": 1.163,
+        "total_operaciones": 149,
+        "operaciones_por_anio": 6.1,
+        "pnl_base_10usd": 10.60,
+        "max_drawdown": 22.40
+      },
+      "pnl_escalado": {
+        "monto_50":  53.00,
+        "monto_100": 106.00,
+        "monto_200": 212.00,
+        "monto_500": 530.00
+      },
+      "ingreso_anual_estimado": {
+        "monto_50":   2.18,
+        "monto_100":  4.35,
+        "monto_200":  8.71,
+        "monto_500": 21.77
+      },
+      "notas": "ADX < 25 filtra mercados en rango. XAUUSD en 1h tiene movimientos ciclicos claros. Atencion: en 4h el mismo activo tiene WR de solo 39% (invertir logica no aplica)."
+    },
+    {
+      "id": 3,
+      "nombre": "Bollinger RSI Reversal v2 — OTC NDX 4h",
+      "estrategia": "BollingerRsiReversal_v2",
+      "symbol": "OTC_NDX",
+      "timeframe": "4h",
+      "config_optima": {
+        "duracion_velas": 2,
+        "payout_pct": 90,
+        "min_confianza": 70
+      },
+      "resultados_backtest": {
+        "sesion_id_referencia": 109,
+        "win_rate_pct": 71.43,
+        "profit_factor": 2.25,
+        "total_operaciones": 14,
+        "operaciones_por_anio": 0.6,
+        "pnl_base_10usd": 5.00,
+        "max_drawdown": 1.10
+      },
+      "pnl_escalado": {
+        "monto_50":  25.00,
+        "monto_100": 50.00,
+        "monto_200": 100.00,
+        "monto_500": 250.00
+      },
+      "ingreso_anual_estimado": {
+        "monto_50":   1.03,
+        "monto_100":  2.05,
+        "monto_200":  4.11,
+        "monto_500": 10.27
+      },
+      "notas": "El mayor WR del portafolio (71%) y mejor profit factor (2.25). Genera muy pocas senales (~1 cada 2 anos) pero casi siempre gana. Ideal como complemento de alta precision."
+    }
+  ],
+  "portafolio_combinado": {
+    "total_operaciones_anio": 21.4,
+    "pnl_total_base_10usd": 32.90,
+    "ingreso_anual_estimado": {
+      "monto_10":   1.35,
+      "monto_50":   6.76,
+      "monto_100": 13.51,
+      "monto_200": 27.03,
+      "monto_500": 67.57
+    },
+    "monto_para_10_dolares_dia": 2703,
+    "break_even_win_rate_pct": 52.63,
+    "resumen": "Portafolio conservador de alta calidad. PF promedio ponderado > 1.1 en todos los combos. Baja frecuencia de senales es el principal limitante para ingresos diarios elevados."
+  }
+}

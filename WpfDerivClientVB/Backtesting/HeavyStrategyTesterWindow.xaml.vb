@@ -32,6 +32,7 @@ Partial Public Class HeavyStrategyTesterWindow
     Private ReadOnly _repo As New BacktestRepository()
     Private _filtroActual As String = "all"
     Private _clockTimer As DispatcherTimer
+    Private _apiServer As HeavyApiServer = Nothing
 
     Private ReadOnly _capitalesDisponibles As Integer() = {100, 200, 300, 400, 500, 700, 1000}
     Private ReadOnly _timeframesDisponibles As String() = {"1m", "5m", "15m", "30m", "1h", "4h", "1d"}
@@ -122,6 +123,11 @@ Partial Public Class HeavyStrategyTesterWindow
             _queue.Cancelar()
         End If
         If _clockTimer IsNot Nothing Then _clockTimer.Stop()
+        ' Detener API si quedo prendido
+        Try
+            If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then _apiServer.Stop()
+        Catch
+        End Try
     End Sub
 
     Private Sub OnTickClock(sender As Object, e As EventArgs)
@@ -935,6 +941,83 @@ Partial Public Class HeavyStrategyTesterWindow
             Return """" & s.Replace("""", """""") & """"
         End If
         Return s
+    End Function
+
+    ' ── SERVIDOR API EMBEBIDO ───────────────────────────────────────
+    ' Permite controlar el Heavy Tester desde curl/Claude por HTTP.
+    ' Coexiste con TradingApiServer (puerto 8765); por defecto este usa 8766.
+
+    Private Sub btnApiServer_Click(sender As Object, e As RoutedEventArgs)
+        If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then
+            Try
+                _apiServer.Stop()
+            Catch
+            End Try
+            _apiServer = Nothing
+            btnApiServer.Content = "▶ Iniciar"
+            btnApiServer.Background = New SolidColorBrush(Color.FromRgb(&HD, &H2A, &H30))
+            btnApiServer.Foreground = New SolidColorBrush(Color.FromRgb(&H5E, &HE0, &HD0))
+            btnApiServer.BorderBrush = New SolidColorBrush(Color.FromRgb(&H5E, &HE0, &HD0))
+            pillApi.Text = "API: stopped"
+            txtStatus.Text = "Servidor API detenido."
+            Return
+        End If
+
+        Dim port As Integer = 8766
+        Integer.TryParse(txtApiPort.Text.Trim(), port)
+        If port < 1024 OrElse port > 65535 Then port = 8766
+
+        Try
+            _apiServer = New HeavyApiServer(port) With {
+                .Queue = _queue,
+                .Repo = _repo,
+                .ConnectionString = ConfigManager.LoadDbConfig().GetConnectionString(),
+                .UiDispatcher = Me.Dispatcher,
+                .LogAction = Sub(m) Dispatcher.BeginInvoke(Sub() txtStatus.Text = m, DispatcherPriority.Background),
+                .StartEjecucion = AddressOf ApiStartEjecucion
+            }
+            _apiServer.Start()
+            btnApiServer.Content = "■ Detener"
+            btnApiServer.Background = New SolidColorBrush(Color.FromRgb(&H3A, &H22, &H30))
+            btnApiServer.Foreground = New SolidColorBrush(Color.FromRgb(&HFF, &HFF, &HFF))
+            btnApiServer.BorderBrush = New SolidColorBrush(Color.FromRgb(&HFF, &H5C, &H7A))
+            pillApi.Text = String.Format("API: http://localhost:{0}", port)
+            txtStatus.Text = String.Format("Servidor Heavy API iniciado en puerto {0}. GET /api/heavy/help", port)
+        Catch ex As Exception
+            MessageBox.Show("No se pudo iniciar el servidor: " & ex.Message,
+                            "Heavy API", MessageBoxButton.OK, MessageBoxImage.Error)
+            _apiServer = Nothing
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Adaptador que el servidor llama via callback para arrancar la ejecucion.
+    ''' Replica la logica de btnEjecutar_Click (limpia resultados previos, levanta
+    ''' los toggles de la UI y dispara la cola), pero sin requerir click en el boton.
+    ''' </summary>
+    Private Async Function ApiStartEjecucion(concurrencia As Integer) As Task
+        If _queue.EnCurso Then Return
+        If concurrencia < 1 Then concurrencia = 1
+        If concurrencia > 8 Then concurrencia = 8
+
+        ' Limpiar resultados previos en memoria (no toca BD)
+        _todasLasFilas.RemoveAll(Function(r) r.JobRef IsNot Nothing AndAlso r.SesionId = 0)
+
+        pillEngine.Text = "Engine v0.9 · running (api)"
+        txtStatus.Text = String.Format("[API] Ejecutando {0} jobs (concurrencia {1})...", _queue.Jobs.Count, concurrencia)
+        btnEjecutar.IsEnabled = False
+        btnLimpiar.IsEnabled = False
+        btnGenerar.IsEnabled = False
+        btnDetener.IsEnabled = True
+        Try
+            Await _queue.EjecutarTodasAsync(concurrencia)
+        Finally
+            btnEjecutar.IsEnabled = True
+            btnLimpiar.IsEnabled = True
+            btnGenerar.IsEnabled = True
+            btnDetener.IsEnabled = False
+            pillEngine.Text = "Engine v0.9 · idle"
+        End Try
     End Function
 
 End Class

@@ -123,8 +123,29 @@
                                    FontSize="10" FontFamily="Consolas"/>
                     </Border>
                     <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
-                            CornerRadius="3" Padding="10,4">
+                            CornerRadius="3" Padding="10,4" Margin="0,0,8,0">
                         <TextBlock x:Name="pillJobs" Text="Jobs: 0"
+                                   Foreground="#aab3c5" FontSize="10" FontFamily="Consolas"/>
+                    </Border>
+                    <!-- Server API embebido -->
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="6,2" Margin="0,0,4,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="API:" Foreground="#aab3c5"
+                                       FontSize="10" FontFamily="Consolas"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBox x:Name="txtApiPort" Width="46" Height="20" Text="8766"
+                                     Background="#0c1018" Foreground="#e7ecf5" BorderBrush="#1f2638"
+                                     FontFamily="Consolas" FontSize="10" VerticalAlignment="Center"/>
+                            <Button x:Name="btnApiServer" Content="▶ Iniciar"
+                                    Background="#0d2a30" Foreground="#5ee0d0" BorderBrush="#5ee0d0"
+                                    BorderThickness="1" Padding="6,2" FontSize="10" FontWeight="SemiBold"
+                                    Cursor="Hand" Margin="4,0,0,0" Click="btnApiServer_Click"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="10,4">
+                        <TextBlock x:Name="pillApi" Text="API: stopped"
                                    Foreground="#aab3c5" FontSize="10" FontFamily="Consolas"/>
                     </Border>
                 </StackPanel>
