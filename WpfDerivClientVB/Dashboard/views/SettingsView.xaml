@@ -272,6 +272,50 @@
                 </StackPanel>
             </Border>
 
+            <!-- ── SERVIDOR SIGNALR ── -->
+            <Border Style="{StaticResource GlassPanelStyle}" MaxWidth="600" HorizontalAlignment="Left" Width="600" Margin="0,24,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <Border Width="40" Height="40" CornerRadius="12" Background="#0D2A30" Margin="0,0,16,0">
+                            <TextBlock Text="📡" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Servidor SignalR (Control remoto)" FontSize="18" FontWeight="Bold" Foreground="{StaticResource OnSurface}"/>
+                            <TextBlock Text="Cliente que recibe estrategias para poner al aire" FontSize="12" Foreground="#888888"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- URL -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="URL DEL SERVIDOR" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="txtSignalRUrl" Style="{StaticResource InputStyle}"
+                                 ToolTip="URL completa del hub SignalR (ej. https://miservidor.com/signalr)"/>
+                    </StackPanel>
+
+                    <!-- Client ID -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="CLIENT ID" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="txtSignalRClientId" Style="{StaticResource InputStyle}"
+                                 ToolTip="Identificador unico de este cliente. Default: nombre de la maquina."/>
+                    </StackPanel>
+
+                    <!-- Hub Name -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="HUB NAME" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox x:Name="txtSignalRHubName" Style="{StaticResource InputStyle}"
+                                 ToolTip="Nombre del Hub registrado en el servidor (ej: DronesHub, StrategiesHub)"/>
+                    </StackPanel>
+
+                    <!-- Auto-conectar -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <CheckBox x:Name="chkAutoConectarSignalR"
+                                  Content="Conectar automaticamente al abrir Servidor Live"
+                                  Foreground="{StaticResource OnSurface}" FontSize="13"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

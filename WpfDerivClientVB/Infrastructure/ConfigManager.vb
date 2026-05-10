@@ -15,6 +15,15 @@ Namespace WpfDerivClientVB
         ''' <summary>Endpoint base de la API externa (ej. https://api.servicio.com).</summary>
         Public Property Endpoint As String = ""
 
+        ''' <summary>URL del servidor SignalR de control remoto (ej. https://servidor.com/signalr).</summary>
+        Public Property SignalRUrl As String = ""
+        ''' <summary>Identificador unico de este cliente para registrarse en el servidor.</summary>
+        Public Property SignalRClientId As String = ""
+        ''' <summary>Nombre del Hub en el servidor (debe coincidir con la implementacion remota). Default DronesHub para compatibilidad con servidores existentes tipo Doom.</summary>
+        Public Property SignalRHubName As String = "DronesHub"
+        ''' <summary>Si True, conecta automaticamente al abrir la ventana Servidor Live.</summary>
+        Public Property AutoConectarSignalR As Boolean = False
+
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.
         ''' </summary>

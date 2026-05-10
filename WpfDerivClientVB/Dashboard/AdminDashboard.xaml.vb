@@ -56,6 +56,11 @@ Partial Public Class AdminDashboard
                 Dim w As New HeavyStrategyTesterWindow()
                 w.Owner = Me
                 w.Show()
+            Case "ServidorLive"
+                ' Cliente SignalR + ejecucion live. Ventana hija independiente.
+                Dim wsl As New ServidorLiveWindow()
+                wsl.Owner = Me
+                wsl.Show()
         End Select
     End Sub
 

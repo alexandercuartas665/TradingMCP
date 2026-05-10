@@ -29,6 +29,12 @@ Namespace WpfDerivClientVB
             txtEndpoint.Text = If(conf.Endpoint, "")
             txtApiKey.Password = If(conf.ApiKey, "")
             txtApiKeyVisible.Text = If(conf.ApiKey, "")
+            ' SignalR
+            txtSignalRUrl.Text = If(conf.SignalRUrl, "")
+            txtSignalRClientId.Text = If(String.IsNullOrWhiteSpace(conf.SignalRClientId),
+                                          Environment.MachineName, conf.SignalRClientId)
+            txtSignalRHubName.Text = If(String.IsNullOrWhiteSpace(conf.SignalRHubName), "DronesHub", conf.SignalRHubName)
+            chkAutoConectarSignalR.IsChecked = conf.AutoConectarSignalR
         End Sub
 
         ''' <summary>
@@ -45,7 +51,11 @@ Namespace WpfDerivClientVB
                 .Username = txtUsername.Text.Trim(),
                 .Password = If(btnShowPassword.IsChecked = True, txtPasswordVisible.Text, txtPassword.Password),
                 .Endpoint = txtEndpoint.Text.Trim(),
-                .ApiKey = If(btnShowApiKey.IsChecked = True, txtApiKeyVisible.Text, txtApiKey.Password)
+                .ApiKey = If(btnShowApiKey.IsChecked = True, txtApiKeyVisible.Text, txtApiKey.Password),
+                .SignalRUrl = txtSignalRUrl.Text.Trim(),
+                .SignalRClientId = txtSignalRClientId.Text.Trim(),
+                .SignalRHubName = txtSignalRHubName.Text.Trim(),
+                .AutoConectarSignalR = (chkAutoConectarSignalR.IsChecked = True)
             }
         End Function
 

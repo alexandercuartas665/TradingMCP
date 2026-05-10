@@ -55,6 +55,28 @@ Namespace WpfDerivClientVB
                 End Sub
 
             AppLogger.Info("Handlers de excepción globales registrados OK")
+
+            ' ── Singletons del modulo Servidor (cliente SignalR + controller live) ──
+            ' Subscribir CommandRouter al evento de instrucciones del cliente SignalR.
+            ' Esto se hace UNA sola vez para toda la app; los servicios viven mas alla
+            ' de las ventanas que abre/cierra el usuario.
+            Try
+                Dim signalRSvc = WpfDerivClientVB.Servidor.SignalRClientService.GetInstance()
+                AddHandler signalRSvc.InstruccionRecibida,
+                    AddressOf WpfDerivClientVB.Servidor.CommandRouter.Handle
+                AddHandler signalRSvc.BroadcastRecibido,
+                    Sub(instruccion As String, parametros As String, timestamp As String)
+                        ' Broadcast = misma logica pero sin clienteId ni correlationId
+                        WpfDerivClientVB.Servidor.CommandRouter.Handle("ALL", instruccion, parametros, "", timestamp)
+                    End Sub
+
+                ' Forzar instanciacion del controller de estrategias para que ya este listo
+                ' cuando lleguen las primeras instrucciones del servidor.
+                Dim _ctrl = WpfDerivClientVB.Servidor.LiveStrategiesController.GetInstance()
+                AppLogger.Info("Modulo Servidor (SignalR + LiveCtrl) inicializado.")
+            Catch ex As Exception
+                AppLogger.Warn("[App] No se pudo inicializar modulo Servidor: " & ex.Message)
+            End Try
         End Sub
 
         Protected Overrides Sub OnExit(e As ExitEventArgs)

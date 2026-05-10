@@ -1,0 +1,322 @@
+<Window x:Class="ServidorLiveWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Servidor Live - Cliente SignalR"
+        Width="1400" Height="820"
+        Background="#07090d"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <Style x:Key="LabelHdr" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#aab3c5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style x:Key="MicroLbl" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6c7790"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="InputDark" TargetType="TextBox">
+            <Setter Property="Background" Value="#121723"/>
+            <Setter Property="Foreground" Value="#e7ecf5"/>
+            <Setter Property="BorderBrush" Value="#1f2638"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="28"/>
+        </Style>
+        <Style x:Key="BtnPrimary" TargetType="Button">
+            <Setter Property="Background" Value="#0d2a30"/>
+            <Setter Property="Foreground" Value="#5ee0d0"/>
+            <Setter Property="BorderBrush" Value="#5ee0d0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="BtnGhost" TargetType="Button">
+            <Setter Property="Background" Value="#121723"/>
+            <Setter Property="Foreground" Value="#aab3c5"/>
+            <Setter Property="BorderBrush" Value="#1f2638"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <Border Grid.Row="0" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="20,0">
+                    <TextBlock Text="📡" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="SERVIDOR LIVE" Foreground="#5ee0d0"
+                                   FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Text="Cliente SignalR · ejecucion remota de estrategias en demo/real"
+                                   Foreground="#6c7790" FontSize="10" FontFamily="Consolas"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="10,4" Margin="0,0,8,0">
+                        <TextBlock x:Name="pillEstado" Text="Desconectado"
+                                   Foreground="#ff5c7a" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                    </Border>
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="10,4" Margin="0,0,8,0">
+                        <TextBlock x:Name="pillUrl" Text="URL: -"
+                                   Foreground="#aab3c5" FontSize="10" FontFamily="Consolas"/>
+                    </Border>
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="10,4" Margin="0,0,8,0">
+                        <TextBlock x:Name="pillCliente" Text="Cliente: -"
+                                   Foreground="#aab3c5" FontSize="10" FontFamily="Consolas"/>
+                    </Border>
+                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                            CornerRadius="3" Padding="10,4">
+                        <TextBlock x:Name="pillMotores" Text="Motores: 0"
+                                   Foreground="#3fd17a" FontSize="10" FontFamily="Consolas"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- BODY -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="380"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: Conexion -->
+            <Border Grid.Column="0" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="14">
+                        <TextBlock Text="CONEXION SIGNALR" Style="{StaticResource LabelHdr}"/>
+
+                        <TextBlock Text="URL DEL SERVIDOR" Style="{StaticResource MicroLbl}"/>
+                        <TextBox x:Name="txtUrl" Style="{StaticResource InputDark}"
+                                 Margin="0,3,0,8" ToolTip="Ej: https://servidor.com/signalr"/>
+
+                        <TextBlock Text="CLIENT ID" Style="{StaticResource MicroLbl}"/>
+                        <TextBox x:Name="txtClientId" Style="{StaticResource InputDark}"
+                                 Margin="0,3,0,8"/>
+
+                        <TextBlock Text="HUB NAME" Style="{StaticResource MicroLbl}"/>
+                        <TextBox x:Name="txtHubName" Style="{StaticResource InputDark}"
+                                 Margin="0,3,0,8" Text="DronesHub"
+                                 ToolTip="Nombre del hub registrado en el servidor (ej: DronesHub, StrategiesHub)"/>
+
+                        <CheckBox x:Name="chkAuto" Content="Auto-conectar al abrir"
+                                  Foreground="#aab3c5" FontSize="11" Margin="0,4,0,12"/>
+
+                        <Button x:Name="btnConectar" Content="▶ Conectar" Style="{StaticResource BtnPrimary}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                Click="btnConectar_Click"/>
+                        <Button x:Name="btnDesconectar" Content="■ Desconectar" Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch" Click="btnDesconectar_Click" Margin="0,0,0,12"/>
+
+                        <Separator Margin="0,4,0,12" Background="#1f2638"/>
+
+                        <TextBlock Text="OPERACIONES" Style="{StaticResource LabelHdr}"/>
+                        <Button x:Name="btnReanudar" Content="🔄 Reanudar sesiones BD"
+                                Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                Click="btnReanudar_Click"
+                                ToolTip="Carga sesiones live abiertas que quedaron de un crash previo"/>
+                        <Button x:Name="btnEstado" Content="📊 Ver estado motores"
+                                Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                Click="btnEstado_Click"/>
+                        <Button x:Name="btnLimpiarLog" Content="🧹 Limpiar log"
+                                Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch"
+                                Click="btnLimpiarLog_Click"/>
+
+                        <Separator Margin="0,8,0,8" Background="#1f2638"/>
+
+                        <TextBlock Text="PRUEBAS" Style="{StaticResource LabelHdr}"/>
+                        <Button x:Name="btnPing" Content="🛰 Reportar al servidor"
+                                Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                Click="btnPing_Click"
+                                ToolTip="Envia un ReportStatus al hub para verificar conexion outbound"/>
+                        <Button x:Name="btnSimular" Content="▶ Simular estrategia.iniciar"
+                                HorizontalAlignment="Stretch"
+                                Background="#0d2a30" Foreground="#5ee0d0" BorderBrush="#5ee0d0"
+                                BorderThickness="1" Padding="10,6" FontWeight="SemiBold"
+                                FontSize="11" Cursor="Hand"
+                                Click="btnSimular_Click"
+                                ToolTip="Inyecta una instruccion como si llegara del servidor (DemoSimple en R_100/1m)"/>
+
+                        <Button x:Name="btnListar" Content="📋 Listar conectados (server)"
+                                Style="{StaticResource BtnGhost}"
+                                HorizontalAlignment="Stretch" Margin="0,4,0,0"
+                                Click="btnListar_Click"
+                                ToolTip="Invoca GetConnectedDrones() en el hub del servidor"/>
+
+                        <TextBlock Text="TARGET ID (SendInstruction)" Style="{StaticResource MicroLbl}" Margin="0,8,0,0"/>
+                        <TextBox x:Name="txtTargetId" Style="{StaticResource InputDark}"
+                                 Margin="0,3,0,4" Text="DronesHub"
+                                 ToolTip="ID del destino al que se enrutara la instruccion via SendInstruction()"/>
+                        <Button x:Name="btnRoundTrip" Content="🔄 Enviar instruccion (SendInstruction)"
+                                HorizontalAlignment="Stretch" Margin="0,4,0,0"
+                                Background="#0d2a30" Foreground="#5ee0d0" BorderBrush="#5ee0d0"
+                                BorderThickness="1" Padding="10,6" FontWeight="SemiBold"
+                                FontSize="11" Cursor="Hand"
+                                Click="btnRoundTrip_Click"
+                                ToolTip="Invoca SendInstruction(target, 'ping', payload) en el hub"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- CENTER: Log -->
+            <Grid Grid.Column="1" Background="#07090d">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,0,1" Padding="14,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="LOG DE ACTIVIDAD" Style="{StaticResource LabelHdr}" Margin="0"/>
+                            <TextBlock x:Name="lblLogResumen" Text="0 lineas"
+                                       Foreground="#6c7790" FontSize="9" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#121723" BorderBrush="#1f2638"
+                                BorderThickness="1" CornerRadius="3" Padding="6,2">
+                            <TextBlock x:Name="lblHubName" Text="Hub: StrategiesHub"
+                                       Foreground="#aab3c5" FontSize="9" FontFamily="Consolas"/>
+                        </Border>
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1" x:Name="scrLog" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="lstLog">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="14,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Hora}"
+                                               Foreground="#6c7790" FontFamily="Consolas" FontSize="10"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Tipo}"
+                                               Foreground="{Binding TipoBrush}"
+                                               FontFamily="Consolas" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Mensaje}"
+                                               Foreground="#e7ecf5" FontFamily="Consolas" FontSize="10"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- RIGHT: Motores activos -->
+            <Border Grid.Column="2" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" BorderBrush="#1f2638" BorderThickness="0,0,0,1" Padding="14,10">
+                        <StackPanel>
+                            <TextBlock Text="ESTRATEGIAS EN VIVO" Style="{StaticResource LabelHdr}" Margin="0"/>
+                            <TextBlock x:Name="lblMotoresResumen" Text="Sin motores activos"
+                                       Foreground="#6c7790" FontSize="10" FontFamily="Consolas"/>
+                        </StackPanel>
+                    </Border>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,8">
+                        <ItemsControl x:Name="lstMotores">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#121723" BorderBrush="#1f2638" BorderThickness="1"
+                                            CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding IdCorto}"
+                                                           Foreground="#475066" FontFamily="Consolas" FontSize="10"
+                                                           Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding EstadoStr}"
+                                                           Foreground="{Binding EstadoBrush}"
+                                                           FontFamily="Consolas" FontSize="9" FontWeight="Bold"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Titulo}" Foreground="#5ee0d0"
+                                                       FontFamily="Consolas" FontSize="12" FontWeight="Bold"
+                                                       Margin="0,0,0,3"/>
+                                            <TextBlock Text="{Binding SubTitulo}" Foreground="#aab3c5"
+                                                       FontFamily="Consolas" FontSize="10"
+                                                       Margin="0,0,0,4"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding OpsStr}"
+                                                           Foreground="#aab3c5" FontFamily="Consolas" FontSize="10"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PnlStr}"
+                                                           Foreground="{Binding PnlBrush}"
+                                                           FontFamily="Consolas" FontSize="11"
+                                                           FontWeight="Bold" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- STATUS BAR -->
+        <Border Grid.Row="2" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" x:Name="txtStatus" Text="Listo"
+                           Foreground="#aab3c5" FontSize="10" FontFamily="Consolas"
+                           VerticalAlignment="Center" Margin="20,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="20,0">
+                    <TextBlock Text="v0.1-beta" Foreground="#6c7790"
+                               FontSize="10" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBlock x:Name="txtClock" Text="" Foreground="#6c7790"
+                               FontSize="10" FontFamily="Consolas" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

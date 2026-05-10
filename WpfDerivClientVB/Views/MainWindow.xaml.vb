@@ -137,6 +137,11 @@ Namespace WpfDerivClientVB
                                         End Sub
 
             InicializarTabDinamicas()
+
+            ' Registrar MainWindow como ITradingService para que el modulo Servidor
+            ' (cliente SignalR + LiveStrategiesController) pueda ejecutar trades en
+            ' Deriv usando el WebSocket que mantiene MainWindow.
+            RegistrarComoTradingService()
         End Sub
 
         Protected Overrides Sub OnSourceInitialized(e As EventArgs)
