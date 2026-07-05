@@ -19,15 +19,19 @@ Imports System.Windows.Controls
 Imports System.Windows.Controls.Primitives
 Imports System.Windows.Media
 Imports System.Windows.Threading
+Imports Newtonsoft.Json.Linq
 Imports Npgsql
 Imports WpfDerivClientVB.WpfDerivClientVB
 Imports WpfDerivClientVB.WpfDerivClientVB.Backtesting
 Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
+Imports WpfDerivClientVB.WpfDerivClientVB.Servidor
 
 Partial Public Class HeavyStrategyTesterWindow
     Inherits Window
 
-    Private ReadOnly _queue As New HeavyTestQueue()
+    ' Cola COMPARTIDA con el AgentHost: si el API headless (modo agente) esta
+    ' corriendo, la ventana y el API operan sobre los mismos jobs.
+    Private ReadOnly _queue As HeavyTestQueue = AgentHost.ObtenerQueue()
     Private ReadOnly _todasLasFilas As New List(Of HeavyResultRow)()
     Private ReadOnly _repo As New BacktestRepository()
     Private _filtroActual As String = "all"
@@ -83,6 +87,19 @@ Partial Public Class HeavyStrategyTesterWindow
         Catch ex As Exception
             txtStatus.Text = "Error cargando sesiones previas: " & ex.Message
         End Try
+
+        ' Si el API global del modo agente ya esta corriendo, adoptarlo en la UI
+        ' (mismo server, misma cola — el boton pasa a "Detener").
+        Dim globalApi = AgentHost.HeavyApi
+        If globalApi IsNot Nothing AndAlso globalApi.IsRunning Then
+            _apiServer = globalApi
+            txtApiPort.Text = globalApi.Port.ToString()
+            btnApiServer.Content = "■ Detener"
+            btnApiServer.Background = New SolidColorBrush(Color.FromRgb(&H3A, &H22, &H30))
+            btnApiServer.Foreground = New SolidColorBrush(Color.FromRgb(&HFF, &HFF, &HFF))
+            btnApiServer.BorderBrush = New SolidColorBrush(Color.FromRgb(&HFF, &H5C, &H7A))
+            pillApi.Text = String.Format("API: http://localhost:{0} (agente)", globalApi.Port)
+        End If
     End Sub
 
     ''' <summary>
@@ -123,9 +140,13 @@ Partial Public Class HeavyStrategyTesterWindow
             _queue.Cancelar()
         End If
         If _clockTimer IsNot Nothing Then _clockTimer.Stop()
-        ' Detener API si quedo prendido
+        ' Detener API si quedo prendido — EXCEPTO si es el server global del modo
+        ' agente: ese vive mas alla de la ventana y lo administra AgentHost.
         Try
-            If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then _apiServer.Stop()
+            If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning AndAlso
+               Not ReferenceEquals(_apiServer, AgentHost.HeavyApi) Then
+                _apiServer.Stop()
+            End If
         Catch
         End Try
     End Sub
@@ -900,6 +921,107 @@ Partial Public Class HeavyStrategyTesterWindow
             txtStatus.Text = String.Format(
                 "✓ {0} sesion(es) y {1:N0} operaciones eliminadas de BD ({2} locales sin id removidas).",
                 eliminadas, opsTotales, sinSesion)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Pone al aire en VIVO las combinaciones marcadas con checkbox, usando el
+    ''' LiveStrategiesController (singleton del modulo Servidor). Cada fila se
+    ''' convierte en un motor live con su config exacta (estrategia, activo, TF,
+    ''' confianza, payout, duracion) y el monto indicado en txtMontoLive.
+    ''' Flujo sugerido: filtro "Top 10" → "Seleccionar todas" → este boton.
+    ''' Las tarjetas aparecen en la ventana Servidor Live y, si el cliente
+    ''' SignalR esta conectado, el estado se reporta al servidor remoto.
+    ''' </summary>
+    Private Async Sub btnEnviarLive_Click(sender As Object, e As RoutedEventArgs)
+        Dim seleccionadas = _todasLasFilas.Where(Function(r) r.Selected).ToList()
+        If seleccionadas.Count = 0 Then
+            txtStatus.Text = "Marca con checkbox las combinaciones a poner al aire (tip: Top 10 → Seleccionar todas)."
+            Return
+        End If
+
+        Dim monto As Decimal = 1D
+        Decimal.TryParse(txtMontoLive.Text.Trim().Replace(",", "."),
+                          Globalization.NumberStyles.Any,
+                          Globalization.CultureInfo.InvariantCulture, monto)
+        If monto <= 0D Then monto = 1D
+
+        ' Avisar si alguna seleccionada no es ganadora segun el backtest
+        Dim perdedoras = seleccionadas.AsEnumerable().Count(Function(r) Not r.EsGanadora)
+        Dim resumen = String.Join(Environment.NewLine,
+            seleccionadas.Take(8).Select(Function(r) String.Format(
+                "  - {0} | {1}/{2} conf:{3}% pay:{4}% dur:{5}v (win {6:F1}%)",
+                r.Estrategia, r.Activo, r.Timeframe, r.Conf, r.Pay, r.Dur, r.Win)))
+        If seleccionadas.Count > 8 Then
+            resumen &= Environment.NewLine & String.Format("  ... y {0} mas", seleccionadas.Count - 8)
+        End If
+        Dim advertencia = If(perdedoras > 0,
+            Environment.NewLine & Environment.NewLine &
+            String.Format("ATENCION: {0} de las marcadas NO es ganadora en backtest.", perdedoras), "")
+
+        Dim msg = String.Format(
+            "¿Poner al aire {0} estrategia(s) EN VIVO con ${1:F2} por operacion?{2}{2}{3}{4}",
+            seleccionadas.Count, monto, Environment.NewLine, resumen, advertencia)
+        Dim confirm = MessageBox.Show(msg, "Enviar a Servidor Live",
+                                      MessageBoxButton.YesNo, MessageBoxImage.Question)
+        If confirm <> MessageBoxResult.Yes Then Return
+
+        btnEnviarLive.IsEnabled = False
+        Dim okCount = 0
+        Dim errCount = 0
+
+        ' Si el cliente SignalR esta conectado, la instruccion viaja A TRAVES del
+        ' servidor: SendInstruction(hub) → el server la enruta de vuelta a este
+        ' cliente → CommandRouter la ejecuta y responde. Asi el servidor tiene
+        ' registro y visibilidad de cada estrategia puesta al aire.
+        ' Si NO esta conectado, fallback: iniciar el motor localmente.
+        Dim signalR = SignalRClientService.GetInstance()
+        Dim viaServidor = signalR.EstaConectado
+        Dim ctrl = LiveStrategiesController.GetInstance()
+
+        For Each fila In seleccionadas
+            Try
+                If viaServidor Then
+                    Dim payload As New JObject From {
+                        {"estrategia", fila.Estrategia},
+                        {"symbol", fila.Activo},
+                        {"timeframe", fila.Timeframe},
+                        {"confianza", fila.Conf},
+                        {"payout", fila.Pay},
+                        {"duracion", fila.Dur},
+                        {"monto", monto}
+                    }
+                    Dim okSend = Await signalR.EnviarInstruccionAsync(
+                        signalR.ClientId, "estrategia.iniciar",
+                        payload.ToString(Newtonsoft.Json.Formatting.None))
+                    If okSend Then
+                        okCount += 1
+                        AppLogger.Info(String.Format("[Heavy→Live] Instruccion via servidor: {0} {1}/{2} conf:{3} monto:${4:F2}",
+                                                      fila.Estrategia, fila.Activo, fila.Timeframe, fila.Conf, monto))
+                    Else
+                        errCount += 1
+                        AppLogger.Warn("[Heavy→Live] SendInstruction fallo para " & fila.Estrategia)
+                    End If
+                Else
+                    Dim sid = Await ctrl.IniciarAsync(fila.Estrategia, fila.Activo, fila.Timeframe,
+                                                       fila.Conf, fila.Pay, fila.Dur, monto)
+                    okCount += 1
+                    AppLogger.Info(String.Format("[Heavy→Live] Sesion #{0} (local): {1} {2}/{3} conf:{4} monto:${5:F2}",
+                                                  sid, fila.Estrategia, fila.Activo, fila.Timeframe, fila.Conf, monto))
+                End If
+            Catch ex As Exception
+                errCount += 1
+                AppLogger.Warn(String.Format("[Heavy→Live] Error iniciando {0} {1}/{2}: {3}",
+                                              fila.Estrategia, fila.Activo, fila.Timeframe, ex.Message))
+            End Try
+        Next
+        btnEnviarLive.IsEnabled = True
+
+        Dim modo = If(viaServidor, "enviadas via servidor SignalR (" & signalR.ServerUrl & ")", "iniciadas localmente (SignalR desconectado)")
+        If errCount = 0 Then
+            txtStatus.Text = String.Format("📡 {0} estrategia(s) {1}. Ver tarjetas en Servidor Live.", okCount, modo)
+        Else
+            txtStatus.Text = String.Format("📡 {0} ok, {1} con error — {2}. Ver app.log.", okCount, errCount, modo)
         End If
     End Sub
 

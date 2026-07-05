@@ -1,0 +1,31 @@
+{
+  "nombre": "IndicePullbackLong_v1",
+  "descripcion": "NUEVA estrategia minada de datos: pullback alcista SOLO CALL para indices bursatiles (OTC_NDX, OTC_DJI, OTC_SPC). Los datos demostraron que en indices el lado PUT pierde sistematicamente (43.3% win) por el sesgo alcista de largo plazo, mientras el lado CALL gana 62.9-82.4%. Zona RSI 35-48 con bonus gradiente hacia 40-45 (82.4% win historico en NDX/4h). Usar en 4h con duracion 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "ema_rapida",    "tipo": "EMA", "params": { "periodo": 13 } },
+    { "id": "ema_tendencia", "tipo": "EMA", "params": { "periodo": 50 } },
+    { "id": "rsi",           "tipo": "RSI", "params": { "periodo": 14 } },
+    { "id": "atr",           "tipo": "ATR", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_que",   "valor": "ema_tendencia" },
+      { "campo": "close", "op": "menor_igual", "valor": "ema_rapida" },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 35 },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 48 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_que", "valor": 0 }
+    ]
+  },
+  "confianza_base": 55,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 45 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 42 }, "sumar": 5 }
+  ]
+}

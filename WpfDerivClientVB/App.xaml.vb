@@ -77,6 +77,15 @@ Namespace WpfDerivClientVB
             Catch ex As Exception
                 AppLogger.Warn("[App] No se pudo inicializar modulo Servidor: " & ex.Message)
             End Try
+
+            ' ── Modo agente: argumentos CLI (--heavy-api, --signalr-connect,
+            '    --open-trading, --minimized). Permite control externo total
+            '    sin interaccion con la UI. Ver Servidor/AgentHost.vb.
+            Try
+                WpfDerivClientVB.Servidor.AgentHost.IniciarDesdeArgs(e.Args)
+            Catch ex As Exception
+                AppLogger.Warn("[App] AgentHost: " & ex.Message)
+            End Try
         End Sub
 
         Protected Overrides Sub OnExit(e As ExitEventArgs)

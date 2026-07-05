@@ -37,6 +37,7 @@ Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
 Imports Npgsql
 Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
+Imports WpfDerivClientVB.WpfDerivClientVB.Servidor
 
 Namespace WpfDerivClientVB.Backtesting
 
@@ -209,6 +210,92 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' ── MODO AGENTE: control de estrategias LIVE ─────────────
+                If path = "/api/heavy/live/estado" Then
+                    Await WriteJson(res, 200, LiveStrategiesController.GetInstance().GetEstadoGlobal())
+                    Return
+                End If
+                If path = "/api/heavy/live/iniciar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await LiveIniciar(body))
+                    Return
+                End If
+                If path = "/api/heavy/live/detener" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await LiveDetener(body))
+                    Return
+                End If
+                If path = "/api/heavy/live/pausar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, LivePausar(body))
+                    Return
+                End If
+                If path = "/api/heavy/live/reanudar-bd" AndAlso method = "POST" Then
+                    Dim n = Await LiveStrategiesController.GetInstance().ReanudarActivasAsync()
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"reanudadas", n}})
+                    Return
+                End If
+
+                ' ── MODO AGENTE: cliente SignalR ─────────────────────────
+                If path = "/api/heavy/signalr/estado" Then
+                    Dim sr = SignalRClientService.GetInstance()
+                    Await WriteJson(res, 200, New JObject From {
+                        {"ok", True}, {"estado", sr.Estado}, {"conectado", sr.EstaConectado},
+                        {"url", sr.ServerUrl}, {"client_id", sr.ClientId}, {"hub", sr.HubName}
+                    })
+                    Return
+                End If
+                If path = "/api/heavy/signalr/conectar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await SignalRConectar(body))
+                    Return
+                End If
+                If path = "/api/heavy/signalr/desconectar" AndAlso method = "POST" Then
+                    SignalRClientService.GetInstance().Desconectar()
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}})
+                    Return
+                End If
+                If path = "/api/heavy/signalr/enviar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await SignalREnviar(body))
+                    Return
+                End If
+
+                ' ── MODO AGENTE: CRUD de estrategias JSON ────────────────
+                If path = "/api/heavy/estrategias/guardar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, EstrategiaGuardar(body))
+                    Return
+                End If
+                If path.StartsWith("/api/heavy/estrategias/") Then
+                    Dim nombreUrl = path.Substring("/api/heavy/estrategias/".Length)
+                    If nombreUrl <> "" AndAlso Not nombreUrl.Contains("/") Then
+                        If method = "GET" Then
+                            Await WriteJson(res, 200, EstrategiaLeer(nombreUrl))
+                            Return
+                        End If
+                        If method = "DELETE" Then
+                            Await WriteJson(res, 200, EstrategiaEliminar(nombreUrl))
+                            Return
+                        End If
+                    End If
+                End If
+
+                ' ── MODO AGENTE: trading (WS Deriv) ──────────────────────
+                If path = "/api/heavy/trading/estado" Then
+                    Dim svc = TradingServiceLocator.Current
+                    If svc Is Nothing Then
+                        Await WriteJson(res, 200, ErrJson("TradingService no registrado. Abre la ventana de trading: POST /api/heavy/app/ventana {""nombre"":""trading""}"))
+                    Else
+                        Await WriteJson(res, 200, svc.GetStatus())
+                    End If
+                    Return
+                End If
+                If path = "/api/heavy/trading/conectar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await TradingConectar(body))
+                    Return
+                End If
+
+                ' ── MODO AGENTE: abrir ventanas ──────────────────────────
+                If path = "/api/heavy/app/ventana" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, AbrirVentana(body))
+                    Return
+                End If
+
                 If path = "/api/heavy/sesiones" Then
                     Await WriteJson(res, 200, Await BuildSesiones(qs))
                     Return
@@ -280,7 +367,22 @@ Namespace WpfDerivClientVB.Backtesting
                 "GET  /api/heavy/sesiones?limite=100",
                 "GET  /api/heavy/sesion/{id}",
                 "GET  /api/heavy/sesion/{id}/ops",
-                "DELETE /api/heavy/sesion/{id}"
+                "DELETE /api/heavy/sesion/{id}",
+                "GET  /api/heavy/live/estado",
+                "POST /api/heavy/live/iniciar     (body: {estrategia,symbol,timeframe,confianza,payout,duracion,monto})",
+                "POST /api/heavy/live/detener     (body: {sesion_id})",
+                "POST /api/heavy/live/pausar      (body: {sesion_id, pausar:true|false})",
+                "POST /api/heavy/live/reanudar-bd",
+                "GET  /api/heavy/signalr/estado",
+                "POST /api/heavy/signalr/conectar (body opcional: {url, client_id, hub} — default config)",
+                "POST /api/heavy/signalr/desconectar",
+                "POST /api/heavy/signalr/enviar   (body: {target, instruccion, parametros})",
+                "GET  /api/heavy/estrategias/{nombre}",
+                "POST /api/heavy/estrategias/guardar (body: definicion JSON completa)",
+                "DELETE /api/heavy/estrategias/{nombre}",
+                "GET  /api/heavy/trading/estado",
+                "POST /api/heavy/trading/conectar (body: {demo:true, cliente:\"\"})",
+                "POST /api/heavy/app/ventana      (body: {nombre: trading|servidorlive|heavy})"
             }
             Return New JObject From {
                 {"ok", True},
@@ -568,6 +670,185 @@ Namespace WpfDerivClientVB.Backtesting
                 }
             Catch ex As Exception
                 Return ErrJson("Error eliminando: " & ex.Message)
+            End Try
+        End Function
+
+        ' ===================================================
+        '  HANDLERS MODO AGENTE
+        ' ===================================================
+
+        Private Async Function LiveIniciar(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body requerido: {estrategia, symbol, timeframe, confianza, payout, duracion, monto}")
+            Try
+                Dim nombre = If(body("estrategia")?.ToString(), "")
+                Dim symbol = If(body("symbol")?.ToString(), "")
+                Dim tf = If(body("timeframe")?.ToString(), "")
+                If nombre = "" OrElse symbol = "" OrElse tf = "" Then
+                    Return ErrJson("estrategia, symbol y timeframe son obligatorios")
+                End If
+                Dim conf = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55)
+                Dim pay = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D)
+                Dim dur = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 5)
+                Dim monto = If(body("monto") IsNot Nothing, CDec(body("monto")), 1D)
+                Dim sid = Await LiveStrategiesController.GetInstance().IniciarAsync(
+                    nombre, symbol, tf, conf, pay, dur, monto)
+                Return New JObject From {{"ok", True}, {"sesion_id", sid}}
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        Private Async Function LiveDetener(body As JObject) As Task(Of JObject)
+            Dim sid = If(body?("sesion_id") IsNot Nothing, CInt(body("sesion_id")), 0)
+            If sid <= 0 Then Return ErrJson("sesion_id requerido")
+            Dim ok = Await LiveStrategiesController.GetInstance().DetenerAsync(sid)
+            Return New JObject From {{"ok", ok}, {"sesion_id", sid}}
+        End Function
+
+        Private Function LivePausar(body As JObject) As JObject
+            Dim sid = If(body?("sesion_id") IsNot Nothing, CInt(body("sesion_id")), 0)
+            If sid <= 0 Then Return ErrJson("sesion_id requerido")
+            Dim pausar = If(body("pausar") IsNot Nothing, CBool(body("pausar")), True)
+            Dim ok = LiveStrategiesController.GetInstance().PausarReanudar(sid, pausar)
+            Return New JObject From {{"ok", ok}, {"sesion_id", sid}, {"pausado", pausar}}
+        End Function
+
+        Private Async Function SignalRConectar(body As JObject) As Task(Of JObject)
+            Try
+                Dim cfg = ConfigManager.LoadDbConfig()
+                Dim url = If(body?("url")?.ToString(), If(cfg.SignalRUrl, ""))
+                Dim cid = If(body?("client_id")?.ToString(),
+                             If(String.IsNullOrWhiteSpace(cfg.SignalRClientId), Environment.MachineName, cfg.SignalRClientId))
+                Dim hub = If(body?("hub")?.ToString(),
+                             If(String.IsNullOrWhiteSpace(cfg.SignalRHubName), SignalRClientService.HUB_NAME_DEFAULT, cfg.SignalRHubName))
+                If String.IsNullOrWhiteSpace(url) Then Return ErrJson("No hay URL (ni en body ni en config).")
+
+                Await SignalRClientService.GetInstance().ConectarAsync(url, cid, hub)
+                Dim sr = SignalRClientService.GetInstance()
+                Return New JObject From {
+                    {"ok", sr.EstaConectado}, {"estado", sr.Estado},
+                    {"url", url}, {"client_id", cid}, {"hub", hub}
+                }
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        Private Async Function SignalREnviar(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body requerido: {target, instruccion, parametros}")
+            Dim sr = SignalRClientService.GetInstance()
+            If Not sr.EstaConectado Then Return ErrJson("SignalR no conectado. POST /api/heavy/signalr/conectar primero.")
+            Dim target = If(body("target")?.ToString(), sr.ClientId)
+            Dim instruccion = If(body("instruccion")?.ToString(), "")
+            If instruccion = "" Then Return ErrJson("instruccion requerida")
+            Dim parametros = If(body("parametros") IsNot Nothing,
+                                 If(TypeOf body("parametros") Is JObject,
+                                    body("parametros").ToString(Formatting.None),
+                                    body("parametros").ToString()), "{}")
+            Dim ok = Await sr.EnviarInstruccionAsync(target, instruccion, parametros)
+            Return New JObject From {{"ok", ok}, {"target", target}, {"instruccion", instruccion}}
+        End Function
+
+        Private Function EstrategiaGuardar(body As JObject) As JObject
+            If body Is Nothing Then Return ErrJson("Body = definicion completa de la estrategia (JSON con 'nombre', 'indicadores', 'senal_call', ...)")
+            Try
+                ' 1) Validar deserializacion + compilacion (indicadores y condiciones)
+                Dim def = JsonConvert.DeserializeObject(Of EstrategiaDinamicaDef)(body.ToString())
+                If def Is Nothing OrElse String.IsNullOrWhiteSpace(def.Nombre) Then
+                    Return ErrJson("La definicion necesita al menos 'nombre'.")
+                End If
+                Dim testCompile As New EstrategiaJson(def)   ' lanza si hay indicador/condicion invalida
+
+                ' 2) Sanitizar nombre de archivo
+                Dim safe As New Text.StringBuilder()
+                For Each ch In def.Nombre
+                    If Char.IsLetterOrDigit(ch) OrElse ch = "_"c OrElse ch = "-"c Then safe.Append(ch)
+                Next
+                If safe.Length = 0 Then Return ErrJson("Nombre invalido.")
+
+                ' 3) Escribir al directorio del registry (hot-reload automatico)
+                Dim dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EstrategiasDinamicas", "estrategias")
+                If Not Directory.Exists(dir) Then Directory.CreateDirectory(dir)
+                Dim archivo = Path.Combine(dir, safe.ToString() & ".json")
+                Dim existia = File.Exists(archivo)
+                File.WriteAllText(archivo, body.ToString(Formatting.Indented))
+
+                Return New JObject From {
+                    {"ok", True}, {"nombre", def.Nombre},
+                    {"archivo", archivo}, {"sobrescrita", existia},
+                    {"mensaje", "Guardada y compilada OK. El registry la recarga automaticamente."}
+                }
+            Catch ex As Exception
+                Return ErrJson("Validacion fallo: " & ex.Message)
+            End Try
+        End Function
+
+        Private Function EstrategiaLeer(nombreUrl As String) As JObject
+            Try
+                EstrategiasDinamicasRegistry.Inicializar()
+                Dim est = EstrategiasDinamicasRegistry.GetAll().
+                    FirstOrDefault(Function(e) e.Nombre.ToLowerInvariant() = nombreUrl.ToLowerInvariant())
+                If est Is Nothing Then Return ErrJson("Estrategia no encontrada: " & nombreUrl)
+                Dim archivo = est.Definicion.ArchivoOrigen
+                If String.IsNullOrEmpty(archivo) OrElse Not File.Exists(archivo) Then
+                    Return ErrJson("Archivo origen no disponible para " & est.Nombre)
+                End If
+                Return New JObject From {
+                    {"ok", True}, {"nombre", est.Nombre}, {"archivo", archivo},
+                    {"definicion", JObject.Parse(File.ReadAllText(archivo))}
+                }
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        Private Function EstrategiaEliminar(nombreUrl As String) As JObject
+            Try
+                EstrategiasDinamicasRegistry.Inicializar()
+                Dim est = EstrategiasDinamicasRegistry.GetAll().
+                    FirstOrDefault(Function(e) e.Nombre.ToLowerInvariant() = nombreUrl.ToLowerInvariant())
+                If est Is Nothing Then Return ErrJson("Estrategia no encontrada: " & nombreUrl)
+                Dim archivo = est.Definicion.ArchivoOrigen
+                If String.IsNullOrEmpty(archivo) OrElse Not File.Exists(archivo) Then
+                    Return ErrJson("Archivo origen no disponible.")
+                End If
+                File.Delete(archivo)
+                Return New JObject From {{"ok", True}, {"nombre", est.Nombre}, {"archivo_eliminado", archivo}}
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        Private Async Function TradingConectar(body As JObject) As Task(Of JObject)
+            Dim svc = TradingServiceLocator.Current
+            If svc Is Nothing Then
+                Return ErrJson("TradingService no registrado. Abre la ventana de trading primero: POST /api/heavy/app/ventana {""nombre"":""trading""}")
+            End If
+            Dim demo = If(body?("demo") IsNot Nothing, CBool(body("demo")), True)
+            Dim cliente = If(body?("cliente")?.ToString(), "")
+            Try
+                Return Await svc.ConectarTradingAsync(demo, cliente)
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        Private Function AbrirVentana(body As JObject) As JObject
+            Dim nombre = If(body?("nombre")?.ToString(), "").ToLowerInvariant()
+            Try
+                Select Case nombre
+                    Case "trading", "mainwindow", "pruebas"
+                        UiDispatcher.Invoke(Sub() AgentHost.AbrirVentanaTrading(minimizada:=True))
+                    Case "servidorlive", "servidor"
+                        UiDispatcher.Invoke(Sub() AgentHost.AbrirVentanaServidorLive())
+                    Case "heavy", "backtest"
+                        UiDispatcher.Invoke(Sub() AgentHost.AbrirVentanaHeavy())
+                    Case Else
+                        Return ErrJson("nombre debe ser: trading | servidorlive | heavy")
+                End Select
+                Return New JObject From {{"ok", True}, {"ventana", nombre}}
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
             End Try
         End Function
 

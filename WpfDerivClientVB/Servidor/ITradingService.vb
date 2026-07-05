@@ -26,6 +26,13 @@ Namespace WpfDerivClientVB.Servidor
 
         ''' <summary>Cierra/vende un contrato abierto por contractId.</summary>
         Function ExecuteSellAsync(contractId As String) As Task(Of JObject)
+
+        ''' <summary>
+        ''' Conecta el WebSocket de trading de Deriv sin interaccion de UI.
+        ''' esDemo=True usa el token virtual. nombreCliente vacio = primer cliente
+        ''' con credenciales configuradas. Devuelve {ok, connected, balance,...}.
+        ''' </summary>
+        Function ConectarTradingAsync(esDemo As Boolean, Optional nombreCliente As String = "") As Task(Of JObject)
     End Interface
 
 End Namespace

@@ -62,7 +62,23 @@
       "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" WpfDerivClientVB.vbproj /p:Configuration=Debug \"/p:Platform=Any CPU\" /t:Build /v:minimal)",
       "mcp__indicadores-deriv__dinamicas_sesiones",
       "Bash(Get-Content \"C:\\\\DesarrolloIA\\\\Traiding\\\\DescargasHistoricas\\\\logs\\\\optimizar_bb4h_20260429_180006.log\")",
-      "Bash(Select-Object -Last 80)"
+      "Bash(Select-Object -Last 80)",
+      "Bash(Get-ChildItem -Path \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\Backtesting\" -Filter \"*.vb\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "PowerShell(docker exec traiding_postgres psql -U traiding_user -d traiding_db -c \"SELECT datos_indicadores FROM backtest_operaciones WHERE sesion_id=538 LIMIT 1;\")",
+      "PowerShell(Start-Process \"C:\\\\DesarrolloIA\\\\Traiding\\\\WpfDerivClientVB\\\\bin\\\\Debug\\\\net48\\\\WpfDerivClientVB.exe\" -ArgumentList \"--heavy-api\",\"--signalr-connect\",\"--open-trading\",\"--minimized\")",
+      "PowerShell(curl.exe -s -m 5 http://localhost:8766/api/heavy/status)",
+      "PowerShell(curl.exe -s -m 5 http://localhost:8766/api/heavy/signalr/estado)",
+      "PowerShell(curl.exe -s -m 5 http://localhost:8766/api/heavy/trading/estado)",
+      "PowerShell(\"=== SIGNALR ===\")",
+      "PowerShell(\"=== TRADING SERVICE ===\")",
+      "PowerShell(curl.exe -s -m 30 -X POST http://localhost:8766/api/heavy/trading/conectar -H \"Content-Type: application/json\" -d \"{\\\\\"demo\\\\\":true}\")",
+      "PowerShell(curl.exe -s -m 10 -X POST http://localhost:8766/api/heavy/jobs/agregar -H \"Content-Type: application/json\" -d $job)",
+      "PowerShell(curl.exe -s -m 10 -X POST http://localhost:8766/api/heavy/ejecutar -H \"Content-Type: application/json\" -d '{\"concurrencia\":1}')",
+      "PowerShell(curl.exe -s -m 10 -X POST http://localhost:8766/api/heavy/estrategias/guardar -H \"Content-Type: application/json\" -d '{\\\\\"nombre\\\\\":\\\\\"Rota\\\\\",\\\\\"indicadores\\\\\":[{\\\\\"id\\\\\":\\\\\"x\\\\\",\\\\\"tipo\\\\\":\\\\\"INDICADOR_FALSO\\\\\",\\\\\"params\\\\\":{}}],\\\\\"senal_call\\\\\":{\\\\\"condiciones\\\\\":[{\\\\\"campo\\\\\":\\\\\"x\\\\\",\\\\\"op\\\\\":\\\\\"mayor_que\\\\\",\\\\\"valor\\\\\":1}]}}')",
+      "PowerShell(\"=== BACKTEST de la estrategia nueva ===\")",
+      "PowerShell($job = '{\"activos\":[\"R_100\"],\"estrategias\":[\"AgentTest_RSI\"],\"timeframes\":[\"1h\"],\"confianzas\":[55],\"payouts\":[85],\"duraciones\":[2],\"capitales\":[100],\"desde_iso\":\"2000-01-01T00:00:00Z\",\"hasta_iso\":\"2026-06-10T00:00:00Z\"}')",
+      "PowerShell(\"`n=== VALIDACION: guardar estrategia INVALIDA \\(indicador inexistente\\) ===\")"
     ]
   }
 }

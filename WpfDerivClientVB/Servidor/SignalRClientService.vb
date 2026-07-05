@@ -210,8 +210,10 @@ Namespace WpfDerivClientVB.Servidor
             If Not EstaConectado Then Return
             Try
                 Await _hubProxy.Invoke("ReportStatus", _clientId, statusJson)
-            Catch
-                ' Errores de envio se absorben — el reconnect se encarga si la conexion cae
+            Catch ex As Exception
+                ' No relanzar (el reconnect timer se encarga si la conexion cae),
+                ' pero dejar constancia para diagnostico.
+                AppLogger.Warn("[SignalR] ReportStatus fallo: " & ex.Message)
             End Try
         End Function
 
@@ -220,7 +222,8 @@ Namespace WpfDerivClientVB.Servidor
             If Not EstaConectado OrElse String.IsNullOrEmpty(correlationId) Then Return
             Try
                 Await _hubProxy.Invoke("InformarRespuesta", correlationId, respuestaJson)
-            Catch
+            Catch ex As Exception
+                AppLogger.Warn("[SignalR] InformarRespuesta(corrId=" & correlationId & ") fallo: " & ex.Message)
             End Try
         End Function
 
@@ -235,7 +238,8 @@ Namespace WpfDerivClientVB.Servidor
             Try
                 Await _hubProxy.Invoke("SendInstruction", targetClientId, instruccion, parametrosJson)
                 Return True
-            Catch
+            Catch ex As Exception
+                AppLogger.Warn("[SignalR] SendInstruction(" & targetClientId & ", " & instruccion & ") fallo: " & ex.Message)
                 Return False
             End Try
         End Function

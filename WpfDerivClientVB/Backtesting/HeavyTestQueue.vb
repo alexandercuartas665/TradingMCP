@@ -227,27 +227,30 @@ Namespace WpfDerivClientVB.Backtesting
                     .Cuentas = New List(Of BacktestCuenta) From {cuenta}
                 }
 
-                ' Adaptador IProgress(Of String) → marca progresos crudos en el job.
+                ' Adaptador IProgress(Of String) → fases de arranque (carga de velas, etc.).
+                ' Tope bajo (15%) para que el % real de velas tome el control sin retroceder.
                 Dim faseActual As Integer = 0
                 Dim progreso As New Progress(Of String)(Sub(msg)
                                                             faseActual += 1
-                                                            job.Progreso = Math.Min(95D, 10D + faseActual * 12D)
+                                                            job.Progreso = Math.Max(job.Progreso,
+                                                                Math.Min(15D, 5D + faseActual * 5D))
                                                         End Sub)
                 ' Adaptador IProgress(Of Metricas) → actualiza contadores en vivo del job.
+                ' Math.Max evita que la barra retroceda si llega un reporte tardio.
                 Dim progresoMetricas As New Progress(Of BacktestProgresoMetricas)(
                     Sub(m)
                         job.VelasAnalizadas = m.VelasAnalizadas
                         job.TotalVelas = m.TotalVelas
                         job.GanadasParcial = m.Ganadas
                         job.PerdidasParcial = m.Perdidas
-                        ' Si hay total, usar % real de velas en vez del faseActual aproximado
                         If m.TotalVelas > 0 Then
-                            job.Progreso = Math.Min(95D, CDec(m.VelasAnalizadas) / CDec(m.TotalVelas) * 100D)
+                            Dim pct = Math.Min(95D, CDec(m.VelasAnalizadas) / CDec(m.TotalVelas) * 100D)
+                            job.Progreso = Math.Max(job.Progreso, pct)
                         End If
                     End Sub)
 
                 Dim motor As New BacktestMotor()
-                Dim res = Await motor.EjecutarAsync(cfg, defEst, progreso, progresoMetricas)
+                Dim res = Await motor.EjecutarAsync(cfg, defEst, progreso, progresoMetricas, ct)
 
                 If ct.IsCancellationRequested Then
                     job.Estado = HeavyJobEstado.Cancelado

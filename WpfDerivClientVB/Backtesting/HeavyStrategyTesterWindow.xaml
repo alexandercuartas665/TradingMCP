@@ -368,7 +368,18 @@
                                 BorderThickness="1" Padding="10,6" FontWeight="SemiBold" FontSize="11"
                                 Cursor="Hand" Click="btnEliminarSeleccion_Click" Margin="0,0,4,0"/>
                         <TextBlock x:Name="lblSeleccionados" Text="0 sel" Foreground="#aab3c5"
-                                   FontFamily="Consolas" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                   FontFamily="Consolas" FontSize="10" VerticalAlignment="Center" Margin="8,0,16,0"/>
+                        <TextBlock Text="Monto $" Foreground="#aab3c5" FontSize="10"
+                                   VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBox x:Name="txtMontoLive" Width="50" Height="24" Text="1.00"
+                                 Background="#121723" Foreground="#e7ecf5" BorderBrush="#1f2638"
+                                 FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"
+                                 ToolTip="Monto por operacion para las estrategias enviadas al Servidor Live"/>
+                        <Button x:Name="btnEnviarLive" Content="📡 Enviar a Servidor Live"
+                                Background="#0d2a30" Foreground="#5ee0d0" BorderBrush="#5ee0d0"
+                                BorderThickness="1" Padding="10,6" FontWeight="SemiBold" FontSize="11"
+                                Cursor="Hand" Click="btnEnviarLive_Click" Margin="4,0,0,0"
+                                ToolTip="Pone al aire las combinaciones marcadas con checkbox usando el motor live (LiveStrategiesController)"/>
                     </StackPanel>
                 </Border>
 

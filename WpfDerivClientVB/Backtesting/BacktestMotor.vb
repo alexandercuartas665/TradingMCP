@@ -1,5 +1,6 @@
 Imports System.Collections.Generic
 Imports System.Linq
+Imports System.Threading
 Imports System.Threading.Tasks
 Imports Newtonsoft.Json
 Imports WpfDerivClientVB.WpfDerivClientVB.Estrategias
@@ -36,10 +37,12 @@ Namespace WpfDerivClientVB.Backtesting
         ''' <param name="estrategia">Estrategia a probar (EstrategiaEmaRsi, EstrategiaSeykota, etc.)</param>
         ''' <param name="progreso">Progreso textual opcional para reportar estado a la UI.</param>
         ''' <param name="progresoMetricas">Progreso estructurado opcional con metricas en tiempo real (velas + ganadas/perdidas).</param>
+        ''' <param name="ct">Token de cancelacion: lanza OperationCanceledException a mitad del loop de velas (no se guarda nada en BD).</param>
         Public Async Function EjecutarAsync(config As BacktestConfig,
                                             estrategia As IEstrategia,
                                             Optional progreso As IProgress(Of String) = Nothing,
-                                            Optional progresoMetricas As IProgress(Of BacktestProgresoMetricas) = Nothing) As Task(Of BacktestResultado)
+                                            Optional progresoMetricas As IProgress(Of BacktestProgresoMetricas) = Nothing,
+                                            Optional ct As CancellationToken = Nothing) As Task(Of BacktestResultado)
 
             ' -- FASE 0: Carga de velas ------------------------------------------
             Reportar(progreso, "Cargando velas historicas...")
@@ -82,6 +85,8 @@ Namespace WpfDerivClientVB.Backtesting
             For i = config.VentanaIndicadores - 1 To iMax
 
                 If i Mod 500 = 0 Then
+                    ' Punto de cancelacion: aborta el backtest sin tocar BD.
+                    ct.ThrowIfCancellationRequested()
                     Reportar(progreso, String.Format("Procesando vela {0}/{1}...", i, todasLasVelas.Count))
                     ReportarMetricas(progresoMetricas, New BacktestProgresoMetricas With {
                         .VelasAnalizadas = i,

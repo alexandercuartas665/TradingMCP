@@ -125,6 +125,27 @@ Namespace WpfDerivClientVB.Servidor
                 Throw New Exception("Estrategia no encontrada en el registry: " & estrategiaNombre)
             End If
 
+            ' 1b) Anti-duplicados: rechazar si ya hay un motor activo con la misma
+            '     combinacion estrategia+symbol+timeframe (evita doble click / doble envio).
+            Dim duplicadoId As Integer = 0
+            For Each kv In _motors
+                Try
+                    Dim est = kv.Value.GetEstado()
+                    If String.Equals(est("estrategia")?.ToString(), estrategiaNombre, StringComparison.OrdinalIgnoreCase) AndAlso
+                       String.Equals(est("symbol")?.ToString(), symbol, StringComparison.OrdinalIgnoreCase) AndAlso
+                       String.Equals(est("timeframe")?.ToString(), timeframe, StringComparison.OrdinalIgnoreCase) Then
+                        duplicadoId = kv.Key
+                        Exit For
+                    End If
+                Catch
+                End Try
+            Next
+            If duplicadoId > 0 Then
+                Throw New Exception(String.Format(
+                    "Ya hay una sesion activa (#{0}) con {1} {2}/{3}. Detenla primero si quieres reiniciarla.",
+                    duplicadoId, estrategiaNombre, symbol, timeframe))
+            End If
+
             ' 2) Validar trading service disponible (sin esto no podemos ejecutar trades reales)
             If Not TradingServiceLocator.IsAvailable Then
                 Log("[LiveCtrl] WARN: TradingServiceLocator no registrado. Las ops abiertas no llegaran a Deriv.")

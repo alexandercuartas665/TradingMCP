@@ -15,23 +15,23 @@ Imports System.Windows.Media
 Imports System.Windows.Threading
 Imports Newtonsoft.Json.Linq
 Imports WpfDerivClientVB.WpfDerivClientVB
+Imports WpfDerivClientVB.WpfDerivClientVB.EstrategiasDinamicas
 Imports WpfDerivClientVB.WpfDerivClientVB.Servidor
 
 Partial Public Class ServidorLiveWindow
     Inherits Window
 
     Private ReadOnly _logEntries As New ObservableCollection(Of LogEntry)()
-    Private ReadOnly _motorRows As New ObservableCollection(Of MotorRow)()
     Private _clockTimer As DispatcherTimer
     Private _signalR As SignalRClientService
     Private _ctrl As LiveStrategiesController
+    Private _panelLive As EstrategiasLivePanelControl
 
     Public Sub New()
         InitializeComponent()
         AddHandler Me.Loaded, AddressOf OnLoadedHandler
         AddHandler Me.Closing, AddressOf OnClosingHandler
         lstLog.ItemsSource = _logEntries
-        lstMotores.ItemsSource = _motorRows
     End Sub
 
     Private Sub OnLoadedHandler(sender As Object, e As RoutedEventArgs)
@@ -64,9 +64,15 @@ Partial Public Class ServidorLiveWindow
         ' Suscribir motor updates
         AddHandler _ctrl.MotorActualizado, AddressOf OnMotorActualizado
 
+        ' Cablear panel lateral de estrategias activas (reusa el control que
+        ' MainWindow ya usa en panelEstrategiasLiveContainer). Es una instancia
+        ' independiente: ambas ventanas pueden mostrar el panel sin chocar
+        ' porque los datos viven en LiveStrategiesController (singleton).
+        CablearPanelLive()
+
         AppendLog("info", "Ventana lista. Configura URL y Client ID si es la primera vez.")
         ActualizarPills()
-        RefrescarMotores()
+        SincronizarPanelDesdeController()
 
         If chkAuto.IsChecked = True AndAlso Not String.IsNullOrWhiteSpace(txtUrl.Text) Then
             btnConectar_Click(Nothing, Nothing)
@@ -142,7 +148,7 @@ Partial Public Class ServidorLiveWindow
         Try
             Dim n = Await _ctrl.ReanudarActivasAsync()
             AppendLog("ok", n & " sesion(es) reanudadas en memoria.")
-            RefrescarMotores()
+            SincronizarPanelDesdeController()
         Catch ex As Exception
             AppendLog("err", "Error reanudando: " & ex.Message)
         End Try
@@ -151,7 +157,7 @@ Partial Public Class ServidorLiveWindow
     Private Sub btnEstado_Click(sender As Object, e As RoutedEventArgs)
         Dim estado = _ctrl.GetEstadoGlobal()
         AppendLog("info", "Estado global: " & estado.ToString(Newtonsoft.Json.Formatting.None))
-        RefrescarMotores()
+        SincronizarPanelDesdeController()
     End Sub
 
     Private Sub btnLimpiarLog_Click(sender As Object, e As RoutedEventArgs)
@@ -288,7 +294,7 @@ Partial Public Class ServidorLiveWindow
         Dispatcher.BeginInvoke(Sub()
                                    AppendLog("rx", String.Format("[{0}] {1}  payload={2}  corrId={3}",
                                               clientId, instruccion, parametros, correlationId))
-                                   RefrescarMotores()
+                                   SincronizarPanelDesdeController()
                                End Sub, DispatcherPriority.Background)
     End Sub
 
@@ -312,7 +318,14 @@ Partial Public Class ServidorLiveWindow
     Private Sub OnMotorActualizado(sesionId As Integer, estado As JObject)
         Dispatcher.BeginInvoke(Sub()
                                    AppendLog("motor", "Sesion #" & sesionId & " actualizada.")
-                                   RefrescarMotores()
+                                   ' Si la sesion sigue activa, upsertear en el panel; si no, removerla.
+                                   Dim activo = JBool(estado, "activo")
+                                   If activo Then
+                                       UpsertCardDesdeMotor(sesionId, estado)
+                                   Else
+                                       _panelLive?.RemoverCard("live-" & sesionId)
+                                   End If
+                                   pillMotores.Text = "Motores: " & _ctrl.Count
                                    ' Opcional: reportar al servidor para que tenga PnL en vivo
                                    Try
                                        If _signalR.EstaConectado Then
@@ -336,22 +349,156 @@ Partial Public Class ServidorLiveWindow
         pillMotores.Text = "Motores: " & _ctrl.Count
     End Sub
 
-    Private Sub RefrescarMotores()
-        _motorRows.Clear()
+    ' ── PANEL DE ESTRATEGIAS ACTIVAS (reusa EstrategiasLivePanelControl) ─
+
+    ''' <summary>
+    ''' Instancia el control, lo monta en el ContentControl del XAML y
+    ''' conecta sus 4 eventos a LiveStrategiesController.
+    ''' </summary>
+    Private Sub CablearPanelLive()
+        If panelEstrategiasLiveContainer Is Nothing OrElse _panelLive IsNot Nothing Then Return
+        _panelLive = New EstrategiasLivePanelControl()
+        panelEstrategiasLiveContainer.Content = _panelLive
+        AddHandler _panelLive.VerDetalleSolicitado, AddressOf OnPanelVerDetalle
+        AddHandler _panelLive.PausarReanudarSolicitado, AddressOf OnPanelPausarReanudar
+        AddHandler _panelLive.ConfigGuardarSolicitada, AddressOf OnPanelConfigGuardar
+        AddHandler _panelLive.DetenerSolicitado, AddressOf OnPanelDetener
+    End Sub
+
+    ''' <summary>Recorre todos los motores activos en el controller y los Upsertea en el panel.</summary>
+    Private Sub SincronizarPanelDesdeController()
+        If _panelLive Is Nothing Then Return
         For Each kv In _ctrl.Motores
             Try
-                Dim est = kv.Value.GetEstado()
-                _motorRows.Add(MotorRow.Desde(kv.Key, est))
+                UpsertCardDesdeMotor(kv.Key, kv.Value.GetEstado())
             Catch
             End Try
         Next
-        If _motorRows.Count = 0 Then
-            lblMotoresResumen.Text = "Sin motores activos."
+        pillMotores.Text = "Motores: " & _ctrl.Count
+    End Sub
+
+    ''' <summary>Construye un EstrategiaActivaCard desde el JObject del motor y lo upsertea.</summary>
+    Private Sub UpsertCardDesdeMotor(sesionId As Integer, est As JObject)
+        If _panelLive Is Nothing OrElse est Is Nothing Then Return
+        Dim id = "live-" & sesionId
+        Dim activo = JBool(est, "activo")
+        Dim pausado = JBool(est, "pausado")
+        Dim estadoTxt = If(Not activo, "Detenida", If(pausado, "Pausada", "Activa"))
+
+        Dim card As New EstrategiaActivaCard With {
+            .Id = id,
+            .Nombre = JStr(est, "estrategia"),
+            .Symbol = JStr(est, "symbol"),
+            .Timeframe = JStr(est, "timeframe"),
+            .HoraInicio = DateTime.Now.AddHours(-JDec(est, "horas_transcurridas")),
+            .Abiertas = JInt(est, "pendientes"),
+            .Ganadas = JInt(est, "n_ganadas"),
+            .Perdidas = JInt(est, "n_perdidas"),
+            .Pnl = JDec(est, "pnl_total"),
+            .VelasAnalizadas = JInt(est, "velas_analizadas"),
+            .Monto = JDec(est, "monto_operacion"),
+            .MinConfianza = JInt(est, "min_confianza"),
+            .DuracionVelas = JInt(est, "duracion_velas"),
+            .PayoutPct = JDec(est, "payout_pct"),
+            .VentanaIndicadores = JInt(est, "ventana_indicadores"),
+            .TotalSenales = JInt(est, "total_senales"),
+            .HorasOperacion = JInt(est, "horas_operacion"),
+            .LimiteGanancia = JDec(est, "limite_ganancia"),
+            .LimitePerdida = JDec(est, "limite_perdida"),
+            .HorasTranscurridas = JDec(est, "horas_transcurridas"),
+            .Estado = estadoTxt
+        }
+        _panelLive.UpsertCard(card)
+    End Sub
+
+    ' ── Handlers del panel (delegan a LiveStrategiesController directo) ──
+
+    Private Sub OnPanelVerDetalle(id As String)
+        AppendLog("info", "Ver detalle: " & id)
+    End Sub
+
+    Private Async Sub OnPanelDetener(id As String)
+        Dim sid = ParseSesionIdFromCardId(id)
+        If sid <= 0 Then
+            _panelLive.RemoverCard(id)
+            Return
+        End If
+        AppendLog("info", "Deteniendo sesion #" & sid & "...")
+        Dim ok = Await _ctrl.DetenerAsync(sid)
+        If ok Then
+            _panelLive.RemoverCard(id)
+            AppendLog("ok", "Sesion #" & sid & " detenida.")
         Else
-            lblMotoresResumen.Text = _motorRows.Count & " motor(es) activo(s)"
+            AppendLog("err", "No se pudo detener sesion #" & sid)
         End If
         pillMotores.Text = "Motores: " & _ctrl.Count
     End Sub
+
+    Private Sub OnPanelPausarReanudar(id As String)
+        Dim sid = ParseSesionIdFromCardId(id)
+        If sid <= 0 Then Return
+        Dim motor As LiveTestMotor = Nothing
+        _ctrl.Motores.TryGetValue(sid, motor)
+        If motor Is Nothing Then
+            AppendLog("err", "Motor #" & sid & " no esta en memoria.")
+            Return
+        End If
+        Dim pausarAhora = Not motor.EstaPausado   ' toggle
+        Dim ok = _ctrl.PausarReanudar(sid, pausarAhora)
+        If ok Then
+            Dim estadoTxt = If(pausarAhora, "Pausada", "Activa")
+            _panelLive.ActualizarMetricas(id, motor.GetEstado()("pendientes").ToObject(Of Integer)(),
+                                           motor.GetEstado()("n_ganadas").ToObject(Of Integer)(),
+                                           motor.GetEstado()("n_perdidas").ToObject(Of Integer)(),
+                                           0D, 0D,
+                                           motor.GetEstado()("pnl_total").ToObject(Of Decimal)(),
+                                           estado:=estadoTxt)
+            AppendLog("ok", "Sesion #" & sid & " -> " & estadoTxt)
+        End If
+    End Sub
+
+    Private Sub OnPanelConfigGuardar(id As String, card As EstrategiaActivaCard)
+        Dim sid = ParseSesionIdFromCardId(id)
+        If sid <= 0 OrElse card Is Nothing Then Return
+        Dim ok = _ctrl.ActualizarConfig(sid, card.Monto, card.MinConfianza, card.DuracionVelas,
+                                         card.HorasOperacion, card.LimiteGanancia, card.LimitePerdida)
+        If ok Then
+            AppendLog("ok", String.Format("Sesion #{0} config aplicada: monto=${1:F2} conf={2}% dur={3}",
+                                          sid, card.Monto, card.MinConfianza, card.DuracionVelas))
+        Else
+            AppendLog("err", "No se pudo aplicar config a sesion #" & sid)
+        End If
+    End Sub
+
+    Private Shared Function ParseSesionIdFromCardId(id As String) As Integer
+        If String.IsNullOrEmpty(id) OrElse Not id.StartsWith("live-") Then Return 0
+        Dim n As Integer
+        Integer.TryParse(id.Substring("live-".Length), n)
+        Return n
+    End Function
+
+    ' Helpers para leer del JObject de GetEstado()
+    Private Shared Function JStr(j As JObject, k As String) As String
+        If j Is Nothing OrElse j(k) Is Nothing Then Return ""
+        Return j(k).ToString()
+    End Function
+    Private Shared Function JInt(j As JObject, k As String) As Integer
+        If j Is Nothing OrElse j(k) Is Nothing Then Return 0
+        Dim v As Integer
+        Return If(Integer.TryParse(j(k).ToString(), v), v, 0)
+    End Function
+    Private Shared Function JDec(j As JObject, k As String) As Decimal
+        If j Is Nothing OrElse j(k) Is Nothing Then Return 0D
+        Dim v As Decimal
+        Return If(Decimal.TryParse(j(k).ToString().Replace(",", "."),
+                                    Globalization.NumberStyles.Any,
+                                    Globalization.CultureInfo.InvariantCulture, v), v, 0D)
+    End Function
+    Private Shared Function JBool(j As JObject, k As String) As Boolean
+        If j Is Nothing OrElse j(k) Is Nothing Then Return False
+        Dim v As Boolean
+        Return Boolean.TryParse(j(k).ToString(), v) AndAlso v
+    End Function
 
     ' ── LOG ──────────────────────────────────────────────────────
 
@@ -404,73 +551,5 @@ Public Class LogEntry
     Public Property Mensaje As String
 End Class
 
-''' <summary>Tarjeta de motor activo (panel derecho).</summary>
-Public Class MotorRow
-    Public Property SesionId As Integer
-    Public Property IdCorto As String
-    Public Property Titulo As String
-    Public Property SubTitulo As String
-    Public Property OpsStr As String
-    Public Property PnlStr As String
-    Public Property PnlBrush As Brush
-    Public Property EstadoStr As String
-    Public Property EstadoBrush As Brush
-
-    Public Shared Function Desde(sesionId As Integer, estado As JObject) As MotorRow
-        Dim activo = TryGet(estado, "activo", False)
-        Dim pausado = TryGet(estado, "pausado", False)
-        Dim symbol = TryGetStr(estado, "symbol", "?")
-        Dim tf = TryGetStr(estado, "timeframe", "?")
-        Dim estr = TryGetStr(estado, "estrategia", "?")
-        Dim ops = TryGetInt(estado, "total_operaciones", 0)
-        Dim ganadas = TryGetInt(estado, "ganadas", 0)
-        Dim perdidas = TryGetInt(estado, "perdidas", 0)
-        Dim pnl = TryGetDec(estado, "pnl_total", 0D)
-
-        Dim estStr = "EJECUTANDO"
-        If pausado Then estStr = "PAUSADO"
-        If Not activo Then estStr = "INACTIVO"
-
-        Dim verde = New SolidColorBrush(Color.FromRgb(&H3F, &HD1, &H7A))
-        Dim rojo = New SolidColorBrush(Color.FromRgb(&HFF, &H5C, &H7A))
-        Dim ambar = New SolidColorBrush(Color.FromRgb(&HFF, &HB4, &H54))
-        Dim gris = New SolidColorBrush(Color.FromRgb(&HAA, &HB3, &HC5))
-
-        Return New MotorRow With {
-            .SesionId = sesionId,
-            .IdCorto = "#" & sesionId,
-            .Titulo = estr,
-            .SubTitulo = symbol & " / " & tf,
-            .OpsStr = String.Format("ops:{0}  ✓{1}  ✕{2}", ops, ganadas, perdidas),
-            .PnlStr = pnl.ToString("+0.00;-0.00;0.00"),
-            .PnlBrush = If(pnl > 0D, verde, If(pnl < 0D, rojo, gris)),
-            .EstadoStr = estStr,
-            .EstadoBrush = If(pausado, ambar, If(activo, verde, gris))
-        }
-    End Function
-
-    Private Shared Function TryGet(j As JObject, key As String, def As Boolean) As Boolean
-        If j Is Nothing OrElse j(key) Is Nothing Then Return def
-        Dim v As Boolean
-        If Boolean.TryParse(j(key).ToString(), v) Then Return v
-        Return def
-    End Function
-    Private Shared Function TryGetStr(j As JObject, key As String, def As String) As String
-        If j Is Nothing OrElse j(key) Is Nothing Then Return def
-        Return j(key).ToString()
-    End Function
-    Private Shared Function TryGetInt(j As JObject, key As String, def As Integer) As Integer
-        If j Is Nothing OrElse j(key) Is Nothing Then Return def
-        Dim v As Integer
-        If Integer.TryParse(j(key).ToString(), v) Then Return v
-        Return def
-    End Function
-    Private Shared Function TryGetDec(j As JObject, key As String, def As Decimal) As Decimal
-        If j Is Nothing OrElse j(key) Is Nothing Then Return def
-        Dim v As Decimal
-        If Decimal.TryParse(j(key).ToString().Replace(",", "."),
-                             Globalization.NumberStyles.Any,
-                             Globalization.CultureInfo.InvariantCulture, v) Then Return v
-        Return def
-    End Function
-End Class
+' Nota: la clase MotorRow se elimino. El panel derecho ahora usa
+' EstrategiasLivePanelControl reusado de MainWindow.

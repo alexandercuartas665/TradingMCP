@@ -138,10 +138,8 @@ Namespace WpfDerivClientVB.Backtesting
 
                             ' -- Insertar operaciones via COPY binario (PostgreSQL) -------
                             ' ~50x mas rapido que INSERT por fila para volumenes grandes (cientos de miles).
-                            ' Importante: el COPY requiere su propio commit; cerramos la transaccion antes
-                            ' para que el writer use la conexion sin choques de tx.
-                            tx.Commit()
-
+                            ' El COPY participa de la transaccion abierta en la conexion: si falla a
+                            ' mitad de carga, el rollback elimina tambien la sesion (sin huerfanas).
                             Dim copySql =
                                 "COPY public.backtest_operaciones " &
                                 "(sesion_id, cuenta_nombre, tipo, epoch_entrada, precio_entrada, " &
@@ -183,11 +181,14 @@ Namespace WpfDerivClientVB.Backtesting
                                 Next
                                 writer.Complete()
                             End Using
+
+                            ' Commit atomico: sesion + operaciones, o nada.
+                            tx.Commit()
                         Catch ex As Exception
                             Try
                                 tx.Rollback()
                             Catch
-                                ' tx puede ya estar commiteada (caso COPY) — ignorar
+                                ' conexion ya rota — el rollback implicito del server limpia
                             End Try
                             Throw
                         End Try

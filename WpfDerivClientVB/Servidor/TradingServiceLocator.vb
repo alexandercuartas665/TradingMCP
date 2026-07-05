@@ -44,6 +44,9 @@ Namespace WpfDerivClientVB.Servidor
         Public Sub Register(svc As ITradingService)
             If svc Is Nothing Then Throw New ArgumentNullException("svc")
             SyncLock _lock
+                If _service IsNot Nothing AndAlso Not ReferenceEquals(_service, svc) Then
+                    AppLogger.Warn("[TradingServiceLocator] Servicio reemplazado por una nueva instancia.")
+                End If
                 _service = svc
             End SyncLock
         End Sub
