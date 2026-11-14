@@ -435,8 +435,15 @@ Namespace WpfDerivClientVB.Backtesting
                 "POST /api/heavy/estrategias/guardar (body: definicion JSON completa)",
                 "DELETE /api/heavy/estrategias/{nombre}",
                 "GET  /api/heavy/trading/estado",
-                "POST /api/heavy/trading/conectar (body: {demo:true, cliente:\"\"})",
-                "POST /api/heavy/app/ventana      (body: {nombre: trading|servidorlive|heavy})"
+                "POST /api/heavy/trading/conectar (body: {demo:true, cliente:''})  demo:false bloqueado salvo PermitirRealRemoto",
+                "POST /api/heavy/app/ventana      (body: {nombre: trading|servidorlive|heavy})",
+                "GET  /api/heavy/riesgo/estado",
+                "POST /api/heavy/riesgo/parar     (body: {motivo})",
+                "POST /api/heavy/riesgo/reanudar",
+                "POST /api/heavy/historico/descargar (body: {symbol, timeframe, desde:YYYY-MM-DD, hasta:YYYY-MM-DD})",
+                "GET  /api/heavy/historico/estado",
+                "POST /api/heavy/historico/detener",
+                "(todas requieren header X-Agent-Token)"
             }
             Return New JObject From {
                 {"ok", True},

@@ -1,0 +1,36 @@
+﻿{
+  "nombre": "EmaRsiCruce_v2",
+  "descripcion": "EMA9/21 filtrado por tendencia EMA50 y RSI en zona estrecha. Solo opera cuando precio confirma la tendencia de largo plazo. Reduce senales de 3000 a ~200 y mejora calidad.",
+  "version": "2.0",
+  "indicadores": [
+    { "id": "ema_rapida",    "tipo": "EMA", "params": { "periodo": 9  } },
+    { "id": "ema_lenta",     "tipo": "EMA", "params": { "periodo": 21 } },
+    { "id": "ema_tendencia", "tipo": "EMA", "params": { "periodo": 50 } },
+    { "id": "rsi",           "tipo": "RSI", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "ema_rapida", "op": "mayor_que", "valor": "ema_lenta"     },
+      { "campo": "close",      "op": "mayor_que", "valor": "ema_tendencia" },
+      { "campo": "rsi",        "op": "mayor_que", "valor": 53 },
+      { "campo": "rsi",        "op": "menor_que", "valor": 67 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "ema_rapida", "op": "menor_que", "valor": "ema_lenta"     },
+      { "campo": "close",      "op": "menor_que", "valor": "ema_tendencia" },
+      { "campo": "rsi",        "op": "menor_que", "valor": 47 },
+      { "campo": "rsi",        "op": "mayor_que", "valor": 33 }
+    ]
+  },
+  "confianza_base": 62,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 60 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 40 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 65 }, "sumar": -10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 35 }, "sumar": -10 }
+  ]
+}

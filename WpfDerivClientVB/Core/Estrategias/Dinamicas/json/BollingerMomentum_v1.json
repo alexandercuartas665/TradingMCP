@@ -1,0 +1,32 @@
+{
+  "nombre": "BollingerMomentum_v1",
+  "descripcion": "Continuacion de momentum en extremos BB. Para pares forex que trendan fuerte (EURUSD, GBPJPY). Logica INVERSA al reversal: opera CON la direccion cuando el precio rompe las bandas extremas. Cuando RSI<30 y toca banda inferior => el mercado CONTINUA bajando (PUT), no rebota.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.5 } },
+    { "id": "rsi", "tipo": "RSI",            "params": { "periodo": 14 } },
+    { "id": "atr", "tipo": "ATR",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_igual", "valor": "bb.Upper" },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 70 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_igual", "valor": "bb.Lower" },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 30 }
+    ]
+  },
+  "confianza_base": 65,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 80 }, "sumar": 15 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 20 }, "sumar": 15 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 75 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 25 }, "sumar": 10 },
+    { "si": { "campo": "bb.BandWidth", "op": "menor_que", "valor": 2 }, "sumar": -10 }
+  ]
+}

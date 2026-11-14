@@ -1,0 +1,31 @@
+{
+  "nombre": "CCIReversal_v1",
+  "descripcion": "Reversal con CCI en lugar de RSI, combinado con BB exterior. Para activos donde el RSI no discrimina bien los extremos ciclicos (DJI, XAUUSD). CCI mide la desviacion del precio respecto a su media estadistica: valores < -100 indican sobreventa ciclica extrema, > +100 sobrecompra.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.0 } },
+    { "id": "cci", "tipo": "CCI",            "params": { "periodo": 20 } },
+    { "id": "atr", "tipo": "ATR",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_igual", "valor": "bb.Lower" },
+      { "campo": "cci",   "op": "menor_que",   "valor": -100 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_igual", "valor": "bb.Upper" },
+      { "campo": "cci",   "op": "mayor_que",   "valor": 100 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": [
+    { "si": { "campo": "cci", "op": "menor_que", "valor": -150 }, "sumar": 20 },
+    { "si": { "campo": "cci", "op": "mayor_que", "valor": 150 },  "sumar": 20 },
+    { "si": { "campo": "cci", "op": "menor_que", "valor": -120 }, "sumar": 10 },
+    { "si": { "campo": "cci", "op": "mayor_que", "valor": 120 },  "sumar": 10 }
+  ]
+}

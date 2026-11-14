@@ -1,0 +1,36 @@
+{
+  "nombre": "EmaRsiCruce_v3",
+  "descripcion": "Pullback a EMA13 en tendencia EMA50. CALL: precio en uptrend (close>EMA50) pero retrocede a EMA13 (close<=EMA13) con RSI en zona de rebote 32-50. PUT: downtrend y rebote debil. Genera pocas senales de alta calidad.",
+  "version": "3.1",
+  "indicadores": [
+    { "id": "ema_rapida",    "tipo": "EMA", "params": { "periodo": 13 } },
+    { "id": "ema_tendencia", "tipo": "EMA", "params": { "periodo": 50 } },
+    { "id": "rsi",           "tipo": "RSI", "params": { "periodo": 14 } },
+    { "id": "atr",           "tipo": "ATR", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",      "op": "mayor_que",   "valor": "ema_tendencia" },
+      { "campo": "close",      "op": "menor_igual",  "valor": "ema_rapida"   },
+      { "campo": "rsi",        "op": "mayor_que",   "valor": 32 },
+      { "campo": "rsi",        "op": "menor_que",   "valor": 50 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",      "op": "menor_que",    "valor": "ema_tendencia" },
+      { "campo": "close",      "op": "mayor_igual",  "valor": "ema_rapida"   },
+      { "campo": "rsi",        "op": "menor_que",    "valor": 68 },
+      { "campo": "rsi",        "op": "mayor_que",    "valor": 50 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 38 }, "sumar": 5 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 44 }, "sumar": 5 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 62 }, "sumar": 5 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 56 }, "sumar": 5 }
+  ]
+}

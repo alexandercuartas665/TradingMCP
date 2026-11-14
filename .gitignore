@@ -106,3 +106,7 @@ ProfilePictures.db
 node_modules/
 build*.log
 build_errors*.txt
+
+# Backups de base de datos: nunca en git (contienen datos y credenciales)
+backups/
+*.dump
