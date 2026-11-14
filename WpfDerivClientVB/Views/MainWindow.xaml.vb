@@ -69,14 +69,9 @@ Namespace WpfDerivClientVB
 
         ' ===== API Server embebido (Tab Server) =====
         Private _apiServer As TradingApiServer
-        Private _pendingApiTrade As System.Threading.Tasks.TaskCompletionSource(Of JObject)
         Private _pendingApiSell As System.Threading.Tasks.TaskCompletionSource(Of JObject)
-
-        ' Metadata del proximo trade que va a llegar via "buy" — usado para taggear ops live
-        ' en el handler "buy" de forma sincrona (sin race con BeginInvoke).
-        Private _proxTradeEstrategia As String = ""
-        Private _proxTradeSesionId As Integer = 0
-        Private _proxTradeOpId As Integer = 0
+        ' Las compras automaticas ya no usan variables compartidas: cada una se correlaciona
+        ' por req_id (ver MainWindow.TradingEnvio.vb).
 
         ' ===== Evento de vela cerrada (Live Test Motor) =====
         ''' <summary>

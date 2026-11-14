@@ -93,6 +93,10 @@ Namespace WpfDerivClientVB
                 ' crash o cierre se reconcilia: la mostramos en el grid + nos suscribimos
                 ' al contrato en Deriv para recibir su estado final.
                 Await RecuperarOperacionesLivePendientesAsync()
+                ' Cerrar con su resultado real las filas de trading_operations que quedaron 'Abierto'
+#Disable Warning BC42358
+                ReconciliarOperacionesAbiertasAsync()
+#Enable Warning BC42358
                 ' Refrescar PnL HOY/SEMANA/MES del panel lateral
                 Await PanelLiveRefrescarPnlPeriodosAsync()
             Else
@@ -277,8 +281,7 @@ Namespace WpfDerivClientVB
                     req.Add("sell", op.ContractId)
                     req.Add("price", 0)   ' 0 = precio de mercado actual
                     Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                    Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes),
-                                               WebSocketMessageType.Text, True, _tradingCts.Token)
+                    Await EnviarTradingBytesAsync(bytes)
                     cerradas += 1
                     Await Task.Delay(150)   ' espacio entre comandos para no saturar el WS
                 Catch ex As Exception
@@ -464,7 +467,7 @@ Namespace WpfDerivClientVB
                 req.Add("balance", 1)
                 req.Add("subscribe", 1)
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
             Catch
             End Try
         End Function
@@ -527,7 +530,7 @@ Namespace WpfDerivClientVB
                 req.Add("underlying_symbol", symbol)
 
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
 
                 txtTradeResult.Text = "⏳ Esperando cotización..."
                 txtTradeResult.Foreground = New SolidColorBrush(Colors.Yellow)
@@ -576,7 +579,7 @@ Namespace WpfDerivClientVB
                 req.Add("duration_unit", GetDurUnit())
                 req.Add("underlying_symbol", symbol)
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
             Catch ex As Exception
                 txtTradingOpEstado.Text = "❌ Error: " & ex.Message
             End Try
@@ -676,7 +679,7 @@ Namespace WpfDerivClientVB
                     End If
                 End If
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
             Catch ex As Exception
                 txtCotizacion.Text = "❌ Error: " & ex.Message
             End Try
@@ -693,7 +696,7 @@ Namespace WpfDerivClientVB
                 buyReq.Add("buy", _pendingProposalId)
                 buyReq.Add("price", _pendingProposalAmount)
                 Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
                 txtTradingOpEstado.Text = "⏳ Ejecutando orden avanzada..."
                 _pendingProposalId = ""
             Catch ex As Exception
@@ -810,7 +813,7 @@ Namespace WpfDerivClientVB
                 If _tradingCts.IsCancellationRequested Then Exit Do
                 Try
                     If _tradingWs IsNot Nothing AndAlso _tradingWs.State = WebSocketState.Open Then
-                        Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(pingJson), WebSocketMessageType.Text, True, _tradingCts.Token)
+                        Await EnviarTradingBytesAsync(pingJson)
                     End If
                 Catch
                 End Try
@@ -883,10 +886,20 @@ Namespace WpfDerivClientVB
                         txtTradingOpEstado.Text = String.Format("Contrato {0} ya no existe en Deriv (expirado).",
                                                                If(contractIdErr, "?"))
                         LogConexion(String.Format("[Deriv] {0} (silenciado, op limpiada)", errMsg))
-                        If _pendingApiTrade IsNot Nothing Then
-                            _pendingApiTrade.TrySetResult(New JObject From {{"ok", False}, {"error", errMsg}})
-                            _pendingApiTrade = Nothing
+                        ' Si era una consulta de reconciliacion, la fila no se puede cerrar con
+                        ' resultado: marcarla para no volver a consultarla en cada conexion.
+                        If Not String.IsNullOrEmpty(contractIdErr) Then
+                            Dim cIdNf = contractIdErr
+                            Task.Run(Async Function() As Task
+                                         Try
+                                             Await New ClientRepository().CerrarOperacionPorContractAsync(cIdNf, "NoEncontrado", 0D)
+                                         Catch ex As Exception
+                                             AppLogger.Warn("[Trading] No se pudo marcar " & cIdNf & " como NoEncontrado: " & ex.Message)
+                                         End Try
+                                     End Function)
                         End If
+                        ResolverCompraPendiente(BuscarCompraPendiente(obj),
+                                                New JObject From {{"ok", False}, {"error", errMsg}})
                         Return
                     End If
 
@@ -895,11 +908,9 @@ Namespace WpfDerivClientVB
                     txtTradingOpEstado.Text = fullErr
                     txtTradeResult.Text = fullErr
                     txtTradeResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
-                    ' Si habia una operacion API pendiente, completarla con el error para no bloquear el servidor
-                    If _pendingApiTrade IsNot Nothing Then
-                        _pendingApiTrade.TrySetResult(New JObject From {{"ok", False}, {"error", fullErr}})
-                        _pendingApiTrade = Nothing
-                    End If
+                    ' Si el error corresponde a una compra automatica (req_id), completarla con el error
+                    ResolverCompraPendiente(BuscarCompraPendiente(obj),
+                                            New JObject From {{"ok", False}, {"error", fullErr}})
                     Return
                 End If
 
@@ -925,7 +936,12 @@ Namespace WpfDerivClientVB
                             Dim payout As Double = If(propObj("payout") IsNot Nothing, CDbl(propObj("payout")), 0)
                             Dim longcode = propObj("longcode")?.ToString()
 
-                            If _modoAvanzado Then
+                            ' Cotizacion de una compra AUTOMATICA (correlacionada por req_id):
+                            ' se valida y se compra con el mismo req_id, sin tocar la UI manual.
+                            Dim compraAuto = BuscarCompraPendiente(obj)
+                            If compraAuto IsNot Nothing Then
+                                ComprarPropuestaPendiente(compraAuto, proposalId, askPrice, payout)
+                            ElseIf _modoAvanzado Then
                                 _pendingProposalId = proposalId
                                 _pendingProposalAmount = askPrice
                                 Dim cotMsg = String.Format("💰 Pago: ${0:F2}  →  Ganancia potencial: ${1:F2}", askPrice, payout)
@@ -940,7 +956,7 @@ Namespace WpfDerivClientVB
                                 buyReq.Add("buy", proposalId)
                                 buyReq.Add("price", askPrice)
                                 Dim bytes = Encoding.UTF8.GetBytes(buyReq.ToString())
-                                _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                                EnviarTradingSinEsperar(bytes)
                             End If
                         End If
 
@@ -960,17 +976,15 @@ Namespace WpfDerivClientVB
                             op.Hora = DateTime.Now.ToString("HH:mm:ss")
                             op.Duracion = ""
                             If _tradingClienteActual IsNot Nothing Then op.ClientId = _tradingClienteActual.Id
-                            ' Taggear como op live si viene de una estrategia (set por ApiExecuteTrade ANTES del send)
-                            If Not String.IsNullOrEmpty(_proxTradeEstrategia) Then
+                            ' Compra automatica: su metadata viaja en la compra pendiente (req_id),
+                            ' no en variables compartidas que otra estrategia pudiera pisar.
+                            Dim compraBuy = BuscarCompraPendiente(obj)
+                            If compraBuy IsNot Nothing AndAlso Not String.IsNullOrEmpty(compraBuy.Estrategia) Then
                                 op.EsLive = True
-                                op.Estrategia = _proxTradeEstrategia
-                                op.SesionId = _proxTradeSesionId
-                                op.OperacionLiveId = _proxTradeOpId
+                                op.Estrategia = compraBuy.Estrategia
+                                op.SesionId = compraBuy.SesionId
+                                op.OperacionLiveId = compraBuy.OperacionLiveId
                             End If
-                            ' Reset de la metadata para el proximo trade
-                            _proxTradeEstrategia = ""
-                            _proxTradeSesionId = 0
-                            _proxTradeOpId = 0
                             _tradingOperaciones.Insert(0, op)
                             Dim msgBuy = String.Format("✅ {0} abierto: {1} — ${2}", op.Tipo, op.ContractId, op.Monto)
                             txtTradingOpEstado.Text = msgBuy
@@ -979,8 +993,8 @@ Namespace WpfDerivClientVB
                             GuardarOperacionBD(op)
                             RiskManager.RegistrarApertura(op.ContractId, op.Monto)
                             SuscribirContratoAsync(op.ContractId)
-                            If _pendingApiTrade IsNot Nothing Then
-                                Dim apiResult = New JObject From {
+                            If compraBuy IsNot Nothing Then
+                                ResolverCompraPendiente(compraBuy, New JObject From {
                                     {"ok", True},
                                     {"contract_id", op.ContractId},
                                     {"tipo", op.Tipo},
@@ -988,9 +1002,7 @@ Namespace WpfDerivClientVB
                                     {"monto", op.Monto},
                                     {"estado", op.Estado},
                                     {"hora", op.Hora}
-                                }
-                                _pendingApiTrade.TrySetResult(apiResult)
-                                _pendingApiTrade = Nothing
+                                })
                             End If
                         End If
 
@@ -1005,7 +1017,27 @@ Namespace WpfDerivClientVB
                             ' (won / lost / vendido antes de tiempo). Idempotente por contract_id.
                             Dim vendido = poc("is_sold") IsNot Nothing AndAlso poc("is_sold").ToString() = "1"
                             If status = "won" OrElse status = "lost" OrElse status = "sold" OrElse vendido Then
-                                RiskManager.RegistrarCierre(contractId, profit)
+                                ' Momento real del cierre segun Deriv (para no contar cierres de otros dias)
+                                Dim cierreEpoch As Long = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                                If poc("sell_time") IsNot Nothing Then
+                                    Long.TryParse(poc("sell_time").ToString(), cierreEpoch)
+                                ElseIf poc("exit_tick_time") IsNot Nothing Then
+                                    Long.TryParse(poc("exit_tick_time").ToString(), cierreEpoch)
+                                End If
+                                RiskManager.RegistrarCierre(contractId, profit, cierreEpoch)
+
+                                ' Cerrar tambien en trading_operations (antes nunca se actualizaba)
+                                Dim estadoReal = If(status = "won", "Ganado", If(status = "lost", "Perdido",
+                                                    If(profit > 0D, "Ganado", "Perdido")))
+                                Dim cIdBd = contractId
+                                Dim pnlBd = profit
+                                Task.Run(Async Function() As Task
+                                             Try
+                                                 Await New ClientRepository().CerrarOperacionPorContractAsync(cIdBd, estadoReal, pnlBd)
+                                             Catch ex As Exception
+                                                 AppLogger.Warn("[Trading] No se pudo cerrar " & cIdBd & " en trading_operations: " & ex.Message)
+                                             End Try
+                                         End Function)
                             End If
 
                             Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
@@ -1061,11 +1093,18 @@ Namespace WpfDerivClientVB
                                                  End Try
                                              End Function)
                                     ' 2) Notificar al motor (si todavia esta cargado en LiveMotors)
-                                    If _apiServer IsNot Nothing AndAlso sidMotor > 0 Then
+                                    If sidMotor > 0 Then
                                         Dim motorLive As LiveTestMotor = Nothing
-                                        SyncLock _apiServer.LiveMotors
-                                            _apiServer.LiveMotors.TryGetValue(sidMotor, motorLive)
-                                        End SyncLock
+                                        If _apiServer IsNot Nothing Then
+                                            SyncLock _apiServer.LiveMotors
+                                                _apiServer.LiveMotors.TryGetValue(sidMotor, motorLive)
+                                            End SyncLock
+                                        End If
+                                        ' Motores del Servidor Live (LiveStrategiesController): antes no
+                                        ' recibian el resultado real y solo contaban su simulacion.
+                                        If motorLive Is Nothing Then
+                                            WpfDerivClientVB.Servidor.LiveStrategiesController.GetInstance().Motores.TryGetValue(sidMotor, motorLive)
+                                        End If
                                         If motorLive IsNot Nothing Then
                                             Try
                                                 motorLive.NotificarOpResueltaExterna(cIdFinal, ganada, pnlFinal)
@@ -1116,7 +1155,7 @@ Namespace WpfDerivClientVB
                              req.Add("contract_id", contractId)
                              req.Add("subscribe", 1)
                              Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                             Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                             Await EnviarTradingBytesAsync(bytes)
                          Catch
                          End Try
                      End Function)
@@ -1178,7 +1217,7 @@ Namespace WpfDerivClientVB
                 req.Add("sell", contractId)
                 req.Add("price", 0)
                 Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _tradingCts.Token)
+                Await EnviarTradingBytesAsync(bytes)
                 txtTradingOpEstado.Text = "⏳ Cerrando contrato " & contractId & "..."
             Catch ex As Exception
                 txtTradingOpEstado.Text = "❌ Error al cerrar: " & ex.Message

@@ -121,13 +121,19 @@ Namespace WpfDerivClientVB
         ''' Llamar cuando Deriv informa que el contrato termino (won/lost/sold).
         ''' Idempotente: cada contract_id se contabiliza una sola vez por dia.
         ''' </summary>
-        Public Sub RegistrarCierre(contractId As String, profit As Decimal)
+        Public Sub RegistrarCierre(contractId As String, profit As Decimal, Optional cierreEpochUtc As Long = 0)
             If String.IsNullOrEmpty(contractId) Then Return
             Dim cfg = ConfigManager.LoadDbConfig()
             SyncLock _lock
                 AsegurarDia()
                 _abiertos.Remove(contractId)
                 If _cerradosDia.Contains(contractId) Then Return
+                ' Cierres de dias anteriores (p.ej. al reconciliar contratos viejos con Deriv)
+                ' no cuentan para la perdida de HOY.
+                If cierreEpochUtc > 0 Then
+                    Dim fechaCierre = DateTimeOffset.FromUnixTimeSeconds(cierreEpochUtc).UtcDateTime.ToString("yyyy-MM-dd")
+                    If fechaCierre <> _fechaUtc Then Return
+                End If
                 _cerradosDia.Add(contractId)
                 _pnlDia += profit
                 AppLogger.Info(String.Format(Globalization.CultureInfo.InvariantCulture,

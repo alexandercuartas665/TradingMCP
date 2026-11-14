@@ -373,12 +373,10 @@ Namespace WpfDerivClientVB
         ''' <summary>Envia el trade a Deriv. Solo se llama tras pasar el gestor de riesgo.</summary>
         Private Async Function EjecutarTradeAprobadoAsync(body As JObject, contractType As String,
                                                          symbol As String, amount As Double) As Task(Of JObject)
-            ' Capturar metadata de estrategia (no se envia a Deriv) para taggear la op
-            ' en el "buy" handler cuando se cree el OperacionModel.
-            _proxTradeEstrategia = If(body("_meta_estrategia")?.ToString(), "")
-            _proxTradeSesionId = If(body("_meta_sesion_id") IsNot Nothing, CInt(body("_meta_sesion_id")), 0)
-            _proxTradeOpId = If(body("_meta_op_id") IsNot Nothing, CInt(body("_meta_op_id")), 0)
+            ' Compra pendiente propia (req_id + metadata de estrategia). Ver MainWindow.TradingEnvio.vb
+            Dim compra = NuevaCompraPendiente(CDec(amount), body)
             Dim req As New JObject()
+            req.Add("req_id", compra.ReqId)
             req.Add("proposal", 1)
             req.Add("amount", amount)
             req.Add("basis", If(body("basis")?.ToString(), "stake"))
@@ -390,23 +388,22 @@ Namespace WpfDerivClientVB
             If body("barrier") IsNot Nothing Then req.Add("barrier", body("barrier").ToString())
             If body("barrier2") IsNot Nothing Then req.Add("barrier2", body("barrier2").ToString())
 
-            _pendingApiTrade = New System.Threading.Tasks.TaskCompletionSource(Of JObject)()
-            ' IMPORTANTE: capturar referencia al Task ANTES de enviar la propuesta.
-            ' El UI thread puede poner _pendingApiTrade = Nothing en ProcesarMensajeTrading
-            ' mientras este thread espera, causando NullReferenceException en la comprobacion.
-            Dim apiTradeTask = _pendingApiTrade.Task
-            _modoAvanzado = False
-
-            Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-            Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), Net.WebSockets.WebSocketMessageType.Text, True, _tradingCts.Token)
+            Dim apiTradeTask = compra.Tcs.Task
+            Try
+                Await EnviarTradingBytesAsync(Encoding.UTF8.GetBytes(req.ToString()))
+            Catch ex As Exception
+                ResolverCompraPendiente(compra, Nothing)
+                Return New JObject From {{"ok", False}, {"error", "No se pudo enviar a Deriv: " & ex.Message}}
+            End Try
 
             Dim winnerApi = Await Task.WhenAny(apiTradeTask, Task.Delay(10000))
             If winnerApi Is apiTradeTask Then
                 Return apiTradeTask.Result
-            Else
-                _pendingApiTrade = Nothing
-                Return New JObject From {{"ok", False}, {"error", "Timeout: no se recibio respuesta en 10 segundos"}}
             End If
+            ' Timeout: la compra pendiente se conserva un rato para que, si el "buy" llega
+            ' tarde, la operacion igual quede registrada y etiquetada con su estrategia.
+            AppLogger.Warn("[Trading] Timeout esperando compra req_id=" & compra.ReqId & " (" & contractType & " " & symbol & ")")
+            Return New JObject From {{"ok", False}, {"error", "Timeout: no se recibio respuesta en 10 segundos"}, {"req_id", compra.ReqId}}
         End Function
 
         Private Async Function ApiExecuteSell(contractId As String) As Task(Of JObject)
@@ -419,7 +416,7 @@ Namespace WpfDerivClientVB
             req.Add("sell", contractId)
             req.Add("price", 0)
             Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-            Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(bytes), Net.WebSockets.WebSocketMessageType.Text, True, _tradingCts.Token)
+            Await EnviarTradingBytesAsync(bytes)
             Dim winnerSell = Await Task.WhenAny(apiSellTask, Task.Delay(10000))
             If winnerSell Is apiSellTask Then
                 Return apiSellTask.Result

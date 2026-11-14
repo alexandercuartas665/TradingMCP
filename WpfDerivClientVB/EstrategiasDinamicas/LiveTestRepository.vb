@@ -248,7 +248,7 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                         "SET precio_salida = @ps, epoch_salida = @es, estado = @est, " &
                         "    profit_loss = @pl, balance_post = @bp, " &
                         "    contexto_velas = CASE WHEN @cv <> '' THEN @cv ELSE contexto_velas END " &
-                        "WHERE id = @id;"
+                        "WHERE id = @id AND estado = 'Pendiente';"   ' nunca pisar un resultado real ya registrado
                     Using cmd As New NpgsqlCommand(sql, conn)
                         cmd.Parameters.AddWithValue("ps",  precioSalida)
                         cmd.Parameters.AddWithValue("es",  epochSalida)
@@ -676,6 +676,25 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
         ''' Marca una operacion live como expirada/perdida cuando Deriv reporta ContractNotFound.
         ''' Esto sucede cuando el contrato cerro hace tiempo y ya no esta en open positions.
         ''' </summary>
+        ''' <summary>
+        ''' Marca una operacion live que NO llego a ejecutarse en Deriv (compra fallida,
+        ''' rechazada o bloqueada por el gestor de riesgo). Antes quedaba 'Pendiente' y
+        ''' el motor la "resolvia" con la simulacion de velas: ganancia/perdida fantasma.
+        ''' </summary>
+        Public Async Function MarcarOperacionNoEjecutadaAsync(operacionId As Integer, estado As String) As Task
+            If operacionId <= 0 Then Return
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Using cmd As New NpgsqlCommand(
+                    "UPDATE public.backtest_operaciones SET estado = @est, profit_loss = 0 " &
+                    "WHERE id = @id AND estado = 'Pendiente';", conn)
+                    cmd.Parameters.AddWithValue("est", estado)
+                    cmd.Parameters.AddWithValue("id", operacionId)
+                    Await cmd.ExecuteNonQueryAsync()
+                End Using
+            End Using
+        End Function
+
         Public Async Function MarcarOperacionExpiradaPorContractIdAsync(contractId As String) As Task
             If String.IsNullOrEmpty(contractId) Then Return
             Try

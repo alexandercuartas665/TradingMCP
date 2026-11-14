@@ -605,6 +605,18 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
 
             ' 3. Ejecutar trade en Deriv (si hay callback configurado)
             If ExecuteTrade IsNot Nothing Then
+                ' Duracion REAL igual a la del backtest: N velas del timeframe en minutos/horas/dias.
+                ' (Antes se enviaba N en TICKS: una estrategia validada a "2 velas de 1h" se
+                '  compraba como contrato de 2 ticks, unos segundos.)
+                Dim unidadDeriv As String = ""
+                Dim durContrato = DuracionDeriv(_config.Timeframe, _config.DuracionVelas, unidadDeriv)
+                If durContrato <= 0 Then
+                    AppLogger.Warn(String.Format("[LiveTestMotor] Duracion no soportada por Deriv: {0} velas de {1}. Operacion no ejecutada.",
+                                                 _config.DuracionVelas, _config.Timeframe))
+                    Await DescartarPendienteAsync(pend, "NoEjecutada")
+                    Return
+                End If
+                Dim fallaEjecucion As Boolean = False
                 Try
                     ' Campos con prefijo _meta_ son metadata interna que ApiExecuteTrade
                     ' extraera ANTES de enviar a Deriv, y los pasara al handler "buy"
@@ -615,8 +627,8 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                         {"amount", CDbl(pend.Monto)},
                         {"basis", "stake"},
                         {"currency", "USD"},
-                        {"duration", _config.DuracionVelas},
-                        {"duration_unit", "t"},
+                        {"duration", durContrato},
+                        {"duration_unit", unidadDeriv},
                         {"underlying_symbol", _config.Symbol},
                         {"_meta_estrategia", If(_estrategia IsNot Nothing, _estrategia.Nombre, "")},
                         {"_meta_sesion_id", _sesionId},
@@ -627,6 +639,8 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                     Dim contractId = tradeResult?("contract_id")?.ToString()
                     If Not String.IsNullOrWhiteSpace(contractId) Then
                         pend.ContractId = contractId
+                        ' El resultado lo decide Deriv (proposal_open_contract), no la simulacion local.
+                        pend.EsExterna = True
                         ' CRITICAL: persistir el contract_id en BD para que la reconciliacion
                         ' tras reinicio funcione (la query filtra contract_id IS NOT NULL).
                         Try
@@ -647,14 +661,70 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                     End If
 
                     Dim okVal = tradeResult?("ok")?.ToObject(Of Boolean)()
-                    AppLogger.Info(String.Format("[LiveTestMotor] Trade Deriv: {0} | ContractId: {1}",
-                                                If(okVal, "OK", "FALLO"), If(contractId, "N/A")))
+                    AppLogger.Info(String.Format("[LiveTestMotor] Trade Deriv: {0} | ContractId: {1} | {2} {3}{4}",
+                                                If(okVal, "OK", "FALLO"), If(contractId, "N/A"),
+                                                durContrato, unidadDeriv,
+                                                If(okVal, "", " | " & If(tradeResult?("error")?.ToString(), ""))))
+
+                    ' Sin contrato en Deriv: no hay operacion real. Se descarta en vez de dejar
+                    ' que la simulacion la "resuelva" como ganancia/perdida fantasma.
+                    If String.IsNullOrWhiteSpace(contractId) Then
+                        Dim porRiesgo = tradeResult?("bloqueado_por_riesgo") IsNot Nothing
+                        Await DescartarPendienteAsync(pend, If(porRiesgo, "BloqueadaRiesgo", "NoEjecutada"))
+                    End If
                 Catch ex As Exception
                     AppLogger.Warn("[LiveTestMotor] Error ejecutando trade en Deriv: " & ex.Message)
+                    fallaEjecucion = True
                 End Try
+                ' (VB no permite Await dentro de Catch)
+                If fallaEjecucion AndAlso String.IsNullOrWhiteSpace(pend.ContractId) Then
+                    Await DescartarPendienteAsync(pend, "NoEjecutada")
+                End If
             Else
                 AppLogger.Warn("[LiveTestMotor] ExecuteTrade no configurado. Trade registrado solo en BD (sin ejecucion real).")
             End If
+        End Function
+
+        ''' <summary>Quita una operacion que no llego a Deriv y la marca en BD con el motivo.</summary>
+        Private Async Function DescartarPendienteAsync(pend As OperacionPendiente, estado As String) As Task
+            SyncLock _pendientesLock
+                _pendientes.Remove(pend)
+            End SyncLock
+            Try
+                Await _repo.MarcarOperacionNoEjecutadaAsync(pend.OperacionId, estado)
+            Catch ex As Exception
+                AppLogger.Warn("[LiveTestMotor] No se pudo marcar operacion " & pend.OperacionId & " como " & estado & ": " & ex.Message)
+            End Try
+        End Function
+
+        ''' <summary>
+        ''' Convierte "N velas de timeframe" a duracion de contrato Deriv.
+        ''' Devuelve la cantidad y deja la unidad en 'unidad' ("m", "h" o "d").
+        ''' Devuelve 0 si la combinacion no se puede expresar dentro de los limites de Deriv
+        ''' (minutos 1-1440, horas 1-24, dias 1-365).
+        ''' </summary>
+        Public Shared Function DuracionDeriv(timeframe As String, velas As Integer, ByRef unidad As String) As Integer
+            unidad = ""
+            If velas <= 0 OrElse String.IsNullOrWhiteSpace(timeframe) Then Return 0
+            Dim tf = timeframe.Trim().ToLowerInvariant()
+            Dim m = System.Text.RegularExpressions.Regex.Match(tf, "^(\d+)\s*([mhd])$")
+            If Not m.Success Then Return 0
+            Dim n = Integer.Parse(m.Groups(1).Value)
+            Dim minutosPorVela As Integer
+            Select Case m.Groups(2).Value
+                Case "m" : minutosPorVela = n
+                Case "h" : minutosPorVela = n * 60
+                Case "d" : minutosPorVela = n * 1440
+                Case Else : Return 0
+            End Select
+            Dim total As Long = CLng(minutosPorVela) * velas
+            If total <= 1440 Then
+                unidad = "m" : Return CInt(total)
+            End If
+            If total Mod 1440 = 0 AndAlso total \ 1440 <= 365 Then
+                unidad = "d" : Return CInt(total \ 1440)
+            End If
+            Return 0
         End Function
 
     End Class

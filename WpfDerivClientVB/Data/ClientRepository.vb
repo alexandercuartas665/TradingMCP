@@ -337,8 +337,51 @@ Namespace WpfDerivClientVB
                         Await cmd.ExecuteNonQueryAsync()
                     End Using
                 End Using
-            Catch
+            Catch ex As Exception
+                ' Antes era un Catch vacio: un fallo aqui dejaba un contrato real sin registrar.
+                AppLogger.Error("[ClientRepository] No se pudo guardar la operacion " & op.ContractId & " en trading_operations", ex)
             End Try
+        End Function
+
+        ''' <summary>
+        ''' Cierra en trading_operations la operacion con su resultado REAL de Deriv.
+        ''' Solo toca filas aun 'Abierto' (idempotente). Antes nunca se actualizaban:
+        ''' la tabla solo recibia el INSERT al comprar.
+        ''' </summary>
+        Public Async Function CerrarOperacionPorContractAsync(contractId As String, estado As String,
+                                                               profitLoss As Decimal) As Task(Of Integer)
+            If String.IsNullOrEmpty(contractId) Then Return 0
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Dim sql = "UPDATE public.trading_operations SET estado = @est, profit_loss = @pl " &
+                          "WHERE contract_id = @cid AND estado = 'Abierto'"
+                Using cmd As New NpgsqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("est", estado)
+                    cmd.Parameters.AddWithValue("pl", profitLoss)
+                    cmd.Parameters.AddWithValue("cid", contractId)
+                    Return Await cmd.ExecuteNonQueryAsync()
+                End Using
+            End Using
+        End Function
+
+        ''' <summary>contract_id de las operaciones que siguen 'Abierto' (para reconciliar con Deriv).</summary>
+        Public Async Function ObtenerContratosAbiertosAsync(Optional limite As Integer = 500) As Task(Of List(Of String))
+            Dim lista As New List(Of String)()
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Dim sql = "SELECT contract_id FROM public.trading_operations " &
+                          "WHERE estado = 'Abierto' AND COALESCE(contract_id,'') <> '' " &
+                          "ORDER BY created_at DESC LIMIT @lim"
+                Using cmd As New NpgsqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("lim", limite)
+                    Using reader = Await cmd.ExecuteReaderAsync()
+                        While Await reader.ReadAsync()
+                            lista.Add(reader.GetString(0))
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return lista
         End Function
 
         ''' <summary>
