@@ -347,6 +347,12 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Payout real: cotiza CALL y PUT por activo y duracion (proposal, NUNCA compra)
+                If path = "/api/heavy/payouts" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await PayoutsApi(body))
+                    Return
+                End If
+
                 ' La misma regla en varios mercados/temporalidades (diseno vs ciego)
                 If path = "/api/heavy/multimercado" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await MultiMercadoApi(body))
@@ -1111,6 +1117,63 @@ Namespace WpfDerivClientVB.Backtesting
                 {"mercados_con_datos_ciegos", mercadosConDatos},
                 {"mercados_sobre_equilibrio_en_ciego", mercadosSobreEquilibrio},
                 {"mercados", filas}
+            }
+        End Function
+
+        ''' <summary>
+        ''' Mide el payout real que ofrece Deriv ahora mismo. Por cada mercado pide una
+        ''' cotizacion (proposal) CALL y otra PUT con la duracion que usa el backtest
+        ''' (velas x timeframe). No compra nada: las cotizaciones caducan solas.
+        ''' body: {mercados:[[symbol, timeframe, velas], ...], monto=10}
+        ''' </summary>
+        Private Async Function PayoutsApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing OrElse Not TypeOf body("mercados") Is JArray Then
+                Return ErrJson("Body: {mercados:[[symbol, timeframe, velas], ...], monto}")
+            End If
+            Dim svc = DerivTradingService.Instance
+            If Not svc.EstaConectado Then Return ErrJson("Trading no conectado: POST /api/heavy/trading/conectar {""demo"":true}")
+            Dim monto = If(body("monto") IsNot Nothing, CDbl(body("monto")), 10.0)
+            Dim filas As New JArray()
+            For Each m In CType(body("mercados"), JArray)
+                Dim mercado = CType(m, JArray)
+                Dim sym = mercado(0).ToString(), tf = mercado(1).ToString()
+                Dim velas = If(mercado.Count > 2, CInt(mercado(2)), 2)
+                Dim unidad As String = ""
+                Dim dur = LiveTestMotor.DuracionDeriv(tf, velas, unidad)
+                Dim fila As New JObject From {{"symbol", sym}, {"timeframe", tf}, {"velas", velas}, {"duracion", dur.ToString() & unidad}}
+                If dur <= 0 Then
+                    fila("error") = "Duracion no soportada por Deriv"
+                    filas.Add(fila)
+                    Continue For
+                End If
+                Dim pagos As New List(Of Double)()
+                For Each tipo In {"CALL", "PUT"}
+                    Dim c = Await svc.CotizarAsync(tipo, sym, monto, dur, unidad)
+                    ' Deriv limita las cotizaciones por minuto: esperar y reintentar una vez
+                    If If(c?("error")?.ToString(), "").Contains("RateLimit") Then
+                        Await Task.Delay(35000)
+                        c = Await svc.CotizarAsync(tipo, sym, monto, dur, unidad)
+                    End If
+                    If c IsNot Nothing AndAlso c("ok") IsNot Nothing AndAlso CBool(c("ok")) AndAlso CDbl(c("ask_price")) > 0 Then
+                        Dim ask = CDbl(c("ask_price")), pago = CDbl(c("payout"))
+                        Dim pct = Math.Round((pago - ask) / ask * 100.0, 2)
+                        fila(tipo.ToLowerInvariant() & "_payout_pct") = pct
+                        pagos.Add(pct)
+                    Else
+                        fila(tipo.ToLowerInvariant() & "_error") = If(c?("error")?.ToString(), "sin respuesta")
+                    End If
+                    Await Task.Delay(1200)
+                Next
+                If pagos.Count > 0 Then
+                    Dim medio = pagos.Average()
+                    fila("payout_pct") = Math.Round(medio, 2)
+                    fila("punto_equilibrio") = Math.Round(Estadistica.PuntoEquilibrio(CDec(medio)), 4)
+                End If
+                filas.Add(fila)
+            Next
+            Return New JObject From {
+                {"ok", True}, {"medido_utc", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")},
+                {"monto", monto}, {"cuenta", If(svc.EsDemo, "demo", "real")}, {"mercados", filas}
             }
         End Function
 

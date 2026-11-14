@@ -1,0 +1,500 @@
+[
+  {
+    "ok": true,
+    "medido_utc": "2026-11-14T18:19:20Z",
+    "monto": 10.0,
+    "cuenta": "demo",
+    "mercados": [
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 07:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "You have reached the rate limit for proposal. [RateLimit]"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "You have reached the rate limit for proposal. [RateLimit]",
+        "put_error": "Trading is not available from 21:00:00 to 23:59:59. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "This market is presently closed. Market will open at 2026-11-16 00:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 79.3,
+        "put_payout_pct": 77.9,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 79.5,
+        "put_payout_pct": 77.6,
+        "payout_pct": 78.55,
+        "punto_equilibrio": 0.5601
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 79.8,
+        "put_payout_pct": 77.4,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 79.9,
+        "put_payout_pct": 77.2,
+        "payout_pct": 78.55,
+        "punto_equilibrio": 0.5601
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_payout_pct": 80.5,
+        "put_payout_pct": 76.7,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      }
+    ]
+  }
+]
