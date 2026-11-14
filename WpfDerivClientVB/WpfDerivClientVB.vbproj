@@ -47,6 +47,11 @@
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
   </ItemGroup>
 
+  <!-- El proyecto de pruebas puede ver los miembros Friend (puntos de inyeccion) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="WpfDerivClientVB.Tests" />
+  </ItemGroup>
+
   <!-- Estrategias JSON: se copian al output para que el registry las encuentre -->
   <ItemGroup>
     <Content Include="Core\Estrategias\Dinamicas\json\*.json">

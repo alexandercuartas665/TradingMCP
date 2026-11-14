@@ -46,12 +46,31 @@ Namespace WpfDerivClientVB
         Private _reservas As Integer = 0                  ' compras en curso (aun sin contract_id)
         Private _cargado As Boolean = False
 
+        ''' <summary>Solo pruebas: ruta alternativa del archivo de estado.</summary>
+        Friend Property RutaEstadoOverride As String = Nothing
+
         Private ReadOnly Property RutaEstado As String
             Get
+                If Not String.IsNullOrEmpty(RutaEstadoOverride) Then Return RutaEstadoOverride
                 Return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                                     "WpfDerivClientVB", "riesgo_estado.json")
             End Get
         End Property
+
+        ''' <summary>Solo pruebas: olvida el estado en memoria (el proximo acceso relee el archivo).</summary>
+        Friend Sub ReiniciarParaPruebas()
+            SyncLock _lock
+                _cargado = False
+                _fechaUtc = ""
+                _pnlDia = 0D
+                _operacionesDia = 0
+                _killSwitch = False
+                _motivoKill = ""
+                _cerradosDia.Clear()
+                _abiertos.Clear()
+                _reservas = 0
+            End SyncLock
+        End Sub
 
         ' ── Validacion ──────────────────────────────────────────
 

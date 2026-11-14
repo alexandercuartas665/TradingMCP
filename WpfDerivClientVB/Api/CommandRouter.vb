@@ -190,6 +190,13 @@ Namespace WpfDerivClientVB.Servidor
         ''' </summary>
         Private Function VerificarInstruccion(clienteId As String, instruccion As String, parametros As String,
                                               ByRef payloadOut As String) As String
+            Return VerificarInstruccionConSecreto(clienteId, instruccion, parametros,
+                                                  ConfigManager.LoadDbConfig().SignalRSecret, payloadOut)
+        End Function
+
+        ''' <summary>Verificacion con el secreto explicito (la usa VerificarInstruccion y las pruebas).</summary>
+        Friend Function VerificarInstruccionConSecreto(clienteId As String, instruccion As String, parametros As String,
+                                                       secreto As String, ByRef payloadOut As String) As String
             Dim instr = If(instruccion, "").Trim().ToLowerInvariant()
             Dim envoltura = ParsePayload(parametros)
             Dim firmado = envoltura("firma") IsNot Nothing AndAlso envoltura("payload") IsNot Nothing
@@ -203,7 +210,6 @@ Namespace WpfDerivClientVB.Servidor
                 Return "Las instrucciones que modifican estado no se aceptan por broadcast."
             End If
 
-            Dim secreto = ConfigManager.LoadDbConfig().SignalRSecret
             If String.IsNullOrWhiteSpace(secreto) Then
                 Return "SignalRSecret no configurado en db_config.json: solo se aceptan ping y estado.*."
             End If
@@ -243,9 +249,13 @@ Namespace WpfDerivClientVB.Servidor
         ''' propia app envia (p.ej. "Enviar a Servidor Live") pasen la verificacion.
         ''' </summary>
         Public Function FirmarSaliente(instruccion As String, parametrosJson As String) As String
+            Return FirmarSalienteConSecreto(instruccion, parametrosJson, ConfigManager.LoadDbConfig().SignalRSecret)
+        End Function
+
+        ''' <summary>Firma con el secreto explicito (la usa FirmarSaliente y las pruebas).</summary>
+        Friend Function FirmarSalienteConSecreto(instruccion As String, parametrosJson As String, secreto As String) As String
             Dim instr = If(instruccion, "").Trim().ToLowerInvariant()
             If SoloLectura.Contains(instr) Then Return parametrosJson
-            Dim secreto = ConfigManager.LoadDbConfig().SignalRSecret
             If String.IsNullOrWhiteSpace(secreto) Then Return parametrosJson
             Dim actual = ParsePayload(parametrosJson)
             If actual("firma") IsNot Nothing AndAlso actual("payload") IsNot Nothing Then Return parametrosJson
