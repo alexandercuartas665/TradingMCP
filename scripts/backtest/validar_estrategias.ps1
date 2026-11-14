@@ -1,6 +1,6 @@
 # Valida fuera de muestra las mejores configuraciones historicas.
 # Corte = 2026-04-29 (fin de los datos con los que se disenaron las estrategias).
-. 'C:\DesarrolloIA\Traiding\scripts\agent_auth.ps1'
+. (Join-Path $PSScriptRoot '..\agent_auth.ps1')
 $casos = @(
   @('BollingerMomentum_v2','OTC_NDX','1h',2,50,85),
   @('BollingerMomentum_v2','OTC_NDX','1h',2,60,85),
@@ -30,5 +30,5 @@ $filas = foreach ($c in $casos) {
     Ciego_Desde = $b.desde; Ciego_Hasta = $b.hasta
   }
 }
-$filas | ConvertTo-Json -Depth 3 | Set-Content -Encoding utf8 (Join-Path $PSScriptRoot '....docsalidacionalidacion_resultados.json')
+$filas | ConvertTo-Json -Depth 3 | Set-Content -Encoding utf8 (Join-Path $PSScriptRoot '..\..\docs\validacion\validacion_resultados.json')
 $filas | Format-Table Estrategia, Activo, Equilibrio, Dis_Ops, Dis_Win, Dis_IC, Ciego_Ops, Ciego_Win, Ciego_IC, Ciego_Pnl, Veredicto_Ciego -AutoSize | Out-String -Width 250
