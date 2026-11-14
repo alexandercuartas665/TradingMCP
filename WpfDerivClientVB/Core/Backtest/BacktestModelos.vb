@@ -50,6 +50,12 @@ Namespace WpfDerivClientVB.Backtesting
         ''' <summary>Cuantas velas previas incluir en el contexto de una perdida.</summary>
         Public Property GuardarContextoVelas As Integer = 5
         Public Property Cuentas             As New List(Of BacktestCuenta)
+        ''' <summary>
+        ''' Si True, no se abre una operacion mientras otra siga en curso: cada resultado
+        ''' es independiente y la estadistica (win rate, intervalo de confianza) es honesta.
+        ''' False conserva el comportamiento historico (operaciones solapadas).
+        ''' </summary>
+        Public Property UnaPosicionALaVez   As Boolean = False
     End Class
 
     ''' <summary>
@@ -107,6 +113,12 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property Sesion         As BacktestSesion
         Public Property Operaciones    As New List(Of BacktestOperacion)
         Public Property CuentasFinales As New List(Of BacktestCuenta)
+        ''' <summary>Senales que no se operaron porque el contrato cruzaba un hueco de datos.</summary>
+        Public Property DescartadasPorHueco As Integer
+        ''' <summary>Senales validas ignoradas porque ya habia una operacion en curso (UnaPosicionALaVez).</summary>
+        Public Property OmitidasPorPosicionAbierta As Integer
+        ''' <summary>Total de senales no NEUTRAL (antes del filtro de confianza).</summary>
+        Public Property TotalSenales As Integer
 
         Public ReadOnly Property OperacionesPerdidas As List(Of BacktestOperacion)
             Get

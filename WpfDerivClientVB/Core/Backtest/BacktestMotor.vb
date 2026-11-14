@@ -62,6 +62,79 @@ Namespace WpfDerivClientVB.Backtesting
 
             Reportar(progreso, String.Format("{0} velas cargadas. Iniciando simulacion...", todasLasVelas.Count))
 
+            ' -- FASE 1: Simulacion (funcion pura, sin BD) ---------------------------
+            Dim sim = Simular(todasLasVelas, estrategia, config, progreso, progresoMetricas, ct)
+            Dim cuentas = sim.CuentasFinales
+            Dim operaciones = sim.Operaciones
+            Dim totalSenales = sim.TotalSenales
+            If sim.DescartadasPorHueco > 0 OrElse sim.OmitidasPorPosicionAbierta > 0 Then
+                Reportar(progreso, String.Format("Senales descartadas: {0} por hueco de datos, {1} por posicion abierta.",
+                                                 sim.DescartadasPorHueco, sim.OmitidasPorPosicionAbierta))
+            End If
+
+            ' -- FASE 2: Metricas ------------------------------------------------
+            Reportar(progreso, "Calculando metricas...")
+            Dim sesion = CalcularMetricas(config, estrategia.Nombre, cuentas, operaciones, totalSenales)
+
+            ' -- FASE 3: Log de perdidas ------------------------------------------
+            For Each op In operaciones
+                If op.Estado = "Perdido" Then
+                    AppLogger.Warn(String.Format(
+                        "[BACKTEST-PERDIDA] Sesion={0} Cuenta={1} Tipo={2} Epoch={3} " &
+                        "Entrada={4:F5} Salida={5:F5} Confianza={6} Motivo={7} Datos={8}",
+                        sesion.Estrategia, op.CuentaNombre, op.Tipo, op.EpochEntrada,
+                        op.PrecioEntrada, op.PrecioSalida, op.Confianza,
+                        op.MotivoSenal, op.DatosIndicadores))
+                End If
+            Next
+
+            ' -- FASE 4: Guardar en BD -------------------------------------------
+            Reportar(progreso, "Guardando en base de datos...")
+            Dim btRepo As New BacktestRepository()
+            Await btRepo.EnsureTablesExistAsync()
+            sim.Sesion = sesion
+            Dim sesionId = Await btRepo.GuardarSesionConOperacionesAsync(sim)
+            sim.Sesion.Id = sesionId
+
+            Reportar(progreso, String.Format("Backtest completado. Sesion ID={0}. {1} operaciones, WinRate={2:P1}",
+                sesionId, sesion.TotalOperaciones, sesion.WinRate))
+            Return sim
+        End Function
+
+        ''' <summary>Segundos por vela del timeframe ("1m", "15m", "1h", "4h", "1d"...). 0 si no se reconoce.</summary>
+        Public Shared Function SegundosTimeframe(timeframe As String) As Integer
+            If String.IsNullOrWhiteSpace(timeframe) Then Return 0
+            Dim m = System.Text.RegularExpressions.Regex.Match(timeframe.Trim().ToLowerInvariant(), "^(\d+)\s*([smhd])$")
+            If Not m.Success Then Return 0
+            Dim n = Integer.Parse(m.Groups(1).Value)
+            Select Case m.Groups(2).Value
+                Case "s" : Return n
+                Case "m" : Return n * 60
+                Case "h" : Return n * 3600
+                Case "d" : Return n * 86400
+            End Select
+            Return 0
+        End Function
+
+        ''' <summary>
+        ''' Simulacion del backtest sobre velas ya cargadas (sin BD: se puede probar).
+        '''
+        ''' Reglas, alineadas con lo que se opera en Deriv:
+        '''  - La senal se evalua con la vela i ya cerrada y se entra al cierre de i.
+        '''  - El contrato dura DuracionVelas x timeframe: sale al cierre de la vela que
+        '''    termina exactamente ese tiempo despues (i + N, si no faltan velas).
+        '''  - Si en ese tramo faltan velas (fin de semana / hueco de datos) la operacion
+        '''    se DESCARTA: en Deriv ese contrato habria durado otra cosa.
+        '''  - Empate (salida = entrada) es perdida, como en Deriv rise/fall.
+        '''  - UnaPosicionALaVez: no se abre otra operacion mientras una siga en curso.
+        ''' </summary>
+        Public Shared Function Simular(todasLasVelas As List(Of CandleModel),
+                                       estrategia As IEstrategia,
+                                       config As BacktestConfig,
+                                       Optional progreso As IProgress(Of String) = Nothing,
+                                       Optional progresoMetricas As IProgress(Of BacktestProgresoMetricas) = Nothing,
+                                       Optional ct As CancellationToken = Nothing) As BacktestResultado
+
             ' -- Clonar cuentas para no mutar el config original ------------------
             Dim cuentas As New List(Of BacktestCuenta)()
             For Each c In config.Cuentas
@@ -73,13 +146,24 @@ Namespace WpfDerivClientVB.Backtesting
                 })
             Next
 
-            ' -- FASE 1: Sliding window -------------------------------------------
+            ' Duracion del contrato en segundos (si el timeframe no se reconoce, se
+            ' infiere del espaciado mas comun entre velas consecutivas)
+            Dim tfSeg As Long = SegundosTimeframe(config.Timeframe)
+            If tfSeg <= 0 AndAlso todasLasVelas.Count > 2 Then
+                tfSeg = todasLasVelas.Zip(todasLasVelas.Skip(1), Function(a, b) b.Epoch - a.Epoch).
+                        GroupBy(Function(d) d).OrderByDescending(Function(g) g.Count()).First().Key
+            End If
+            Dim duracionSeg As Long = tfSeg * config.DuracionVelas
+
             Dim operaciones As New List(Of BacktestOperacion)()
             Dim totalSenales As Integer = 0
             Dim totalOps As Integer = 0
             Dim totalGanadas As Integer = 0
             Dim totalPerdidas As Integer = 0
             Dim pnlAcumulado As Decimal = 0D
+            Dim descartadasHueco As Integer = 0
+            Dim omitidasPosicion As Integer = 0
+            Dim libreDesdeIndice As Integer = -1   ' con UnaPosicionALaVez: indice de la vela de salida en curso
 
             Dim iMax = todasLasVelas.Count - config.DuracionVelas - 1
             For i = config.VentanaIndicadores - 1 To iMax
@@ -109,9 +193,21 @@ Namespace WpfDerivClientVB.Backtesting
                 totalSenales += 1
                 If resultado.Confianza < config.MinConfianza Then Continue For
 
-                ' Vela de entrada y de salida
+                ' Una sola posicion a la vez: ignorar senales mientras otra este en curso
+                If config.UnaPosicionALaVez AndAlso i < libreDesdeIndice Then
+                    omitidasPosicion += 1
+                    Continue For
+                End If
+
+                ' Vela de entrada y de salida POR TIEMPO: la de salida debe cerrar exactamente
+                ' DuracionVelas x timeframe despues. Si faltan velas en el tramo, se descarta.
                 Dim velaEntrada = todasLasVelas(i)
                 Dim velaSalida  = todasLasVelas(i + config.DuracionVelas)
+                If tfSeg > 0 AndAlso velaSalida.Epoch - velaEntrada.Epoch <> duracionSeg Then
+                    descartadasHueco += 1
+                    Continue For
+                End If
+                If config.UnaPosicionALaVez Then libreDesdeIndice = i + config.DuracionVelas
 
                 ' Logica de opciones binarias
                 Dim esPrecioSubio = velaSalida.ClosePrice > velaEntrada.ClosePrice
@@ -187,40 +283,14 @@ Namespace WpfDerivClientVB.Backtesting
                 .PnlActual = pnlAcumulado
             })
 
-            ' -- FASE 2: Metricas ------------------------------------------------
-            Reportar(progreso, "Calculando metricas...")
-            Dim sesion = CalcularMetricas(config, estrategia.Nombre, cuentas, operaciones, totalSenales)
-
-            ' -- FASE 3: Log de perdidas ------------------------------------------
-            For Each op In operaciones
-                If op.Estado = "Perdido" Then
-                    AppLogger.Warn(String.Format(
-                        "[BACKTEST-PERDIDA] Sesion={0} Cuenta={1} Tipo={2} Epoch={3} " &
-                        "Entrada={4:F5} Salida={5:F5} Confianza={6} Motivo={7} Datos={8}",
-                        sesion.Estrategia, op.CuentaNombre, op.Tipo, op.EpochEntrada,
-                        op.PrecioEntrada, op.PrecioSalida, op.Confianza,
-                        op.MotivoSenal, op.DatosIndicadores))
-                End If
-            Next
-
-            ' -- FASE 4: Guardar en BD -------------------------------------------
-            Reportar(progreso, "Guardando en base de datos...")
-            Dim btRepo As New BacktestRepository()
-            Await btRepo.EnsureTablesExistAsync()
-
-            Dim resultado2 As New BacktestResultado With {
-                .Sesion         = sesion,
-                .Operaciones    = operaciones,
-                .CuentasFinales = cuentas
+            Return New BacktestResultado With {
+                .Operaciones = operaciones,
+                .CuentasFinales = cuentas,
+                .TotalSenales = totalSenales,
+                .DescartadasPorHueco = descartadasHueco,
+                .OmitidasPorPosicionAbierta = omitidasPosicion,
+                .Sesion = CalcularMetricas(config, estrategia.Nombre, cuentas, operaciones, totalSenales)
             }
-
-            Dim sesionId = Await btRepo.GuardarSesionConOperacionesAsync(resultado2)
-            resultado2.Sesion.Id = sesionId
-
-            Reportar(progreso, String.Format("Backtest completado. Sesion ID={0}. {1} operaciones, WinRate={2:P1}",
-                sesionId, sesion.TotalOperaciones, sesion.WinRate))
-
-            Return resultado2
         End Function
 
         ' ================================================================
