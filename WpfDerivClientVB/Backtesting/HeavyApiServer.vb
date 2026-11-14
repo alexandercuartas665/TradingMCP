@@ -185,6 +185,22 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' --- Gestor de riesgo (Infrastructure/RiskManager.vb) ---
+                If path = "/api/heavy/riesgo/estado" AndAlso method = "GET" Then
+                    Await WriteJson(res, 200, RiskManager.GetEstado())
+                    Return
+                End If
+                If path = "/api/heavy/riesgo/parar" AndAlso method = "POST" Then
+                    RiskManager.ActivarParada(If(body?("motivo")?.ToString(), "Parada por API"))
+                    Await WriteJson(res, 200, RiskManager.GetEstado())
+                    Return
+                End If
+                If path = "/api/heavy/riesgo/reanudar" AndAlso method = "POST" Then
+                    RiskManager.DesactivarParada()
+                    Await WriteJson(res, 200, RiskManager.GetEstado())
+                    Return
+                End If
+
                 If path = "/api/heavy/activos" Then
                     Await WriteJson(res, 200, Await BuildActivos())
                     Return

@@ -977,6 +977,7 @@ Namespace WpfDerivClientVB
                             txtTradeResult.Text = msgBuy
                             txtTradeResult.Foreground = New SolidColorBrush(Colors.LightGreen)
                             GuardarOperacionBD(op)
+                            RiskManager.RegistrarApertura(op.ContractId, op.Monto)
                             SuscribirContratoAsync(op.ContractId)
                             If _pendingApiTrade IsNot Nothing Then
                                 Dim apiResult = New JObject From {
@@ -999,6 +1000,14 @@ Namespace WpfDerivClientVB
                             Dim contractId = poc("contract_id")?.ToString()
                             Dim status = poc("status")?.ToString()
                             Dim profit As Decimal = If(poc("profit") IsNot Nothing, CDec(poc("profit")), 0)
+
+                            ' Gestor de riesgo: contabilizar el resultado REAL al cerrarse el contrato
+                            ' (won / lost / vendido antes de tiempo). Idempotente por contract_id.
+                            Dim vendido = poc("is_sold") IsNot Nothing AndAlso poc("is_sold").ToString() = "1"
+                            If status = "won" OrElse status = "lost" OrElse status = "sold" OrElse vendido Then
+                                RiskManager.RegistrarCierre(contractId, profit)
+                            End If
+
                             Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
                             If op IsNot Nothing Then
                                 Dim estadoPrevio = op.Estado

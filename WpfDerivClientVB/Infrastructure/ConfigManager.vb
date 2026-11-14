@@ -36,6 +36,16 @@ Namespace WpfDerivClientVB
         ''' </summary>
         Public Property PermitirRealRemoto As Boolean = False
 
+        ' ── Gestor de riesgo (ver Infrastructure/RiskManager.vb) ──
+        ''' <summary>Stake maximo por operacion automatica (USD).</summary>
+        Public Property RiesgoMontoMaximo As Decimal = 2D
+        ''' <summary>Perdida maxima del dia UTC (USD, resultados reales de Deriv). 0 = sin limite.</summary>
+        Public Property RiesgoPerdidaMaximaDiaria As Decimal = 10D
+        ''' <summary>Contratos abiertos a la vez (incluye compras en curso). 0 = sin limite.</summary>
+        Public Property RiesgoMaxContratosAbiertos As Integer = 3
+        ''' <summary>Si False (por defecto), las operaciones automaticas solo se ejecutan en cuenta DEMO.</summary>
+        Public Property PermitirRealAutomatico As Boolean = False
+
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.
         ''' </summary>

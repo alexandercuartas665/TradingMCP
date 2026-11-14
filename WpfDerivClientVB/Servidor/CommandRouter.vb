@@ -144,6 +144,16 @@ Namespace WpfDerivClientVB.Servidor
                     If sid <= 0 Then Return New JObject From {{"ok", False}, {"error", "sesion_id requerido"}}
                     Return ctrl.GetEstadoMotor(sid)
 
+                Case "riesgo.estado"
+                    Return RiskManager.GetEstado()
+
+                Case "riesgo.parar"
+                    ' Detener todo remotamente esta permitido (firmado). Reanudar NO:
+                    ' solo en local (API 8766 o UI), para que un servidor comprometido
+                    ' no pueda levantar una parada de emergencia.
+                    RiskManager.ActivarParada("Remota (SignalR): " & StrFromPayload(payload, "motivo", "sin motivo"))
+                    Return RiskManager.GetEstado()
+
                 Case "reanudar.activas"
                     Dim n = Await ctrl.ReanudarActivasAsync()
                     Return New JObject From {{"ok", True}, {"reanudadas", n}}
@@ -168,7 +178,7 @@ Namespace WpfDerivClientVB.Servidor
         ' - Broadcasts ("ALL") nunca pueden ejecutar instrucciones que modifican estado.
 
         Private ReadOnly SoloLectura As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {
-            "ping", "estado.consultar", "estado.motor"
+            "ping", "estado.consultar", "estado.motor", "riesgo.estado"
         }
         Private Const VentanaSegundos As Integer = 120
         Private ReadOnly _noncesVistos As New Dictionary(Of String, DateTime)()

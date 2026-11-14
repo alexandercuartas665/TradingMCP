@@ -277,23 +277,23 @@ Namespace WpfDerivClientVB
                         If monto <= 0 Then monto = 1.0
                         If duracion <= 0 Then duracion = 5
 
-                        Dim autoReq As New JObject()
-                        autoReq.Add("proposal", 1)
-                        autoReq.Add("amount", monto)
-                        autoReq.Add("basis", "stake")
-                        autoReq.Add("contract_type", recomendacion)
-                        autoReq.Add("currency", "USD")
-                        autoReq.Add("duration", duracion)
-                        autoReq.Add("duration_unit", "t")
-                        autoReq.Add("underlying_symbol", symbol)
-
-                        _pendingProposalAmount = monto
-                        _modoAvanzado = False
-
-                        Dim autoBytes As Byte() = Encoding.UTF8.GetBytes(autoReq.ToString())
-                        Await _tradingWs.SendAsync(New ArraySegment(Of Byte)(autoBytes), WebSocketMessageType.Text, True, _tradingCts.Token)
-
-                        txtAnalisisResult.Text = txtAnalisisResult.Text & Environment.NewLine & String.Format("🤖 Operación {0} enviada automáticamente.", recomendacion)
+                        ' Pasa por ApiExecuteTrade para quedar sujeto al gestor de riesgo
+                        ' (antes enviaba la propuesta directo al WebSocket, sin limites).
+                        Dim autoBody As New JObject From {
+                            {"contract_type", recomendacion},
+                            {"symbol", symbol},
+                            {"amount", monto},
+                            {"basis", "stake"},
+                            {"currency", "USD"},
+                            {"duration", duracion},
+                            {"duration_unit", "t"}
+                        }
+                        Dim autoRes = Await ApiExecuteTrade(autoBody)
+                        Dim autoOk = autoRes("ok") IsNot Nothing AndAlso CBool(autoRes("ok"))
+                        txtAnalisisResult.Text = txtAnalisisResult.Text & Environment.NewLine &
+                            If(autoOk,
+                               String.Format("🤖 Operación {0} ejecutada automáticamente.", recomendacion),
+                               "⛔ Operación automática no ejecutada: " & If(autoRes("error")?.ToString(), "error desconocido"))
                     Else
                         txtAnalisisResult.Text = txtAnalisisResult.Text & Environment.NewLine & "⚠ Trading no conectado. No se ejecutó operación."
                     End If
@@ -358,6 +358,21 @@ Namespace WpfDerivClientVB
                 Return New JObject From {{"ok", False}, {"error", "Requeridos: contract_type, symbol, amount > 0"}}
             End If
 
+            ' ── Gestor de riesgo: valida y reserva cupo ANTES de enviar nada a Deriv ──
+            Dim motivoRiesgo = RiskManager.ValidarYReservar(CDec(amount), _tradingEsDemo)
+            If motivoRiesgo <> "" Then
+                Return New JObject From {{"ok", False}, {"error", "Riesgo: " & motivoRiesgo}, {"bloqueado_por_riesgo", True}}
+            End If
+            Try
+                Return Await EjecutarTradeAprobadoAsync(body, contractType, symbol, amount)
+            Finally
+                RiskManager.LiberarReserva()
+            End Try
+        End Function
+
+        ''' <summary>Envia el trade a Deriv. Solo se llama tras pasar el gestor de riesgo.</summary>
+        Private Async Function EjecutarTradeAprobadoAsync(body As JObject, contractType As String,
+                                                         symbol As String, amount As Double) As Task(Of JObject)
             ' Capturar metadata de estrategia (no se envia a Deriv) para taggear la op
             ' en el "buy" handler cuando se cree el OperacionModel.
             _proxTradeEstrategia = If(body("_meta_estrategia")?.ToString(), "")
