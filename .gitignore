@@ -98,3 +98,6 @@ Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 ProfilePictures.db
+
+# Secretos locales
+.env

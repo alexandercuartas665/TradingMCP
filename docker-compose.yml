@@ -7,10 +7,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: traiding_user
-      POSTGRES_PASSWORD: traiding_pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD en .env}
       POSTGRES_DB: traiding_db
     ports:
-      - "8083:5432"
+      - "127.0.0.1:8083:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
