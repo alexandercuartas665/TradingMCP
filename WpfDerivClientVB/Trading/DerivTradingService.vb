@@ -86,6 +86,17 @@ Namespace WpfDerivClientVB.Servidor
             End Get
         End Property
 
+        ''' <summary>
+        ''' True si hay una conexion iniciada que se cayo y el bucle de escucha esta
+        ''' reintentando (no hay que llamar ConectarAsync en paralelo).
+        ''' </summary>
+        Public ReadOnly Property ReconexionEnCurso As Boolean
+            Get
+                Dim cts = _cts
+                Return cts IsNot Nothing AndAlso Not cts.IsCancellationRequested AndAlso Not EstaConectado
+            End Get
+        End Property
+
         Public ReadOnly Property EsDemo As Boolean
             Get
                 Return _esDemo

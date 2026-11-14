@@ -696,6 +696,32 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
         ''' rechazada o bloqueada por el gestor de riesgo). Antes quedaba 'Pendiente' y
         ''' el motor la "resolvia" con la simulacion de velas: ganancia/perdida fantasma.
         ''' </summary>
+        ''' <summary>Marca en las notas de una sesion live que el modo autonomo debe reanudarla.</summary>
+        Public Const MARCA_AUTONOMO As String = "[autonomo]"
+
+        ''' <summary>
+        ''' Activa o quita la reanudacion automatica de una sesion (marca en la columna notas).
+        ''' El modo autonomo solo reanuda las sesiones marcadas.
+        ''' </summary>
+        Public Async Function MarcarReanudacionAutomaticaAsync(sesionId As Integer, activar As Boolean) As Task(Of Boolean)
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Dim sql = If(activar,
+                    "UPDATE public.backtest_sesiones SET notas = TRIM(COALESCE(notas, '') || ' ' || @m) " &
+                    "WHERE id = @id AND POSITION(@m IN COALESCE(notas, '')) = 0;",
+                    "UPDATE public.backtest_sesiones SET notas = TRIM(REPLACE(COALESCE(notas, ''), @m, '')) WHERE id = @id;")
+                Using cmd As New NpgsqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("m", MARCA_AUTONOMO)
+                    cmd.Parameters.AddWithValue("id", sesionId)
+                    Await cmd.ExecuteNonQueryAsync()
+                End Using
+                Using cmd As New NpgsqlCommand("SELECT COUNT(*) FROM public.backtest_sesiones WHERE id = @id;", conn)
+                    cmd.Parameters.AddWithValue("id", sesionId)
+                    Return CLng(Await cmd.ExecuteScalarAsync()) > 0
+                End Using
+            End Using
+        End Function
+
         Public Async Function MarcarOperacionNoEjecutadaAsync(operacionId As Integer, estado As String) As Task
             If operacionId <= 0 Then Return
             Using conn As New NpgsqlConnection(_connectionString)

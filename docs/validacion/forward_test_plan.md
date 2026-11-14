@@ -64,5 +64,15 @@ pwsh -File scripts\live\forward_test.ps1 -Accion reanudar   # tras reiniciar la 
 pwsh -File scripts\live\forward_test.ps1 -Accion detener    # al terminar
 ```
 
-La app debe quedar abierta (`WpfDerivClientVB.exe --heavy-api --minimized`) y conectada a la demo.
-Si el PC se apaga, las velas de ese tiempo se pierden; al volver, `reanudar`.
+La app corre en **modo autónomo** (`WpfDerivClientVB.exe --heavy-api --minimized --autonomo`),
+que arranca solo al iniciar sesión en Windows (`scripts\live\inicio_automatico.ps1 -Accion instalar`):
+
+- conecta la cuenta demo y reintenta cada minuto si no puede;
+- reanuda solo las sesiones marcadas `[autonomo]` (las del forward test se marcan al iniciarlas);
+- avisa por WhatsApp si la conexión lleva más de 15 min caída o una sesión se queda sin velas
+  con el mercado abierto, y avisa al recuperarse;
+- cada día a las 22:10 UTC actualiza las velas y hace una copia de seguridad sin credenciales.
+
+Requisito: Docker Desktop debe arrancar al iniciar sesión (Settings > General). Si el PC está apagado,
+las velas de ese tiempo no se operan; la descarga diaria rellena el histórico.
+Estado en cualquier momento: `GET /api/heavy/salud`.

@@ -73,7 +73,8 @@ Namespace WpfDerivClientVB
                                              symbol As String,
                                              timeframe As String,
                                              candles As IEnumerable(Of CandleModel),
-                                             isClosed As Boolean) As Task
+                                             isClosed As Boolean,
+                                             Optional actualizarExistentes As Boolean = False) As Task
             Try
                 Using conn As New NpgsqlConnection(_connectionString)
                     Await conn.OpenAsync()
@@ -85,7 +86,11 @@ Namespace WpfDerivClientVB
                             "  (platform, symbol, timeframe, epoch, open_time, open_price, high_price, low_price, close_price, is_closed) " &
                             "VALUES " &
                             "  (@platform, @symbol, @timeframe, @epoch, @open_time, @open_price, @high_price, @low_price, @close_price, @is_closed) " &
-                            "ON CONFLICT (platform, symbol, timeframe, epoch) DO NOTHING;"
+                            If(actualizarExistentes,
+                               "ON CONFLICT (platform, symbol, timeframe, epoch) DO UPDATE SET " &
+                               "  open_price = EXCLUDED.open_price, high_price = EXCLUDED.high_price, " &
+                               "  low_price = EXCLUDED.low_price, close_price = EXCLUDED.close_price, is_closed = EXCLUDED.is_closed;",
+                               "ON CONFLICT (platform, symbol, timeframe, epoch) DO NOTHING;")
 
                         For Each candle In candles
                             Using cmd As New NpgsqlCommand(sql, conn, tx)
@@ -107,6 +112,24 @@ Namespace WpfDerivClientVB
         ''' Cuenta cuantas velas hay guardadas para un activo/temporalidad.
         ''' Util para verificar que la persistencia funciona.
         ''' </summary>
+        ''' <summary>Series guardadas (symbol, timeframe) con el epoch de su ultima vela.</summary>
+        Public Async Function ListarSeriesAsync(platform As String) As Task(Of List(Of Tuple(Of String, String, Long)))
+            Dim res As New List(Of Tuple(Of String, String, Long))()
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Using cmd As New NpgsqlCommand(
+                    "SELECT symbol, timeframe, MAX(epoch) FROM public.candles WHERE platform = @p GROUP BY symbol, timeframe ORDER BY symbol, timeframe;", conn)
+                    cmd.Parameters.AddWithValue("p", platform)
+                    Using rd = Await cmd.ExecuteReaderAsync()
+                        While Await rd.ReadAsync()
+                            res.Add(Tuple.Create(rd.GetString(0), rd.GetString(1), rd.GetInt64(2)))
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return res
+        End Function
+
         Public Async Function CountAsync(platform As String,
                                          symbol As String,
                                          timeframe As String) As Task(Of Long)

@@ -44,6 +44,8 @@ Public Class BackgroundStreamingSubscriber
         Public UltimaEmitida As Long          ' epoch de apertura de la ultima vela cerrada emitida
         Public ProximaConsulta As Long        ' epoch UTC en que toca consultar
         Public FallosSeguidos As Integer
+        Public MercadoAbierto As Boolean      ' la ultima respuesta traia una vela abierta
+        Public UltimaRespuestaUtc As Long     ' epoch de la ultima consulta correcta
     End Class
 
     Private ReadOnly _subs As New Dictionary(Of String, Suscripcion)()
@@ -184,6 +186,7 @@ Public Class BackgroundStreamingSubscriber
             Return
         End If
         s.FallosSeguidos = 0
+        s.UltimaRespuestaUtc = ahora
         Dim velas = TryCast(r("candles"), JArray)
 
         If Not s.Inicializada Then
@@ -202,6 +205,26 @@ Public Class BackgroundStreamingSubscriber
         End If
 
         s.ProximaConsulta = ProximaConsulta(velas, s.Granularidad, ahora)
+        s.MercadoAbierto = s.ProximaConsulta <> ahora + SEGUNDOS_SIN_VELA_ABIERTA
+    End Function
+
+    ''' <summary>Estado de cada suscripcion (para la vigilancia y /api/heavy/salud).</summary>
+    Public Function Estado() As JArray
+        Dim res As New JArray()
+        Dim ahora = AhoraEpoch.Invoke()
+        SyncLock _lock
+            For Each s In _subs.Values
+                res.Add(New JObject From {
+                    {"symbol", s.Symbol}, {"timeframe", s.Timeframe}, {"granularidad", s.Granularidad},
+                    {"inicializada", s.Inicializada}, {"mercado_abierto", s.MercadoAbierto},
+                    {"ultima_vela_epoch", s.UltimaEmitida},
+                    {"minutos_desde_ultima_vela", If(s.UltimaEmitida > 0, Math.Round((ahora - s.UltimaEmitida - s.Granularidad) / 60.0, 1), -1.0)},
+                    {"fallos_seguidos", s.FallosSeguidos},
+                    {"minutos_desde_ultima_respuesta", If(s.UltimaRespuestaUtc > 0, Math.Round((ahora - s.UltimaRespuestaUtc) / 60.0, 1), -1.0)}
+                })
+            Next
+        End SyncLock
+        Return res
     End Function
 
     ''' <summary>
