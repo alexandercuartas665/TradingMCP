@@ -66,6 +66,21 @@ Namespace WpfDerivClientVB.Backtesting
         ''' </summary>
         Public Property StartEjecucion As Func(Of Integer, Task)
 
+        ' Servicio de descarga historica (standalone: Deriv WS publico + Postgres).
+        ' Lazy-init para no abrir recursos si nadie descarga.
+        Private _descarga As DescargaService = Nothing
+        Private ReadOnly _descargaLock As New Object()
+        Private ReadOnly Property Descarga As DescargaService
+            Get
+                SyncLock _descargaLock
+                    If _descarga Is Nothing Then
+                        _descarga = New DescargaService(New CandleRepository(ConnectionString))
+                    End If
+                    Return _descarga
+                End SyncLock
+            End Get
+        End Property
+
         Public Sub New(port As Integer)
             _Port = port
         End Sub
@@ -127,7 +142,15 @@ Namespace WpfDerivClientVB.Backtesting
             Dim req = ctx.Request
             Dim res = ctx.Response
             res.ContentType = "application/json; charset=utf-8"
-            res.Headers.Add("Access-Control-Allow-Origin", "*")
+            ' Sin CORS: solo clientes locales con token (ver Infrastructure/AgentAuth.vb)
+
+            ' --- Autenticacion: header X-Agent-Token obligatorio ---
+            Dim motivoRechazo = AgentAuth.Validar(req)
+            If motivoRechazo <> "" Then
+                Log("[HeavyApi] RECHAZADO " & req.HttpMethod & " " & req.Url.AbsolutePath & ": " & motivoRechazo)
+                Await WriteJson(res, 401, New JObject From {{"ok", False}, {"error", motivoRechazo}})
+                Return
+            End If
 
             Dim path = req.Url.AbsolutePath.TrimEnd("/"c).ToLower()
             Dim method = req.HttpMethod.ToUpper()
@@ -293,6 +316,21 @@ Namespace WpfDerivClientVB.Backtesting
                 ' ── MODO AGENTE: abrir ventanas ──────────────────────────
                 If path = "/api/heavy/app/ventana" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, AbrirVentana(body))
+                    Return
+                End If
+
+                ' ── MODO AGENTE: descarga historica (Deriv → Postgres) ───
+                If path = "/api/heavy/historico/descargar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await HistoricoDescargar(body))
+                    Return
+                End If
+                If path = "/api/heavy/historico/estado" Then
+                    Await WriteJson(res, 200, HistoricoEstado())
+                    Return
+                End If
+                If path = "/api/heavy/historico/detener" AndAlso method = "POST" Then
+                    Descarga.Detener()
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"mensaje", "Detencion solicitada."}})
                     Return
                 End If
 
@@ -820,17 +858,74 @@ Namespace WpfDerivClientVB.Backtesting
         End Function
 
         Private Async Function TradingConectar(body As JObject) As Task(Of JObject)
+            Dim demo = If(body?("demo") IsNot Nothing, CBool(body("demo")), True)
+            Dim cliente = If(body?("cliente")?.ToString(), "")
+            ' Seguridad (primera comprobacion): la cuenta REAL no se conecta por API
+            ' salvo permiso local explicito en db_config.json.
+            If Not demo AndAlso Not ConfigManager.LoadDbConfig().PermitirRealRemoto Then
+                Log("[HeavyApi] BLOQUEADO: intento de conectar cuenta REAL por API.")
+                Return ErrJson("Conectar la cuenta REAL por API esta bloqueado. Para permitirlo, pon ""PermitirRealRemoto"": true en db_config.json.")
+            End If
             Dim svc = TradingServiceLocator.Current
             If svc Is Nothing Then
                 Return ErrJson("TradingService no registrado. Abre la ventana de trading primero: POST /api/heavy/app/ventana {""nombre"":""trading""}")
             End If
-            Dim demo = If(body?("demo") IsNot Nothing, CBool(body("demo")), True)
-            Dim cliente = If(body?("cliente")?.ToString(), "")
             Try
                 Return Await svc.ConectarTradingAsync(demo, cliente)
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
+        End Function
+
+        Private Async Function HistoricoDescargar(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body: {symbol, timeframe, desde:YYYY-MM-DD, hasta:YYYY-MM-DD}")
+            Dim symbol = If(body("symbol")?.ToString(), "")
+            Dim tf = If(body("timeframe")?.ToString(), "")
+            Dim desdeStr = If(body("desde")?.ToString(), "")
+            Dim hastaStr = If(body("hasta")?.ToString(), DateTime.UtcNow.ToString("yyyy-MM-dd"))
+            If symbol = "" OrElse tf = "" OrElse desdeStr = "" Then
+                Return ErrJson("symbol, timeframe y desde son obligatorios")
+            End If
+            Dim fromD, toD As DateTime
+            If Not DateTime.TryParse(desdeStr, fromD) Then Return ErrJson("Fecha 'desde' invalida (use YYYY-MM-DD)")
+            If Not DateTime.TryParse(hastaStr, toD) Then Return ErrJson("Fecha 'hasta' invalida (use YYYY-MM-DD)")
+
+            If Descarga.EstaDescargando Then
+                Return New JObject From {
+                    {"ok", False}, {"error", "Ya hay una descarga en curso."},
+                    {"estado", EstadoDescargaJson(Descarga.ObtenerEstado())}
+                }
+            End If
+
+            ' Lanzar en background — el cliente pollea /api/heavy/historico/estado
+            Dim _t = Task.Run(Async Function()
+                                  Try
+                                      Await Descarga.DescargarAsync(symbol, tf, fromD, toD)
+                                  Catch ex As Exception
+                                      Log("[Historico] Error: " & ex.Message)
+                                  End Try
+                              End Function)
+            Await Task.Delay(300)
+            Return New JObject From {
+                {"ok", True},
+                {"mensaje", String.Format("Descarga iniciada: {0} {1} {2}→{3}. Pollear /api/heavy/historico/estado.",
+                                           symbol, tf, fromD.ToString("yyyy-MM-dd"), toD.ToString("yyyy-MM-dd"))}
+            }
+        End Function
+
+        Private Function HistoricoEstado() As JObject
+            Dim e = Descarga.ObtenerEstado()
+            Return New JObject From {{"ok", True}, {"estado", EstadoDescargaJson(e)}}
+        End Function
+
+        Private Function EstadoDescargaJson(e As DescargaJobEstado) As JObject
+            Return New JObject From {
+                {"symbol", e.Symbol}, {"timeframe", e.Timeframe},
+                {"desde", e.Desde}, {"hasta", e.Hasta},
+                {"activo", e.EstaActivo}, {"completado", e.Completado},
+                {"error", e.TuvoError}, {"velas_guardadas", e.VelasGuardadas},
+                {"pagina", e.Pagina}, {"mensaje", e.UltimoMensaje}
+            }
         End Function
 
         Private Function AbrirVentana(body As JObject) As JObject

@@ -16,6 +16,9 @@
 # ============================================================
 
 # ── CONFIGURACION ──────────────────────────────────────────
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot 'agent_auth.ps1')
+
 $SERVER      = "http://localhost:8765"
 $SYMBOL      = "R_100"
 $AMOUNT      = 1.0      # Monto base por operacion (USD)

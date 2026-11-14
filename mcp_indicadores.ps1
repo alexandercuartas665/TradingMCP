@@ -14,6 +14,9 @@
 # Uso: registrar en .claude/settings.json como MCP server
 # ============================================================
 
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot 'agent_auth.ps1')
+
 $SERVER = "http://localhost:8765"
 
 # ── Forzar stdout en UTF-8 sin BOM ─────────────────────────

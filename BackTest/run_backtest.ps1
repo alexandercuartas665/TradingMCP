@@ -6,6 +6,9 @@
 #   Invoke-Backtest -Nombre BollingerRsiReversal -Confianza 60
 # ============================================================
 
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot '..\agent_auth.ps1')
+
 function Invoke-Backtest {
     param(
         [string]  $Nombre     = "EmaRsiCruce",

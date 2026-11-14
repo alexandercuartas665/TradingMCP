@@ -44,7 +44,16 @@ Namespace WpfDerivClientVB.Servidor
                                 correlationId As String, timestamp As String)
             Dim resp As JObject
             Try
-                resp = Await Procesar(instruccion, parametros)
+                ' Seguridad: verificar firma antes de ejecutar cualquier instruccion que modifique estado
+                Dim payloadVerificado As String = Nothing
+                Dim rechazo = VerificarInstruccion(clienteId, instruccion, parametros, payloadVerificado)
+                If rechazo <> "" Then
+                    Log("[CmdRouter] RECHAZADA '" & instruccion & "' de " & clienteId & ": " & rechazo)
+                    AppLogger.Warn("[CmdRouter] Instruccion rechazada '" & instruccion & "' (" & clienteId & "): " & rechazo)
+                    resp = New JObject From {{"ok", False}, {"error", rechazo}, {"instruccion", instruccion}}
+                Else
+                    resp = Await Procesar(instruccion, payloadVerificado)
+                End If
             Catch ex As Exception
                 resp = New JObject From {{"ok", False}, {"error", ex.Message}, {"instruccion", instruccion}}
                 Log("[CmdRouter] EXC en " & instruccion & ": " & ex.Message)
@@ -145,6 +154,86 @@ Namespace WpfDerivClientVB.Servidor
                         {"error", "Instruccion no reconocida: " & instruccion}
                     }
             End Select
+        End Function
+
+        ' ── Seguridad: firma HMAC de instrucciones ───────────────────────
+        '
+        ' Formato firmado de "parametros":
+        '   {"payload":"<json como string>","ts":<unix segundos>,"nonce":"<unico>","firma":"<hex>"}
+        ' firma = HMAC-SHA256(SignalRSecret,
+        '           instruccion_en_minusculas + "\n" + ts + "\n" + nonce + "\n" + payload)  en hex minuscula
+        '
+        ' - Solo lectura (ping, estado.*): se aceptan sin firma.
+        ' - El resto exige firma valida, ts dentro de +-120 s y nonce no repetido.
+        ' - Broadcasts ("ALL") nunca pueden ejecutar instrucciones que modifican estado.
+
+        Private ReadOnly SoloLectura As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {
+            "ping", "estado.consultar", "estado.motor"
+        }
+        Private Const VentanaSegundos As Integer = 120
+        Private ReadOnly _noncesVistos As New Dictionary(Of String, DateTime)()
+        Private ReadOnly _noncesLock As New Object()
+
+        ''' <summary>
+        ''' Devuelve "" si la instruccion puede ejecutarse (y deja en payloadOut el JSON
+        ''' de parametros a usar) o el motivo del rechazo.
+        ''' </summary>
+        Private Function VerificarInstruccion(clienteId As String, instruccion As String, parametros As String,
+                                              ByRef payloadOut As String) As String
+            Dim instr = If(instruccion, "").Trim().ToLowerInvariant()
+            Dim envoltura = ParsePayload(parametros)
+            Dim firmado = envoltura("firma") IsNot Nothing AndAlso envoltura("payload") IsNot Nothing
+
+            If SoloLectura.Contains(instr) Then
+                payloadOut = If(firmado, envoltura("payload").ToString(), parametros)
+                Return ""
+            End If
+
+            If String.Equals(clienteId, "ALL", StringComparison.OrdinalIgnoreCase) Then
+                Return "Las instrucciones que modifican estado no se aceptan por broadcast."
+            End If
+
+            Dim secreto = ConfigManager.LoadDbConfig().SignalRSecret
+            If String.IsNullOrWhiteSpace(secreto) Then
+                Return "SignalRSecret no configurado en db_config.json: solo se aceptan ping y estado.*."
+            End If
+            If Not firmado Then Return "Instruccion sin firma."
+
+            Dim payload = envoltura("payload").ToString()
+            Dim nonce = If(envoltura("nonce")?.ToString(), "")
+            Dim tsTexto = If(envoltura("ts")?.ToString(), "")
+            Dim firma = envoltura("firma").ToString().Trim().ToLowerInvariant()
+
+            Dim ts As Long
+            If Not Long.TryParse(tsTexto, ts) Then Return "ts invalido."
+            Dim ahora = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            If Math.Abs(ahora - ts) > VentanaSegundos Then Return "ts fuera de ventana (reloj desfasado o mensaje reenviado)."
+            If nonce.Length < 8 Then Return "nonce invalido."
+
+            Dim esperada = CalcularFirma(secreto, instr, tsTexto, nonce, payload)
+            If Not AgentAuth.IgualTiempoConstante(firma, esperada) Then Return "Firma invalida."
+
+            SyncLock _noncesLock
+                Dim limite = DateTime.UtcNow
+                For Each k In _noncesVistos.Where(Function(kv) kv.Value < limite).Select(Function(kv) kv.Key).ToList()
+                    _noncesVistos.Remove(k)
+                Next
+                If _noncesVistos.ContainsKey(nonce) Then Return "nonce repetido (posible reenvio)."
+                _noncesVistos(nonce) = DateTime.UtcNow.AddSeconds(VentanaSegundos * 2)
+            End SyncLock
+
+            payloadOut = payload
+            Return ""
+        End Function
+
+        ''' <summary>HMAC-SHA256 en hex minuscula. Publica para poder probarla.</summary>
+        Public Function CalcularFirma(secreto As String, instruccion As String, ts As String,
+                                      nonce As String, payload As String) As String
+            Dim mensaje = instruccion.ToLowerInvariant() & vbLf & ts & vbLf & nonce & vbLf & payload
+            Using h As New System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(secreto))
+                Dim hash = h.ComputeHash(System.Text.Encoding.UTF8.GetBytes(mensaje))
+                Return String.Concat(hash.Select(Function(b) b.ToString("x2")))
+            End Using
         End Function
 
         Private Function ParsePayload(parametros As String) As JObject

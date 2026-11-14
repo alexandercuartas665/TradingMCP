@@ -18,6 +18,9 @@ param(
     [switch]$DetallePendientes,
     [switch]$SoloBacktest
 )
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot '..\agent_auth.ps1')
+
 
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $ErrorActionPreference = "Continue"

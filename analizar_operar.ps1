@@ -5,6 +5,9 @@ param(
     [string]$DurUnit  = "t",
     [switch]$AutoTrade
 )
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot 'agent_auth.ps1')
+
 
 Write-Host "=== ANALISIS DE MERCADO ===" -ForegroundColor Cyan
 Write-Host "Simbolo: $Symbol  Monto: $Amount  Duracion: $Duration $DurUnit"

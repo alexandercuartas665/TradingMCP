@@ -56,6 +56,13 @@ Namespace WpfDerivClientVB
 
             AppLogger.Info("Handlers de excepción globales registrados OK")
 
+            ' ── Seguridad: token de las APIs locales 8765/8766 (se crea una vez).
+            Try
+                AgentAuth.GetOrCreateToken()
+            Catch ex As Exception
+                AppLogger.Warn("[App] No se pudo preparar el token de API local: " & ex.Message)
+            End Try
+
             ' ── Seguridad: cifrar con DPAPI los tokens de Deriv que sigan en
             '    texto plano en la BD (idempotente, en segundo plano).
             Task.Run(Async Function()

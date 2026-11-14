@@ -25,6 +25,18 @@ Namespace WpfDerivClientVB
         Public Property AutoConectarSignalR As Boolean = False
 
         ''' <summary>
+        ''' Secreto compartido para firmar (HMAC-SHA256) las instrucciones que llegan
+        ''' por SignalR. Sin el, las instrucciones que modifican estado se rechazan.
+        ''' </summary>
+        Public Property SignalRSecret As String = ""
+
+        ''' <summary>
+        ''' Si False (por defecto), la cuenta REAL no se puede conectar desde las APIs
+        ''' locales ni desde SignalR: solo desde la UI, con confirmacion.
+        ''' </summary>
+        Public Property PermitirRealRemoto As Boolean = False
+
+        ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.
         ''' </summary>
         Public Function GetConnectionString() As String

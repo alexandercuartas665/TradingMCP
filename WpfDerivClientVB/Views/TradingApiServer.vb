@@ -132,7 +132,17 @@ Namespace WpfDerivClientVB
             Dim req = ctx.Request
             Dim res = ctx.Response
             res.ContentType = "application/json; charset=utf-8"
-            res.Headers.Add("Access-Control-Allow-Origin", "*")
+            ' Sin CORS: solo clientes locales con token (ver Infrastructure/AgentAuth.vb)
+
+            ' ── Autenticacion: header X-Agent-Token obligatorio ──
+            Dim motivoRechazo = AgentAuth.Validar(req)
+            If motivoRechazo <> "" Then
+                If LogAction IsNot Nothing Then
+                    LogAction.Invoke(String.Format("[Server] RECHAZADO {0} {1}: {2}", req.HttpMethod, req.Url.AbsolutePath, motivoRechazo))
+                End If
+                Await WriteResponse(res, 401, New JObject From {{"ok", False}, {"error", motivoRechazo}}.ToString(Formatting.None))
+                Return
+            End If
 
             Dim path = req.Url.AbsolutePath.TrimEnd("/"c).ToLower()
             Dim method = req.HttpMethod.ToUpper()

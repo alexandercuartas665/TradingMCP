@@ -18,6 +18,9 @@ param(
     [decimal] $Monto   = 10,
     [int]    $Ventana  = 100
 )
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot '..\agent_auth.ps1')
+
 
 $ErrorActionPreference = "Continue"
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}

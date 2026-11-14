@@ -26,6 +26,9 @@ param(
     [switch]$Forzar,      # Forzar descarga aunque la cobertura ya sea completa
     [switch]$SoloVer
 )
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot '..\agent_auth.ps1')
+
 
 # ============================================================
 # LIMITES DE COBERTURA MAXIMA POR TIMEFRAME

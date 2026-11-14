@@ -11,6 +11,9 @@ param(
     [int]$ChunkDias    = 4,
     [string]$Server    = "http://localhost:8765"
 )
+# Token de las APIs locales 8765/8766 (ver agent_auth.ps1)
+. (Join-Path $PSScriptRoot 'agent_auth.ps1')
+
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
