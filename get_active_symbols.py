@@ -1,10 +1,11 @@
+import os
 import asyncio
 import websockets
 import json
 import sys
 
 # El Token que generamos en la consola de Deriv
-DERIV_API_TOKEN = 'pat_f33f6f20c8c31e2707d1060a7f37b61b7c219d2756398d2e9a0279ee5426caa3'
+DERIV_API_TOKEN = os.environ.get('DERIV_API_TOKEN', '')  # definir en el entorno, nunca en el codigo
 # App ID genérico para pruebas (1089)
 APP_ID = '1089'
 URI = f"wss://ws.derivws.com/websockets/v3?app_id={APP_ID}"

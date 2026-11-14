@@ -1,6 +1,6 @@
-$TOKEN      = "pat_b825f02dc6ac349dc381afbde872ede597c0030c5d262a5a42d8effa52aba552"
+$TOKEN      = $env:DERIV_API_TOKEN   # definir en el entorno, nunca en el codigo
 $ACCOUNT_ID = "DOT90355933"
-$APP_ID     = "32SQld9iNe8Q4FJx0BEJP"
+$APP_ID     = $env:DERIV_APP_ID
 
 Write-Host "[1] Obteniendo OTP..." -ForegroundColor Cyan
 $otpUrl = "https://api.derivws.com/trading/v1/options/accounts/$ACCOUNT_ID/otp"
