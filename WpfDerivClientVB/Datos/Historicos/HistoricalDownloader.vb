@@ -4,6 +4,7 @@ Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports Newtonsoft.Json.Linq
+Imports WpfDerivClientVB.WpfDerivClientVB.Servidor
 
 Namespace WpfDerivClientVB
 
@@ -51,9 +52,13 @@ Namespace WpfDerivClientVB
             Dim currentEndEpoch As Long = ToEpoch(toDate.AddHours(23).AddMinutes(59))
             Dim startEpoch As Long = ToEpoch(fromDate)
 
+            ' La API publica antigua (ws.derivws.com) ya no responde (HTTP 520). Si el servicio
+            ' de trading esta conectado, las paginas se piden por la API nueva autenticada.
+            Dim usarApiNueva = DerivTradingService.Instance.EstaConectado
             Dim ws As New ClientWebSocket()
+            Dim oldestAnterior As Long = Long.MaxValue
             Try
-                Await ws.ConnectAsync(New Uri(API_URI), token)
+                If Not usarApiNueva Then Await ws.ConnectAsync(New Uri(API_URI), token)
 
                 Do While Not token.IsCancellationRequested
 
@@ -69,10 +74,17 @@ Namespace WpfDerivClientVB
                     requestJson("granularity") = granularity
                     requestJson("start") = startEpoch
 
-                    Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(requestJson.ToString())
-                    Await ws.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, token)
-
-                    Dim data As JObject = Await ReceiveMessageAsync(ws, token)
+                    Dim data As JObject
+                    If usarApiNueva Then
+                        data = Await DerivTradingService.Instance.ConsultarAsync(requestJson, 30000)
+                        If data("ok") IsNot Nothing AndAlso Not CBool(data("ok")) AndAlso data("candles") Is Nothing Then
+                            data = New JObject From {{"error", New JObject From {{"message", If(data("error")?.ToString(), "error")}}}}
+                        End If
+                    Else
+                        Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(requestJson.ToString())
+                        Await ws.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, token)
+                        data = Await ReceiveMessageAsync(ws, token)
+                    End If
 
                     If data Is Nothing Then
                         onProgress(New DownloadProgress With {
@@ -146,8 +158,11 @@ Namespace WpfDerivClientVB
                         .IsComplete = False
                     })
 
-                    ' Si recibimos menos de 1000 o ya llegamos al inicio: terminar
-                    If arr.Count < 1000 OrElse oldestEpoch <= startEpoch Then
+                    ' Fin: llegamos al inicio pedido o la pagina no retrocedio (no hay mas historia).
+                    ' (No usar "menos de 1000 velas": la API nueva devuelve ~440 por pagina.)
+                    Dim sinProgreso = oldestEpoch >= oldestAnterior
+                    oldestAnterior = oldestEpoch
+                    If oldestEpoch <= startEpoch OrElse sinProgreso Then
                         onProgress(New DownloadProgress With {
                             .PageNum = pageNum,
                             .TotalSaved = totalSaved,

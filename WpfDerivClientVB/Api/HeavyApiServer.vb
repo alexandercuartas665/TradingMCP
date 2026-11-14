@@ -329,6 +329,18 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Consulta de solo lectura por la conexion autenticada (lista blanca en el servicio)
+                If path = "/api/heavy/trading/consulta" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await DerivTradingService.Instance.ConsultarAsync(body))
+                    Return
+                End If
+
+                ' Validacion fuera de muestra de una estrategia (no guarda nada)
+                If path = "/api/heavy/validar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await ValidarEstrategiaApi(body))
+                    Return
+                End If
+
                 ' ── MODO AGENTE: abrir ventanas ──────────────────────────
                 If path = "/api/heavy/app/ventana" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, AbrirVentana(body))
@@ -939,6 +951,39 @@ Namespace WpfDerivClientVB.Backtesting
         Private Function HistoricoEstado() As JObject
             Dim e = Descarga.ObtenerEstado()
             Return New JObject From {{"ok", True}, {"estado", EstadoDescargaJson(e)}}
+        End Function
+
+        ''' <summary>
+        ''' body: {estrategia, symbol, timeframe, duracion, confianza, payout, corte:"YYYY-MM-DD", [desde:"YYYY-MM-DD"]}
+        ''' </summary>
+        Private Async Function ValidarEstrategiaApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body: {estrategia, symbol, timeframe, duracion, confianza, payout, corte}")
+            Dim nombre = If(body("estrategia")?.ToString(), "")
+            EstrategiasDinamicasRegistry.Inicializar()
+            Dim est = EstrategiasDinamicasRegistry.GetByNombre(nombre)
+            If est Is Nothing Then Return ErrJson("Estrategia no encontrada: " & nombre)
+            Dim corte As DateTime
+            If Not DateTime.TryParse(If(body("corte")?.ToString(), ""), Globalization.CultureInfo.InvariantCulture,
+                                     Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, corte) Then
+                Return ErrJson("corte requerido (YYYY-MM-DD)")
+            End If
+            Dim desdeEpoch As Long = 0
+            Dim desde As DateTime
+            If DateTime.TryParse(If(body("desde")?.ToString(), ""), Globalization.CultureInfo.InvariantCulture,
+                                 Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, desde) Then
+                desdeEpoch = New DateTimeOffset(desde).ToUnixTimeSeconds()
+            End If
+            Try
+                Return Await ValidacionEstrategia.ValidarAsync(
+                    est,
+                    If(body("symbol")?.ToString(), ""), If(body("timeframe")?.ToString(), ""),
+                    If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2),
+                    If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
+                    If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                    New DateTimeOffset(corte).ToUnixTimeSeconds(), desdeEpoch)
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
         End Function
 
         Private Function EstadoDescargaJson(e As DescargaJobEstado) As JObject

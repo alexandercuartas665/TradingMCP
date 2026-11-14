@@ -375,7 +375,29 @@ Namespace WpfDerivClientVB.Servidor
             Cotizacion         ' proposal manual: devuelve la cotizacion
             Compra             ' buy manual de una cotizacion ya obtenida
             Venta              ' sell
+            Consulta           ' consulta de solo lectura: devuelve la respuesta cruda
         End Enum
+
+        ' Unicos tipos de mensaje permitidos en ConsultarAsync: ninguno mueve dinero.
+        Private Shared ReadOnly ConsultasPermitidas As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {
+            "ticks_history", "active_symbols", "contracts_for", "time", "website_status", "trading_times"
+        }
+
+        ''' <summary>
+        ''' Consulta de SOLO LECTURA por la conexion autenticada (ticks_history, active_symbols,
+        ''' contracts_for, time...). Lista blanca: nunca permite buy/sell/proposal.
+        ''' Devuelve la respuesta cruda de Deriv o {ok:false, error}.
+        ''' </summary>
+        Public Async Function ConsultarAsync(req As JObject, Optional timeoutMs As Integer = 20000) As Task(Of JObject)
+            If req Is Nothing Then Return New JObject From {{"ok", False}, {"error", "Peticion vacia."}}
+            Dim tipo = req.Properties().Select(Function(prop) prop.Name).FirstOrDefault(Function(n) ConsultasPermitidas.Contains(n))
+            If tipo Is Nothing OrElse req.Properties().Any(Function(prop) prop.Name = "buy" OrElse prop.Name = "sell" OrElse prop.Name = "proposal") Then
+                Return New JObject From {{"ok", False}, {"error", "Solo se permiten consultas de lectura: " & String.Join(", ", ConsultasPermitidas)}}
+            End If
+            If Not EstaConectado Then Return New JObject From {{"ok", False}, {"error", "Trading no conectado."}}
+            Dim p = NuevoPendiente(TipoPendiente.Consulta)
+            Return Await EnviarYEsperarAsync(p, CType(req.DeepClone(), JObject), timeoutMs)
+        End Function
 
         Private Class Pendiente
             Public Property ReqId As Integer
@@ -763,6 +785,14 @@ Namespace WpfDerivClientVB.Servidor
 
             If obj("error") IsNot Nothing Then
                 ProcesarError(obj)
+                Return
+            End If
+
+            ' Respuesta a una consulta de solo lectura (ticks_history, active_symbols...)
+            Dim consulta = BuscarPendiente(obj)
+            If consulta IsNot Nothing AndAlso consulta.Tipo = TipoPendiente.Consulta Then
+                obj("ok") = True
+                Resolver(consulta, obj)
                 Return
             End If
 
