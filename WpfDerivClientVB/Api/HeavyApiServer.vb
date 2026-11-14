@@ -335,6 +335,18 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Multiplicadores: backtest con eleccion de configuracion en diseno y prueba en ciego
+                If path = "/api/heavy/multiplicadores/validar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await MultiplicadoresValidarApi(body))
+                    Return
+                End If
+
+                ' Multiplicadores: cotiza (sin comprar) para medir comision y stop out
+                If path = "/api/heavy/multiplicadores/cotizar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await MultiplicadoresCotizarApi(body))
+                    Return
+                End If
+
                 ' Diagnostico: suscribe velas en vivo unos segundos y cuenta los ticks recibidos
                 If path = "/api/heavy/trading/probar-velas" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await ProbarVelasApi(body))
@@ -1211,6 +1223,171 @@ Namespace WpfDerivClientVB.Backtesting
                 {"ok", True}, {"symbol", symbol}, {"granularidad", gran}, {"segundos", segundos},
                 {"subscription_id", If(subId, "")}, {"velas_iniciales", If(velas Is Nothing, 0, velas.Count)},
                 {"ticks_recibidos", ticks}, {"ultimo_ohlc", If(ultimo, CType(JValue.CreateNull(), JToken))}
+            }
+        End Function
+
+        ''' <summary>
+        ''' Mide la comision real de los multiplicadores: por cada [symbol, multiplicador] cotiza
+        ''' MULTUP y MULTDOWN (proposal, NUNCA compra). body: {mercados:[[symbol, mult], ...], monto=10}
+        ''' comision_pct = comision / (monto x multiplicador): fraccion del nocional que se paga al entrar.
+        ''' </summary>
+        Private Async Function MultiplicadoresCotizarApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing OrElse Not TypeOf body("mercados") Is JArray Then
+                Return ErrJson("Body: {mercados:[[symbol, multiplicador], ...], monto}")
+            End If
+            Dim svc = DerivTradingService.Instance
+            If Not svc.EstaConectado Then Return ErrJson("Trading no conectado: POST /api/heavy/trading/conectar {""demo"":true}")
+            Dim monto = If(body("monto") IsNot Nothing, CDbl(body("monto")), 10.0)
+            Dim filas As New JArray()
+            For Each m In CType(body("mercados"), JArray)
+                Dim sym = m(0).ToString()
+                Dim mult = CInt(m(1))
+                Dim fila As New JObject From {{"symbol", sym}, {"multiplicador", mult}}
+                For Each tipo In {"MULTUP", "MULTDOWN"}
+                    Dim c = Await svc.CotizarMultiplicadorAsync(tipo, sym, monto, mult)
+                    If If(c?("error")?.ToString(), "").Contains("RateLimit") Then
+                        Await Task.Delay(35000)
+                        c = Await svc.CotizarMultiplicadorAsync(tipo, sym, monto, mult)
+                    End If
+                    Dim clave = tipo.ToLowerInvariant()
+                    If c IsNot Nothing AndAlso c("ok") IsNot Nothing AndAlso CBool(c("ok")) Then
+                        Dim prop = c("proposal")
+                        Dim comision = If(prop?("commission") IsNot Nothing, CDbl(prop("commission")), 0.0)
+                        fila(clave & "_comision") = comision
+                        fila(clave & "_comision_pct") = Math.Round(comision / (monto * mult), 7)
+                        fila(clave & "_stop_out") = prop?("limit_order")?("stop_out")?.DeepClone()
+                        fila(clave & "_spot") = prop?("spot")?.DeepClone()
+                    Else
+                        fila(clave & "_error") = If(c?("error")?.ToString(), "sin respuesta")
+                    End If
+                    Await Task.Delay(1200)
+                Next
+                filas.Add(fila)
+            Next
+            Return New JObject From {
+                {"ok", True}, {"medido_utc", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")},
+                {"monto", monto}, {"mercados", filas}
+            }
+        End Function
+
+        ''' <summary>
+        ''' Valida una estrategia operada con multiplicadores. En cada mercado se prueban todas las
+        ''' combinaciones (multiplicador x [take profit, stop loss] x velas maximas), se ELIGE la mejor
+        ''' solo con el periodo de diseno (minimo min_ops operaciones) y se mide esa misma en el
+        ''' periodo ciego. TP y SL van en multiplos del stake (stake = 1: resultados por dolar).
+        ''' body: {estrategia, confianza, corte, [ventana=100, min_ops=30],
+        '''        mercados:[[symbol, tf, comision_pct, [multiplicadores opcionales]], ...],
+        '''        multiplicadores:[...], tp_sl:[[tp, sl], ...], max_velas:[...]}
+        ''' </summary>
+        Private Async Function MultiplicadoresValidarApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing OrElse Not TypeOf body("mercados") Is JArray Then
+                Return ErrJson("Body: {estrategia, confianza, corte, mercados:[[symbol, tf, comision_pct], ...], multiplicadores, tp_sl, max_velas}")
+            End If
+            EstrategiasDinamicasRegistry.Inicializar()
+            Dim est = EstrategiasDinamicasRegistry.GetByNombre(If(body("estrategia")?.ToString(), ""))
+            If est Is Nothing Then Return ErrJson("Estrategia no encontrada.")
+            Dim corte As DateTime
+            If Not DateTime.TryParse(If(body("corte")?.ToString(), ""), Globalization.CultureInfo.InvariantCulture,
+                                     Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, corte) Then
+                Return ErrJson("corte requerido (YYYY-MM-DD)")
+            End If
+            Dim corteEpoch = New DateTimeOffset(corte).ToUnixTimeSeconds()
+            Dim conf = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55)
+            Dim ventana = If(body("ventana") IsNot Nothing, CInt(body("ventana")), 100)
+            Dim minOps = If(body("min_ops") IsNot Nothing, CInt(body("min_ops")), 30)
+            Dim multsGlobal = If(TypeOf body("multiplicadores") Is JArray,
+                                 CType(body("multiplicadores"), JArray).Select(Function(t) CInt(t)).ToList(), New List(Of Integer) From {100})
+            Dim tpSl As New List(Of Decimal())()
+            If TypeOf body("tp_sl") Is JArray Then
+                For Each par In CType(body("tp_sl"), JArray)
+                    tpSl.Add({CDec(par(0)), CDec(par(1))})
+                Next
+            Else
+                tpSl.Add({0D, 0D})
+            End If
+            Dim maxVelas = If(TypeOf body("max_velas") Is JArray,
+                              CType(body("max_velas"), JArray).Select(Function(t) CInt(t)).ToList(), New List(Of Integer) From {6})
+
+            Dim filas As New JArray()
+            Dim cieTodos As New List(Of OperacionMultiplicador)()
+            Dim disTodos As New List(Of OperacionMultiplicador)()
+            Dim cieOperables As New List(Of OperacionMultiplicador)()
+            Dim mercadosOperables = 0
+            For Each m In CType(body("mercados"), JArray)
+                Dim mercado = CType(m, JArray)
+                Dim sym = mercado(0).ToString(), tf = mercado(1).ToString()
+                Dim comision = If(mercado.Count > 2, CDbl(mercado(2)), 0.0)
+                Dim mults = If(mercado.Count > 3 AndAlso TypeOf mercado(3) Is JArray,
+                               CType(mercado(3), JArray).Select(Function(t) CInt(t)).ToList(), multsGlobal)
+                Dim velas = Await CargarVelasAsync(sym, tf)
+                If velas.Count < ventana + 200 Then
+                    filas.Add(New JObject From {{"symbol", sym}, {"timeframe", tf}, {"error", "Velas insuficientes: " & velas.Count}})
+                    Continue For
+                End If
+                Dim tfSeg As Long = BacktestMotor.SegundosTimeframe(tf)
+                Dim r = Await Task.Run(Function()
+                    Dim senales = MultiplicadorMotor.CalcularSenales(velas, est, ventana, conf)
+                    Dim mejorCfg As MultiplicadorConfig = Nothing
+                    Dim mejorOps As List(Of OperacionMultiplicador) = Nothing
+                    Dim mejorPnl As Double = Double.MinValue
+                    Dim mejorDesc As Integer = 0
+                    Dim combos = 0
+                    For Each mult In mults
+                        For Each par In tpSl
+                            For Each mv In maxVelas
+                                Dim cfg As New MultiplicadorConfig With {
+                                    .Multiplicador = mult, .Stake = 1D, .TakeProfit = par(0), .StopLoss = par(1),
+                                    .MaxVelas = mv, .ComisionPct = comision}
+                                Dim desc As Integer = 0
+                                Dim ops = MultiplicadorMotor.Simular(velas, senales, cfg, tfSeg, desc)
+                                combos += 1
+                                Dim dis = ops.Where(Function(o) o.EpochEntrada < corteEpoch).ToList()
+                                If dis.Count < minOps Then Continue For
+                                Dim pnlDis = dis.Sum(Function(o) CDbl(o.Pnl))
+                                If pnlDis > mejorPnl Then
+                                    mejorPnl = pnlDis : mejorCfg = cfg : mejorOps = ops : mejorDesc = desc
+                                End If
+                            Next
+                        Next
+                    Next
+                    Return Tuple.Create(senales.Count, combos, mejorCfg, mejorOps, mejorDesc)
+                End Function)
+                Dim fila As New JObject From {
+                    {"symbol", sym}, {"timeframe", tf}, {"comision_pct", comision},
+                    {"senales", r.Item1}, {"combinaciones_probadas", r.Item2}
+                }
+                If r.Item3 Is Nothing Then
+                    fila("error") = String.Format("Ninguna combinacion llega a {0} operaciones en diseno.", minOps)
+                    filas.Add(fila)
+                    Continue For
+                End If
+                Dim c = r.Item3
+                Dim disOps = r.Item4.Where(Function(o) o.EpochEntrada < corteEpoch).ToList()
+                Dim cieOps = r.Item4.Where(Function(o) o.EpochEntrada >= corteEpoch).ToList()
+                Dim operable = disOps.Sum(Function(o) CDbl(o.Pnl)) > 0
+                fila("config_elegida") = New JObject From {
+                    {"multiplicador", c.Multiplicador}, {"take_profit", c.TakeProfit}, {"stop_loss", c.StopLoss},
+                    {"max_velas", c.MaxVelas}}
+                fila("diseno_rentable") = operable
+                fila("descartadas_por_hueco") = r.Item5
+                fila("diseno") = MultiplicadorMotor.Resumen(disOps)
+                fila("ciego") = MultiplicadorMotor.Resumen(cieOps)
+                filas.Add(fila)
+                disTodos.AddRange(disOps)
+                cieTodos.AddRange(cieOps)
+                If operable Then
+                    mercadosOperables += 1
+                    cieOperables.AddRange(cieOps)
+                End If
+            Next
+            Return New JObject From {
+                {"ok", True}, {"estrategia", est.Nombre}, {"min_confianza", conf},
+                {"corte_utc", corte.ToString("yyyy-MM-dd")}, {"stake", 1},
+                {"total_diseno", MultiplicadorMotor.Resumen(disTodos)},
+                {"total_ciego", MultiplicadorMotor.Resumen(cieTodos)},
+                {"mercados_rentables_en_diseno", mercadosOperables},
+                {"total_ciego_solo_rentables_en_diseno", MultiplicadorMotor.Resumen(cieOperables)},
+                {"mercados", filas}
             }
         End Function
 
