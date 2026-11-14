@@ -103,6 +103,10 @@ Namespace WpfDerivClientVB.Servidor
 
                     Dim sid = Await ctrl.IniciarAsync(nombre, symbol, tf, conf, payout, dur, monto,
                                                       ventana, horas, limGan, limPer)
+                    ' "autonomo": true -> el modo autonomo la reanuda tras un reinicio
+                    If payload IsNot Nothing AndAlso payload("autonomo") IsNot Nothing AndAlso CBool(payload("autonomo")) Then
+                        Await New EstrategiasDinamicas.LiveTestRepository().MarcarReanudacionAutomaticaAsync(sid, True)
+                    End If
                     Return New JObject From {
                         {"ok", True}, {"sesion_id", sid},
                         {"estrategia", nombre}, {"symbol", symbol}, {"timeframe", tf}

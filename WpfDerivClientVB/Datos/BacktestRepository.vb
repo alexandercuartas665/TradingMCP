@@ -14,6 +14,35 @@ Namespace WpfDerivClientVB.Backtesting
 
         Private ReadOnly _connectionString As String
 
+        ''' <summary>
+        ''' Por cada sesion: operaciones resueltas (Ganado/Perdido) y ganadas con entrada en o
+        ''' despues de corteEpoch (periodo ciego). Devuelve sesion_id -> (operaciones, ganadas).
+        ''' </summary>
+        Public Async Function ContarCiegoAsync(sesionIds As IEnumerable(Of Integer), corteEpoch As Long) As Task(Of Dictionary(Of Integer, Tuple(Of Integer, Integer)))
+            Dim res As New Dictionary(Of Integer, Tuple(Of Integer, Integer))()
+            Dim ids = sesionIds.Where(Function(i) i > 0).Distinct().ToArray()
+            If ids.Length = 0 Then Return res
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Using cmd As New NpgsqlCommand(
+                    "SELECT sesion_id, " &
+                    "       COUNT(*) FILTER (WHERE estado IN ('Ganado','Perdido')), " &
+                    "       COUNT(*) FILTER (WHERE estado = 'Ganado') " &
+                    "FROM public.backtest_operaciones " &
+                    "WHERE sesion_id = ANY(@ids) AND epoch_entrada >= @corte " &
+                    "GROUP BY sesion_id;", conn)
+                    cmd.Parameters.AddWithValue("ids", ids)
+                    cmd.Parameters.AddWithValue("corte", corteEpoch)
+                    Using rd = Await cmd.ExecuteReaderAsync()
+                        While Await rd.ReadAsync()
+                            res(rd.GetInt32(0)) = Tuple.Create(CInt(rd.GetInt64(1)), CInt(rd.GetInt64(2)))
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return res
+        End Function
+
         Public Sub New()
             Dim config = ConfigManager.LoadDbConfig()
             _connectionString = config.GetConnectionString()

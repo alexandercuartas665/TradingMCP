@@ -238,6 +238,17 @@
                             <TextBox Grid.Column="1" x:Name="txtPayMax" Style="{StaticResource InputDark}" Text="90" Margin="2,0,2,0"/>
                             <TextBox Grid.Column="2" x:Name="txtPayStep" Style="{StaticResource InputDark}" Text="5" Margin="4,0,0,0"/>
                         </Grid>
+                        <CheckBox x:Name="chkPayoutReal" IsChecked="True" Foreground="#e7ecf5" FontSize="11" Margin="0,-6,0,12"
+                                  Content="Usar payout real medido en Deriv (si existe)"
+                                  ToolTip="Cada job toma el payout medido con POST /api/heavy/payouts para su activo y duracion. Si no hay medicion usa el primer valor del rango y la columna Pay no dice 'real'."/>
+
+                        <!-- Periodo ciego -->
+                        <TextBlock Text="INICIO DEL PERIODO CIEGO · AAAA-MM-DD"
+                                   Style="{StaticResource LabelHdr}"
+                                   ToolTip="Las operaciones desde esta fecha forman el periodo ciego: datos que no se usaron para elegir la estrategia. Vacio = no se mide."/>
+                        <TextBox x:Name="txtCorte" Style="{StaticResource InputDark}" Text="2026-04-29" Margin="0,0,0,12"
+                                 LostFocus="txtCorte_LostFocus"
+                                 ToolTip="Las reglas actuales se disenaron con datos hasta el 29 de abril de 2026. Para una estrategia nueva, usa una fecha posterior a su creacion."/>
 
                         <!-- Duracion -->
                         <TextBlock Text="DURACION VELAS · min/max/step ó 3 valores"
@@ -380,6 +391,11 @@
                                 BorderThickness="1" Padding="10,6" FontWeight="SemiBold" FontSize="11"
                                 Cursor="Hand" Click="btnEnviarLive_Click" Margin="4,0,0,0"
                                 ToolTip="Pone al aire las combinaciones marcadas con checkbox usando el motor live (LiveStrategiesController)"/>
+                        <Button x:Name="btnValidar" Content="🔬 Validar"
+                                Background="#2a2440" Foreground="#c9b8ff" BorderBrush="#c9b8ff"
+                                BorderThickness="1" Padding="10,6" FontWeight="SemiBold" FontSize="11"
+                                Cursor="Hand" Click="btnValidar_Click" Margin="4,0,0,0"
+                                ToolTip="Prueba completa de la combinacion marcada: diseno frente a ciego, walk-forward, Monte Carlo, ruido en precios y otros mercados"/>
                     </StackPanel>
                 </Border>
 
@@ -641,6 +657,17 @@
                                 <DataTemplate>
                                     <TextBlock Text="{Binding PnlStr}" Foreground="{Binding PnlBrush}"
                                                FontWeight="Bold" Margin="6,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Ciego ops" Binding="{Binding CiegoOpsStr}" Width="70"/>
+                        <DataGridTextColumn Header="Ciego %" Binding="{Binding CiegoWinStr}" Width="65"/>
+                        <DataGridTextColumn Header="IC95 ciego" Binding="{Binding CiegoIcStr}" Width="80"/>
+                        <DataGridTemplateColumn Header="Veredicto ciego" Width="130" SortMemberPath="VeredictoStr">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding VeredictoStr}" Foreground="{Binding VeredictoBrush}"
+                                               ToolTip="{Binding VeredictoTip}" FontWeight="SemiBold" Margin="6,0"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

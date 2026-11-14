@@ -127,7 +127,51 @@ Partial Public Class HeavyStrategyTesterWindow
         ReindexarYRefrescar()
         ActualizarKpis()
         txtStatus.Text = String.Format("{0} sesiones previas cargadas desde BD.", sesiones.Count)
+        Await ActualizarCiegoAsync()
     End Function
+
+    ' ── PERIODO CIEGO ───────────────────────────────────────────────
+
+    ''' <summary>Epoch del inicio del periodo ciego (txtCorte) o 0 si esta vacio o no es una fecha.</summary>
+    Private Function CorteEpoch() As Long
+        Dim f As DateTime
+        If DateTime.TryParseExact(txtCorte.Text.Trim(), "yyyy-MM-dd", Globalization.CultureInfo.InvariantCulture,
+                                  Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, f) Then
+            Return New DateTimeOffset(f).ToUnixTimeSeconds()
+        End If
+        Return 0
+    End Function
+
+    ''' <summary>Recalcula las columnas del periodo ciego de todas las filas (una consulta a la BD).</summary>
+    Private Async Function ActualizarCiegoAsync() As Task
+        Dim corte = CorteEpoch()
+        Dim filas = _todasLasFilas.ToList()
+        Dim conteos As New Dictionary(Of Integer, Tuple(Of Integer, Integer))()
+        If corte > 0 Then
+            Try
+                conteos = Await _repo.ContarCiegoAsync(filas.Select(Function(r) r.SesionId), corte)
+            Catch ex As Exception
+                txtStatus.Text = "Periodo ciego: " & ex.Message
+            End Try
+        End If
+        For Each r In filas
+            Dim c As Tuple(Of Integer, Integer) = Nothing
+            If Not conteos.TryGetValue(r.SesionId, c) Then
+                ' Sin datos en BD: usar las operaciones en memoria del job (si las hay)
+                c = HeavyResultRow.ContarCiego(r.JobRef?.Resultado?.Operaciones, corte)
+            End If
+            r.AplicarCiego(c.Item1, c.Item2, corte > 0)
+        Next
+    End Function
+
+    Private Async Sub txtCorte_LostFocus(sender As Object, e As RoutedEventArgs)
+        If txtCorte.Text.Trim() <> "" AndAlso CorteEpoch() = 0 Then
+            txtStatus.Text = "Fecha de corte no valida: usa AAAA-MM-DD (vacio = sin periodo ciego)."
+            Return
+        End If
+        Await ActualizarCiegoAsync()
+        txtStatus.Text = If(CorteEpoch() > 0, "Periodo ciego recalculado desde " & txtCorte.Text.Trim() & ".", "Periodo ciego desactivado.")
+    End Sub
 
     Private Sub OnWindowClosing(sender As Object, e As System.ComponentModel.CancelEventArgs)
         If _queue.EnCurso Then
@@ -344,6 +388,9 @@ Partial Public Class HeavyStrategyTesterWindow
         ' Rangos
         sel.Confianzas = ParseRange(txtConfMin.Text, txtConfMax.Text, txtConfStep.Text).Select(Function(d) CInt(d)).ToList()
         sel.Payouts = ParseRange(txtPayMin.Text, txtPayMax.Text, txtPayStep.Text)
+        ' Payout real: cada job toma el medido; el rango solo aporta el valor de respaldo
+        sel.UsarPayoutReal = chkPayoutReal.IsChecked.GetValueOrDefault()
+        If sel.UsarPayoutReal AndAlso sel.Payouts.Count > 1 Then sel.Payouts = New List(Of Decimal) From {sel.Payouts(0)}
         sel.Duraciones = ParseRange(txtDurMin.Text, txtDurMax.Text, txtDurStep.Text).Select(Function(d) CInt(d)).ToList()
         ' Fechas — DatePicker retorna DateTime con Kind=Local. Forzamos UTC con la
         ' fecha tal cual (medianoche UTC) para construir un DateTimeOffset valido.
@@ -495,6 +542,9 @@ Partial Public Class HeavyStrategyTesterWindow
         Dispatcher.BeginInvoke(Sub()
                                    If job.Estado = HeavyJobEstado.Completado Then
                                        Dim row = HeavyResultRow.DesdeJob(job)
+                                       Dim corte = CorteEpoch()
+                                       Dim c = HeavyResultRow.ContarCiego(job.Resultado?.Operaciones, corte)
+                                       row.AplicarCiego(c.Item1, c.Item2, corte > 0)
                                        _todasLasFilas.Add(row)
                                        ReindexarYRefrescar()
                                    End If
@@ -958,6 +1008,12 @@ Partial Public Class HeavyStrategyTesterWindow
         Dim advertencia = If(perdedoras > 0,
             Environment.NewLine & Environment.NewLine &
             String.Format("ATENCION: {0} de las marcadas NO es ganadora en backtest.", perdedoras), "")
+        Dim sinVentaja = seleccionadas.AsEnumerable().Count(Function(r) r.Veredicto <> "VENTAJA ESTADISTICA")
+        If sinVentaja > 0 Then
+            advertencia &= Environment.NewLine & Environment.NewLine &
+                String.Format("ATENCION: {0} de las marcadas NO tiene ventaja demostrada en el periodo ciego (columna Veredicto ciego). " &
+                              "Lo recomendable es probarlas antes con el boton Validar.", sinVentaja)
+        End If
 
         Dim msg = String.Format(
             "¿Poner al aire {0} estrategia(s) EN VIVO con ${1:F2} por operacion?{2}{2}{3}{4}",
@@ -989,7 +1045,8 @@ Partial Public Class HeavyStrategyTesterWindow
                         {"confianza", fila.Conf},
                         {"payout", fila.Pay},
                         {"duracion", fila.Dur},
-                        {"monto", monto}
+                        {"monto", monto},
+                        {"autonomo", True}
                     }
                     Dim okSend = Await signalR.EnviarInstruccionAsync(
                         signalR.ClientId, "estrategia.iniciar",
@@ -1005,6 +1062,8 @@ Partial Public Class HeavyStrategyTesterWindow
                 Else
                     Dim sid = Await ctrl.IniciarAsync(fila.Estrategia, fila.Activo, fila.Timeframe,
                                                        fila.Conf, fila.Pay, fila.Dur, monto)
+                    ' El modo autonomo la reanudara si el PC se reinicia
+                    Await New LiveTestRepository().MarcarReanudacionAutomaticaAsync(sid, True)
                     okCount += 1
                     AppLogger.Info(String.Format("[Heavy→Live] Sesion #{0} (local): {1} {2}/{3} conf:{4} monto:${5:F2}",
                                                   sid, fila.Estrategia, fila.Activo, fila.Timeframe, fila.Conf, monto))
@@ -1023,6 +1082,67 @@ Partial Public Class HeavyStrategyTesterWindow
         Else
             txtStatus.Text = String.Format("📡 {0} ok, {1} con error — {2}. Ver app.log.", okCount, errCount, modo)
         End If
+    End Sub
+
+    ' ── VALIDACION COMPLETA ─────────────────────────────────────────
+
+    ''' <summary>
+    ''' Prueba completa de la primera combinacion marcada: diseno frente a ciego, walk-forward,
+    ''' Monte Carlo, ruido en precios y la misma regla en los demas mercados de esa temporalidad.
+    ''' El informe se muestra en una ventana aparte y se va completando por pasos.
+    ''' </summary>
+    Private Async Sub btnValidar_Click(sender As Object, e As RoutedEventArgs)
+        Dim fila = _todasLasFilas.FirstOrDefault(Function(r) r.Selected)
+        If fila Is Nothing Then
+            txtStatus.Text = "Marca con checkbox la combinacion a validar."
+            Return
+        End If
+        Dim corte = CorteEpoch()
+        If corte = 0 Then
+            txtStatus.Text = "Indica el inicio del periodo ciego (AAAA-MM-DD) para validar."
+            Return
+        End If
+        EstrategiasDinamicasRegistry.Inicializar()
+        Dim est = EstrategiasDinamicasRegistry.GetByNombre(fila.Estrategia)
+        If est Is Nothing Then
+            txtStatus.Text = "Estrategia no encontrada: " & fila.Estrategia
+            Return
+        End If
+
+        Dim caja As New TextBox With {
+            .IsReadOnly = True, .FontFamily = New FontFamily("Consolas"), .FontSize = 12,
+            .Background = New SolidColorBrush(Color.FromRgb(&H12, &H17, &H23)),
+            .Foreground = New SolidColorBrush(Color.FromRgb(&HE7, &HEC, &HF5)),
+            .BorderThickness = New Thickness(0), .Padding = New Thickness(12),
+            .TextWrapping = TextWrapping.Wrap, .VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+        }
+        Dim ventana As New Window With {
+            .Title = String.Format("Validacion: {0} {1} {2}", fila.Estrategia, fila.Activo, fila.Timeframe),
+            .Width = 900, .Height = 620, .Owner = Me, .Content = caja,
+            .Background = caja.Background, .WindowStartupLocation = WindowStartupLocation.CenterOwner
+        }
+        ventana.Show()
+        btnValidar.IsEnabled = False
+        If _todasLasFilas.Where(Function(r) r.Selected).Count() > 1 Then
+            txtStatus.Text = "Se valida solo la primera combinacion marcada."
+        End If
+        Try
+            caja.Text = "1/3 Prueba ciega..."
+            Dim validar = Await ValidacionEstrategia.ValidarAsync(est, fila.Activo, fila.Timeframe, fila.Dur, fila.Conf, fila.Pay, corte)
+            caja.Text = ValidacionCompleta.InformeTexto(validar, Nothing, Nothing) & Environment.NewLine & "2/3 Walk-forward, Monte Carlo y ruido (puede tardar unos minutos)..."
+            Dim robustez = Await ValidacionCompleta.RobustezAsync(est, fila.Activo, fila.Timeframe, fila.Dur, fila.Conf, fila.Pay, corte)
+            caja.Text = ValidacionCompleta.InformeTexto(validar, robustez, Nothing) & Environment.NewLine & "3/3 Otros mercados..."
+            Dim series = Await New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString()).ListarSeriesAsync("Deriv")
+            Dim mercados = series.Where(Function(s) s.Item2 = fila.Timeframe).Select(Function(s) Tuple.Create(s.Item1, s.Item2)).ToList()
+            Dim multi = Await ValidacionCompleta.MultiMercadoAsync(est, mercados, fila.Dur, fila.Conf, fila.Pay, corte)
+            caja.Text = ValidacionCompleta.InformeTexto(validar, robustez, multi)
+            txtStatus.Text = "Validacion terminada: " & ValidacionCompleta.Conclusion(validar, robustez)
+        Catch ex As Exception
+            caja.Text &= Environment.NewLine & Environment.NewLine & "Error: " & ex.Message
+            txtStatus.Text = "Validacion: " & ex.Message
+        Finally
+            btnValidar.IsEnabled = True
+        End Try
     End Sub
 
     ' ── EXPORT CSV ──────────────────────────────────────────────────

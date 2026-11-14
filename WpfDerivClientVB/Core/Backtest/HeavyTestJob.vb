@@ -30,6 +30,10 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property Timeframe As String = ""
         Public Property Confianza As Integer = 0
         Public Property Payout As Decimal = 0D
+        ''' <summary>True: usar el payout real medido (PayoutsReales) si existe para este simbolo y duracion.</summary>
+        Public Property UsarPayoutReal As Boolean = False
+        ''' <summary>True si Payout es un valor medido en Deriv (no supuesto).</summary>
+        Public Property PayoutEsReal As Boolean = False
         Public Property Duracion As Integer = 0
         Public Property Capital As Decimal = 0D
         Public Property DesdeEpoch As Long = 0L
