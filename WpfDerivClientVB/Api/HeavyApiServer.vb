@@ -341,6 +341,18 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Walk-forward + Monte Carlo + ruido en precios (no guarda nada)
+                If path = "/api/heavy/robustez" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await RobustezApi(body))
+                    Return
+                End If
+
+                ' La misma regla en varios mercados/temporalidades (diseno vs ciego)
+                If path = "/api/heavy/multimercado" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await MultiMercadoApi(body))
+                    Return
+                End If
+
                 ' ── MODO AGENTE: abrir ventanas ──────────────────────────
                 If path = "/api/heavy/app/ventana" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, AbrirVentana(body))
@@ -984,6 +996,122 @@ Namespace WpfDerivClientVB.Backtesting
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
+        End Function
+
+        Private Shared Function CargarVelasAsync(symbol As String, timeframe As String) As Task(Of List(Of CandleModel))
+            Dim repo = New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
+            Return repo.GetCandlesRangoAsync("Deriv", symbol, timeframe, 0, DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+        End Function
+
+        ''' <summary>
+        ''' body: {estrategia, symbol, timeframe, duracion, confianza, payout,
+        '''        [dias_entrenamiento=365, dias_prueba=90, grilla=[50,55,60,65,70],
+        '''         iteraciones=5000, corridas_ruido=30, nivel_ruido=0.1]}
+        ''' </summary>
+        Private Async Function RobustezApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body: {estrategia, symbol, timeframe, duracion, confianza, payout}")
+            EstrategiasDinamicasRegistry.Inicializar()
+            Dim est = EstrategiasDinamicasRegistry.GetByNombre(If(body("estrategia")?.ToString(), ""))
+            If est Is Nothing Then Return ErrJson("Estrategia no encontrada.")
+            Dim symbol = If(body("symbol")?.ToString(), ""), tf = If(body("timeframe")?.ToString(), "")
+            Dim cfg As New BacktestConfig With {
+                .Symbol = symbol, .Timeframe = tf,
+                .DuracionVelas = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2),
+                .MinConfianza = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
+                .PayoutPct = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                .VentanaIndicadores = 100, .UnaPosicionALaVez = True
+            }
+            cfg.Cuentas.Add(New BacktestCuenta With {.NombreCuenta = "robustez", .BalanceInicial = 1000D, .MontoPorOperacion = 1D})
+            Dim grilla As New List(Of Integer)()
+            If TypeOf body("grilla") Is JArray Then
+                grilla.AddRange(CType(body("grilla"), JArray).Select(Function(t) CInt(t)))
+            Else
+                grilla.AddRange({50, 55, 60, 65, 70})
+            End If
+            ' Corte opcional: separa las ventanas de prueba anteriores y posteriores al diseno
+            Dim corteRobustez As Long = 0
+            Dim corteR As DateTime
+            If DateTime.TryParse(If(body("corte")?.ToString(), ""), Globalization.CultureInfo.InvariantCulture,
+                                 Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, corteR) Then
+                corteRobustez = New DateTimeOffset(corteR).ToUnixTimeSeconds()
+            End If
+            Try
+                Dim velas = Await CargarVelasAsync(symbol, tf)
+                If velas.Count < 300 Then Return ErrJson(String.Format("Velas insuficientes ({0}) para {1} {2}.", velas.Count, symbol, tf))
+                Return Await Task.Run(Function()
+                    ' Cache de senales: walk-forward y simulacion completa analizan las mismas velas
+                    Dim estCache As New EstrategiaCacheada(est)
+                    Dim wf = WalkForward.Ejecutar(velas, estCache, cfg, grilla,
+                        If(body("dias_entrenamiento") IsNot Nothing, CInt(body("dias_entrenamiento")), 365),
+                        If(body("dias_prueba") IsNot Nothing, CInt(body("dias_prueba")), 90),
+                        10, corteRobustez)
+                    Dim sim = BacktestMotor.Simular(velas, estCache, cfg)
+                    Dim mc = MonteCarlo.AnalizarOperaciones(sim.Operaciones,
+                        If(body("iteraciones") IsNot Nothing, CInt(body("iteraciones")), 5000))
+                    Dim ruido = MonteCarlo.RuidoEnPrecios(velas, est, cfg,
+                        If(body("corridas_ruido") IsNot Nothing, CInt(body("corridas_ruido")), 30),
+                        If(body("nivel_ruido") IsNot Nothing, CDbl(body("nivel_ruido")), 0.1))
+                    Return New JObject From {
+                        {"ok", True}, {"estrategia", est.Nombre}, {"symbol", symbol}, {"timeframe", tf},
+                        {"duracion_velas", cfg.DuracionVelas}, {"min_confianza", cfg.MinConfianza}, {"payout_pct", cfg.PayoutPct},
+                        {"desde", DateTimeOffset.FromUnixTimeSeconds(velas.First().Epoch).UtcDateTime.ToString("yyyy-MM-dd")},
+                        {"hasta", DateTimeOffset.FromUnixTimeSeconds(velas.Last().Epoch).UtcDateTime.ToString("yyyy-MM-dd")},
+                        {"walk_forward", wf}, {"monte_carlo", mc}, {"ruido_precios", ruido}
+                    }
+                End Function)
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        ''' <summary>
+        ''' body: {estrategia, duracion, confianza, payout, corte:"YYYY-MM-DD",
+        '''        mercados:[["OTC_NDX","1h"], ["frxEURUSD","4h"], ...]}
+        ''' </summary>
+        Private Async Function MultiMercadoApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing OrElse Not TypeOf body("mercados") Is JArray Then Return ErrJson("Body: {estrategia, duracion, confianza, payout, corte, mercados:[[symbol,tf],...]}")
+            EstrategiasDinamicasRegistry.Inicializar()
+            Dim est = EstrategiasDinamicasRegistry.GetByNombre(If(body("estrategia")?.ToString(), ""))
+            If est Is Nothing Then Return ErrJson("Estrategia no encontrada.")
+            Dim corte As DateTime
+            If Not DateTime.TryParse(If(body("corte")?.ToString(), ""), Globalization.CultureInfo.InvariantCulture,
+                                     Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, corte) Then
+                Return ErrJson("corte requerido (YYYY-MM-DD)")
+            End If
+            Dim corteEpoch = New DateTimeOffset(corte).ToUnixTimeSeconds()
+            Dim dur = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)
+            Dim conf = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55)
+            Dim payout = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D)
+
+            Dim filas As New JArray()
+            Dim totD = 0, ganD = 0, totC = 0, ganC = 0, mercadosSobreEquilibrio = 0, mercadosConDatos = 0
+            For Each m In CType(body("mercados"), JArray)
+                Dim sym = m(0).ToString(), tf = m(1).ToString()
+                Dim velas = Await CargarVelasAsync(sym, tf)
+                Dim r = Await Task.Run(Function() ValidacionEstrategia.Validar(velas, est, sym, tf, dur, conf, payout, corteEpoch))
+                filas.Add(r)
+                If r("ok") Is Nothing OrElse Not CBool(r("ok")) Then Continue For
+                Dim d = r("periodo_diseno"), c = r("periodo_ciego")
+                totD += CInt(d("operaciones")) : ganD += CInt(d("ganadas"))
+                totC += CInt(c("operaciones")) : ganC += CInt(c("ganadas"))
+                If CInt(c("operaciones")) > 0 Then
+                    mercadosConDatos += 1
+                    If CDbl(c("win_rate")) > Estadistica.PuntoEquilibrio(payout) Then mercadosSobreEquilibrio += 1
+                End If
+            Next
+            Dim icD = Estadistica.IntervaloWilson(ganD, totD), icC = Estadistica.IntervaloWilson(ganC, totC)
+            Return New JObject From {
+                {"ok", True}, {"estrategia", est.Nombre}, {"duracion_velas", dur}, {"min_confianza", conf}, {"payout_pct", payout},
+                {"punto_equilibrio", Math.Round(Estadistica.PuntoEquilibrio(payout), 4)},
+                {"total_diseno", New JObject From {{"operaciones", totD}, {"win_rate", If(totD > 0, Math.Round(ganD / CDbl(totD), 4), 0.0)},
+                                                  {"ic95_inf", Math.Round(icD.Item1, 4)}, {"ic95_sup", Math.Round(icD.Item2, 4)}}},
+                {"total_ciego", New JObject From {{"operaciones", totC}, {"win_rate", If(totC > 0, Math.Round(ganC / CDbl(totC), 4), 0.0)},
+                                                 {"ic95_inf", Math.Round(icC.Item1, 4)}, {"ic95_sup", Math.Round(icC.Item2, 4)},
+                                                 {"veredicto", Estadistica.Veredicto(ganC, totC, payout)}}},
+                {"mercados_con_datos_ciegos", mercadosConDatos},
+                {"mercados_sobre_equilibrio_en_ciego", mercadosSobreEquilibrio},
+                {"mercados", filas}
+            }
         End Function
 
         Private Function EstadoDescargaJson(e As DescargaJobEstado) As JObject

@@ -1,0 +1,928 @@
+[
+  {
+    "ok": true,
+    "estrategia": "BollingerMomentum_v2",
+    "symbol": "OTC_NDX",
+    "timeframe": "1h",
+    "duracion_velas": 2,
+    "min_confianza": 50,
+    "payout_pct": 85.0,
+    "desde": "2024-04-23",
+    "hasta": "2026-11-13",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2024-04-23 / 2025-04-23",
+          "prueba": "2025-04-23 / 2025-07-22",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 58,
+          "entrenamiento_win_rate": 0.6897,
+          "prueba_ops": 13,
+          "prueba_win_rate": 0.7692,
+          "prueba_pnl_por_dolar": 5.5
+        },
+        {
+          "entrenamiento": "2024-07-22 / 2025-07-22",
+          "prueba": "2025-07-22 / 2025-10-20",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 55,
+          "entrenamiento_win_rate": 0.7091,
+          "prueba_ops": 11,
+          "prueba_win_rate": 0.6364,
+          "prueba_pnl_por_dolar": 1.95
+        },
+        {
+          "entrenamiento": "2024-10-20 / 2025-10-20",
+          "prueba": "2025-10-20 / 2026-01-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 53,
+          "entrenamiento_win_rate": 0.6981,
+          "prueba_ops": 8,
+          "prueba_win_rate": 0.625,
+          "prueba_pnl_por_dolar": 1.25
+        },
+        {
+          "entrenamiento": "2025-01-18 / 2026-01-18",
+          "prueba": "2026-01-18 / 2026-04-18",
+          "confianza_elegida": 55,
+          "entrenamiento_ops": 23,
+          "entrenamiento_win_rate": 0.6957,
+          "prueba_ops": 6,
+          "prueba_win_rate": 0.6667,
+          "prueba_pnl_por_dolar": 1.4
+        },
+        {
+          "entrenamiento": "2025-04-18 / 2026-04-18",
+          "prueba": "2026-04-18 / 2026-07-17",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 42,
+          "entrenamiento_win_rate": 0.6667,
+          "prueba_ops": 6,
+          "prueba_win_rate": 0.8333,
+          "prueba_pnl_por_dolar": 3.25
+        },
+        {
+          "entrenamiento": "2025-07-17 / 2026-07-17",
+          "prueba": "2026-07-17 / 2026-10-15",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 34,
+          "entrenamiento_win_rate": 0.6765,
+          "prueba_ops": 5,
+          "prueba_win_rate": 0.4,
+          "prueba_pnl_por_dolar": -1.3
+        },
+        {
+          "entrenamiento": "2025-10-15 / 2026-10-15",
+          "prueba": "2026-10-15 / 2026-11-13",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 27,
+          "entrenamiento_win_rate": 0.6296,
+          "prueba_ops": 2,
+          "prueba_win_rate": 0.5,
+          "prueba_pnl_por_dolar": -0.15
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 51,
+        "ganadas": 34,
+        "win_rate": 0.6667,
+        "ic95_inf": 0.5297,
+        "ic95_sup": 0.7803,
+        "pnl_por_dolar": 11.9,
+        "punto_equilibrio": 0.5405,
+        "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 40,
+        "ganadas": 27,
+        "win_rate": 0.675,
+        "ic95_inf": 0.5202,
+        "ic95_sup": 0.7992,
+        "pnl_por_dolar": 9.95,
+        "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 11,
+        "ganadas": 7,
+        "win_rate": 0.6364,
+        "ic95_inf": 0.3538,
+        "ic95_sup": 0.8483,
+        "pnl_por_dolar": 1.95,
+        "veredicto": "MUESTRA INSUFICIENTE"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 111,
+      "iteraciones": 5000,
+      "resultado_total_real": 27.75,
+      "orden": {
+        "caida_maxima_real": 3.6,
+        "caida_maxima_p50": 4.45,
+        "caida_maxima_p95": 7.45,
+        "peor_racha_real": 2,
+        "peor_racha_p50": 4.0,
+        "peor_racha_p95": 6.0
+      },
+      "bootstrap": {
+        "resultado_p5": 12.95,
+        "resultado_p50": 27.75,
+        "resultado_p95": 42.55,
+        "prob_terminar_ganando": 0.9988,
+        "win_rate_p2_5": 0.5856,
+        "win_rate_p97_5": 0.7658
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 5.7,
+      "base_operaciones": 111,
+      "base_win_rate": 0.6757,
+      "ruido_win_rate_media": 0.6094,
+      "ruido_win_rate_desv": 0.0262,
+      "ruido_win_rate_min": 0.5472,
+      "ruido_win_rate_max": 0.6514,
+      "ruido_operaciones_media": 111.6,
+      "ruido_pnl_media": 14.17,
+      "corridas_sobre_equilibrio": 30
+    }
+  },
+  {
+    "ok": true,
+    "estrategia": "IndicePullbackLong_v1",
+    "symbol": "OTC_NDX",
+    "timeframe": "4h",
+    "duracion_velas": 2,
+    "min_confianza": 50,
+    "payout_pct": 85.0,
+    "desde": "2024-04-23",
+    "hasta": "2026-11-13",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2024-04-23 / 2025-04-23",
+          "prueba": "2025-04-23 / 2025-07-22",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 33,
+          "entrenamiento_win_rate": 0.5455,
+          "prueba_ops": 18,
+          "prueba_win_rate": 0.8333,
+          "prueba_pnl_por_dolar": 9.75
+        },
+        {
+          "entrenamiento": "2024-07-22 / 2025-07-22",
+          "prueba": "2025-07-22 / 2025-10-20",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 39,
+          "entrenamiento_win_rate": 0.6667,
+          "prueba_ops": 7,
+          "prueba_win_rate": 0.5714,
+          "prueba_pnl_por_dolar": 0.4
+        },
+        {
+          "entrenamiento": "2024-10-20 / 2025-10-20",
+          "prueba": "2025-10-20 / 2026-01-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 32,
+          "entrenamiento_win_rate": 0.7188,
+          "prueba_ops": 7,
+          "prueba_win_rate": 0.5714,
+          "prueba_pnl_por_dolar": 0.4
+        },
+        {
+          "entrenamiento": "2025-01-18 / 2026-01-18",
+          "prueba": "2026-01-18 / 2026-04-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 34,
+          "entrenamiento_win_rate": 0.7059,
+          "prueba_ops": 0,
+          "prueba_win_rate": 0.0,
+          "prueba_pnl_por_dolar": 0.0
+        },
+        {
+          "entrenamiento": "2025-04-18 / 2026-04-18",
+          "prueba": "2026-04-18 / 2026-07-17",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 32,
+          "entrenamiento_win_rate": 0.7188,
+          "prueba_ops": 6,
+          "prueba_win_rate": 0.6667,
+          "prueba_pnl_por_dolar": 1.4
+        },
+        {
+          "entrenamiento": "2025-07-17 / 2026-07-17",
+          "prueba": "2026-07-17 / 2026-10-15",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 21,
+          "entrenamiento_win_rate": 0.619,
+          "prueba_ops": 4,
+          "prueba_win_rate": 0.5,
+          "prueba_pnl_por_dolar": -0.3
+        },
+        {
+          "entrenamiento": "2025-10-15 / 2026-10-15",
+          "prueba": "2026-10-15 / 2026-11-13",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 17,
+          "entrenamiento_win_rate": 0.5882,
+          "prueba_ops": 0,
+          "prueba_win_rate": 0.0,
+          "prueba_pnl_por_dolar": 0.0
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 42,
+        "ganadas": 29,
+        "win_rate": 0.6905,
+        "ic95_inf": 0.5397,
+        "ic95_sup": 0.8093,
+        "pnl_por_dolar": 11.65,
+        "punto_equilibrio": 0.5405,
+        "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 33,
+        "ganadas": 24,
+        "win_rate": 0.7273,
+        "ic95_inf": 0.5578,
+        "ic95_sup": 0.8493,
+        "pnl_por_dolar": 11.4,
+        "veredicto": "VENTAJA ESTADISTICA"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 9,
+        "ganadas": 5,
+        "win_rate": 0.5556,
+        "ic95_inf": 0.2666,
+        "ic95_sup": 0.8112,
+        "pnl_por_dolar": 0.25,
+        "veredicto": "MUESTRA INSUFICIENTE"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 75,
+      "iteraciones": 5000,
+      "resultado_total_real": 11.95,
+      "orden": {
+        "caida_maxima_real": 5.6,
+        "caida_maxima_p50": 5.15,
+        "caida_maxima_p95": 8.2,
+        "peor_racha_real": 4,
+        "peor_racha_p50": 4.0,
+        "peor_racha_p95": 6.0
+      },
+      "bootstrap": {
+        "resultado_p5": -1.0,
+        "resultado_p50": 11.95,
+        "resultado_p95": 24.9,
+        "prob_terminar_ganando": 0.9318,
+        "win_rate_p2_5": 0.5067,
+        "win_rate_p97_5": 0.7333
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 11.55,
+      "base_operaciones": 75,
+      "base_win_rate": 0.6267,
+      "ruido_win_rate_media": 0.644,
+      "ruido_win_rate_desv": 0.0314,
+      "ruido_win_rate_min": 0.5942,
+      "ruido_win_rate_max": 0.7059,
+      "ruido_operaciones_media": 68.3,
+      "ruido_pnl_media": 13.01,
+      "corridas_sobre_equilibrio": 30
+    }
+  },
+  {
+    "ok": true,
+    "estrategia": "CCIReversal_v2",
+    "symbol": "OTC_DJI",
+    "timeframe": "4h",
+    "duracion_velas": 2,
+    "min_confianza": 55,
+    "payout_pct": 90.0,
+    "desde": "2024-04-29",
+    "hasta": "2026-11-13",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2024-04-29 / 2025-04-29",
+          "prueba": "2025-04-29 / 2025-07-28",
+          "confianza_elegida": 55,
+          "entrenamiento_ops": 27,
+          "entrenamiento_win_rate": 0.5926,
+          "prueba_ops": 3,
+          "prueba_win_rate": 1.0,
+          "prueba_pnl_por_dolar": 2.7
+        },
+        {
+          "entrenamiento": "2024-07-28 / 2025-07-28",
+          "prueba": "2025-07-28 / 2025-10-26",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 103,
+          "entrenamiento_win_rate": 0.5728,
+          "prueba_ops": 26,
+          "prueba_win_rate": 0.6923,
+          "prueba_pnl_por_dolar": 8.2
+        },
+        {
+          "entrenamiento": "2024-10-26 / 2025-10-26",
+          "prueba": "2025-10-26 / 2026-01-24",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 107,
+          "entrenamiento_win_rate": 0.6168,
+          "prueba_ops": 19,
+          "prueba_win_rate": 0.8421,
+          "prueba_pnl_por_dolar": 11.4
+        },
+        {
+          "entrenamiento": "2025-01-24 / 2026-01-24",
+          "prueba": "2026-01-24 / 2026-04-24",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 100,
+          "entrenamiento_win_rate": 0.73,
+          "prueba_ops": 31,
+          "prueba_win_rate": 0.5806,
+          "prueba_pnl_por_dolar": 3.2
+        },
+        {
+          "entrenamiento": "2025-04-24 / 2026-04-24",
+          "prueba": "2026-04-24 / 2026-07-23",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 103,
+          "entrenamiento_win_rate": 0.7282,
+          "prueba_ops": 13,
+          "prueba_win_rate": 0.3846,
+          "prueba_pnl_por_dolar": -3.5
+        },
+        {
+          "entrenamiento": "2025-07-23 / 2026-07-23",
+          "prueba": "2026-07-23 / 2026-10-21",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 90,
+          "entrenamiento_win_rate": 0.6444,
+          "prueba_ops": 16,
+          "prueba_win_rate": 0.5,
+          "prueba_pnl_por_dolar": -0.8
+        },
+        {
+          "entrenamiento": "2025-10-21 / 2026-10-21",
+          "prueba": "2026-10-21 / 2026-11-13",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 80,
+          "entrenamiento_win_rate": 0.6,
+          "prueba_ops": 3,
+          "prueba_win_rate": 0.6667,
+          "prueba_pnl_por_dolar": 0.8
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 111,
+        "ganadas": 70,
+        "win_rate": 0.6306,
+        "ic95_inf": 0.5379,
+        "ic95_sup": 0.7146,
+        "pnl_por_dolar": 22.0,
+        "punto_equilibrio": 0.5263,
+        "veredicto": "VENTAJA ESTADISTICA"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 79,
+        "ganadas": 55,
+        "win_rate": 0.6962,
+        "ic95_inf": 0.5877,
+        "ic95_sup": 0.7866,
+        "pnl_por_dolar": 25.5,
+        "veredicto": "VENTAJA ESTADISTICA"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 32,
+        "ganadas": 15,
+        "win_rate": 0.4688,
+        "ic95_inf": 0.3087,
+        "ic95_sup": 0.6355,
+        "pnl_por_dolar": -3.5,
+        "veredicto": "SIN VENTAJA"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 59,
+      "iteraciones": 5000,
+      "resultado_total_real": 7.5,
+      "orden": {
+        "caida_maxima_real": 5.2,
+        "caida_maxima_p50": 5.2,
+        "caida_maxima_p95": 8.2,
+        "peor_racha_real": 3,
+        "peor_racha_p50": 4.0,
+        "peor_racha_p95": 6.0
+      },
+      "bootstrap": {
+        "resultado_p5": -3.9,
+        "resultado_p50": 7.5,
+        "resultado_p95": 18.9,
+        "prob_terminar_ganando": 0.8246,
+        "win_rate_p2_5": 0.4742,
+        "win_rate_p97_5": 0.7119
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 16.0,
+      "base_operaciones": 59,
+      "base_win_rate": 0.5932,
+      "ruido_win_rate_media": 0.6128,
+      "ruido_win_rate_desv": 0.0286,
+      "ruido_win_rate_min": 0.5593,
+      "ruido_win_rate_max": 0.6667,
+      "ruido_operaciones_media": 60.4,
+      "ruido_pnl_media": 9.93,
+      "corridas_sobre_equilibrio": 30
+    }
+  },
+  {
+    "ok": true,
+    "estrategia": "EmaRsiCruce_v4",
+    "symbol": "OTC_NDX",
+    "timeframe": "4h",
+    "duracion_velas": 2,
+    "min_confianza": 55,
+    "payout_pct": 85.0,
+    "desde": "2024-04-23",
+    "hasta": "2026-11-13",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2024-04-23 / 2025-04-23",
+          "prueba": "2025-04-23 / 2025-07-22",
+          "confianza_elegida": 60,
+          "entrenamiento_ops": 12,
+          "entrenamiento_win_rate": 0.6667,
+          "prueba_ops": 2,
+          "prueba_win_rate": 1.0,
+          "prueba_pnl_por_dolar": 1.7
+        },
+        {
+          "entrenamiento": "2024-07-22 / 2025-07-22",
+          "prueba": "2025-07-22 / 2025-10-20",
+          "confianza_elegida": 55,
+          "entrenamiento_ops": 50,
+          "entrenamiento_win_rate": 0.62,
+          "prueba_ops": 8,
+          "prueba_win_rate": 0.5,
+          "prueba_pnl_por_dolar": -0.6
+        },
+        {
+          "entrenamiento": "2024-10-20 / 2025-10-20",
+          "prueba": "2025-10-20 / 2026-01-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 81,
+          "entrenamiento_win_rate": 0.6296,
+          "prueba_ops": 24,
+          "prueba_win_rate": 0.4583,
+          "prueba_pnl_por_dolar": -3.65
+        },
+        {
+          "entrenamiento": "2025-01-18 / 2026-01-18",
+          "prueba": "2026-01-18 / 2026-04-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 95,
+          "entrenamiento_win_rate": 0.5895,
+          "prueba_ops": 18,
+          "prueba_win_rate": 0.5556,
+          "prueba_pnl_por_dolar": 0.5
+        },
+        {
+          "entrenamiento": "2025-04-18 / 2026-04-18",
+          "prueba": "2026-04-18 / 2026-07-17",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 99,
+          "entrenamiento_win_rate": 0.596,
+          "prueba_ops": 14,
+          "prueba_win_rate": 0.5714,
+          "prueba_pnl_por_dolar": 0.8
+        },
+        {
+          "entrenamiento": "2025-07-17 / 2026-07-17",
+          "prueba": "2026-07-17 / 2026-10-15",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 80,
+          "entrenamiento_win_rate": 0.575,
+          "prueba_ops": 13,
+          "prueba_win_rate": 0.5385,
+          "prueba_pnl_por_dolar": -0.05
+        },
+        {
+          "entrenamiento": "2025-10-15 / 2026-10-15",
+          "prueba": "2026-10-15 / 2026-11-13",
+          "confianza_elegida": "no opera",
+          "entrenamiento_ops": 0,
+          "entrenamiento_win_rate": 0.0,
+          "prueba_ops": 0,
+          "prueba_win_rate": 0.0,
+          "prueba_pnl_por_dolar": 0.0
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 79,
+        "ganadas": 42,
+        "win_rate": 0.5316,
+        "ic95_inf": 0.4227,
+        "ic95_sup": 0.6376,
+        "pnl_por_dolar": -1.3,
+        "punto_equilibrio": 0.5405,
+        "veredicto": "SIN VENTAJA"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 53,
+        "ganadas": 28,
+        "win_rate": 0.5283,
+        "ic95_inf": 0.3966,
+        "ic95_sup": 0.6562,
+        "pnl_por_dolar": -1.2,
+        "veredicto": "SIN VENTAJA"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 26,
+        "ganadas": 14,
+        "win_rate": 0.5385,
+        "ic95_inf": 0.3546,
+        "ic95_sup": 0.7124,
+        "pnl_por_dolar": -0.1,
+        "veredicto": "MUESTRA INSUFICIENTE"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 101,
+      "iteraciones": 5000,
+      "resultado_total_real": 0.75,
+      "orden": {
+        "caida_maxima_real": 8.4,
+        "caida_maxima_p50": 9.3,
+        "caida_maxima_p95": 13.95,
+        "peor_racha_real": 4,
+        "peor_racha_p50": 5.0,
+        "peor_racha_p95": 8.0
+      },
+      "bootstrap": {
+        "resultado_p5": -14.05,
+        "resultado_p50": 0.75,
+        "resultado_p95": 15.55,
+        "prob_terminar_ganando": 0.5372,
+        "win_rate_p2_5": 0.4455,
+        "win_rate_p97_5": 0.6436
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 11.55,
+      "base_operaciones": 101,
+      "base_win_rate": 0.5446,
+      "ruido_win_rate_media": 0.5576,
+      "ruido_win_rate_desv": 0.0295,
+      "ruido_win_rate_min": 0.5104,
+      "ruido_win_rate_max": 0.6211,
+      "ruido_operaciones_media": 96.1,
+      "ruido_pnl_media": 3.0,
+      "corridas_sobre_equilibrio": 20
+    }
+  },
+  {
+    "ok": true,
+    "estrategia": "BollingerRsiReversal_d30",
+    "symbol": "frxXAUUSD",
+    "timeframe": "1h",
+    "duracion_velas": 2,
+    "min_confianza": 50,
+    "payout_pct": 85.0,
+    "desde": "2024-04-23",
+    "hasta": "2026-11-13",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2024-04-23 / 2025-04-23",
+          "prueba": "2025-04-23 / 2025-07-22",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 35,
+          "entrenamiento_win_rate": 0.6857,
+          "prueba_ops": 8,
+          "prueba_win_rate": 0.5,
+          "prueba_pnl_por_dolar": -0.6
+        },
+        {
+          "entrenamiento": "2024-07-22 / 2025-07-22",
+          "prueba": "2025-07-22 / 2025-10-20",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 33,
+          "entrenamiento_win_rate": 0.6061,
+          "prueba_ops": 12,
+          "prueba_win_rate": 0.75,
+          "prueba_pnl_por_dolar": 4.65
+        },
+        {
+          "entrenamiento": "2024-10-20 / 2025-10-20",
+          "prueba": "2025-10-20 / 2026-01-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 37,
+          "entrenamiento_win_rate": 0.5946,
+          "prueba_ops": 7,
+          "prueba_win_rate": 0.7143,
+          "prueba_pnl_por_dolar": 2.25
+        },
+        {
+          "entrenamiento": "2025-01-18 / 2026-01-18",
+          "prueba": "2026-01-18 / 2026-04-18",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 35,
+          "entrenamiento_win_rate": 0.6286,
+          "prueba_ops": 16,
+          "prueba_win_rate": 0.625,
+          "prueba_pnl_por_dolar": 2.5
+        },
+        {
+          "entrenamiento": "2025-04-18 / 2026-04-18",
+          "prueba": "2026-04-18 / 2026-07-17",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 43,
+          "entrenamiento_win_rate": 0.6512,
+          "prueba_ops": 6,
+          "prueba_win_rate": 0.3333,
+          "prueba_pnl_por_dolar": -2.3
+        },
+        {
+          "entrenamiento": "2025-07-17 / 2026-07-17",
+          "prueba": "2026-07-17 / 2026-10-15",
+          "confianza_elegida": 50,
+          "entrenamiento_ops": 42,
+          "entrenamiento_win_rate": 0.619,
+          "prueba_ops": 8,
+          "prueba_win_rate": 0.375,
+          "prueba_pnl_por_dolar": -2.45
+        },
+        {
+          "entrenamiento": "2025-10-15 / 2026-10-15",
+          "prueba": "2026-10-15 / 2026-11-13",
+          "confianza_elegida": "no opera",
+          "entrenamiento_ops": 0,
+          "entrenamiento_win_rate": 0.0,
+          "prueba_ops": 0,
+          "prueba_win_rate": 0.0,
+          "prueba_pnl_por_dolar": 0.0
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 57,
+        "ganadas": 33,
+        "win_rate": 0.5789,
+        "ic95_inf": 0.4498,
+        "ic95_sup": 0.6981,
+        "pnl_por_dolar": 4.05,
+        "punto_equilibrio": 0.5405,
+        "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 43,
+        "ganadas": 28,
+        "win_rate": 0.6512,
+        "ic95_inf": 0.5017,
+        "ic95_sup": 0.7758,
+        "pnl_por_dolar": 8.8,
+        "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 14,
+        "ganadas": 5,
+        "win_rate": 0.3571,
+        "ic95_inf": 0.1634,
+        "ic95_sup": 0.6124,
+        "pnl_por_dolar": -4.75,
+        "veredicto": "MUESTRA INSUFICIENTE"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 94,
+      "iteraciones": 5000,
+      "resultado_total_real": 11.45,
+      "orden": {
+        "caida_maxima_real": 7.6,
+        "caida_maxima_p50": 6.15,
+        "caida_maxima_p95": 9.75,
+        "peor_racha_real": 4,
+        "peor_racha_p50": 4.0,
+        "peor_racha_p95": 7.0
+      },
+      "bootstrap": {
+        "resultado_p5": -3.35,
+        "resultado_p50": 11.45,
+        "resultado_p95": 26.25,
+        "prob_terminar_ganando": 0.9218,
+        "win_rate_p2_5": 0.5106,
+        "win_rate_p97_5": 0.7021
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 1.051,
+      "base_operaciones": 94,
+      "base_win_rate": 0.6064,
+      "ruido_win_rate_media": 0.5861,
+      "ruido_win_rate_desv": 0.0239,
+      "ruido_win_rate_min": 0.5506,
+      "ruido_win_rate_max": 0.6292,
+      "ruido_operaciones_media": 90.1,
+      "ruido_pnl_media": 7.61,
+      "corridas_sobre_equilibrio": 30
+    }
+  },
+  {
+    "ok": true,
+    "estrategia": "EmaRsiCruce_v4",
+    "symbol": "R_100",
+    "timeframe": "4h",
+    "duracion_velas": 2,
+    "min_confianza": 55,
+    "payout_pct": 85.0,
+    "desde": "2025-04-29",
+    "hasta": "2026-11-14",
+    "walk_forward": {
+      "ok": true,
+      "dias_entrenamiento": 365,
+      "dias_prueba": 90,
+      "grilla_confianza": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "ventanas": [
+        {
+          "entrenamiento": "2025-04-29 / 2026-04-29",
+          "prueba": "2026-04-29 / 2026-07-28",
+          "confianza_elegida": 55,
+          "entrenamiento_ops": 67,
+          "entrenamiento_win_rate": 0.5672,
+          "prueba_ops": 21,
+          "prueba_win_rate": 0.6667,
+          "prueba_pnl_por_dolar": 4.9
+        },
+        {
+          "entrenamiento": "2025-07-28 / 2026-07-28",
+          "prueba": "2026-07-28 / 2026-10-26",
+          "confianza_elegida": 55,
+          "entrenamiento_ops": 76,
+          "entrenamiento_win_rate": 0.6184,
+          "prueba_ops": 16,
+          "prueba_win_rate": 0.3125,
+          "prueba_pnl_por_dolar": -6.75
+        },
+        {
+          "entrenamiento": "2025-10-26 / 2026-10-26",
+          "prueba": "2026-10-26 / 2026-11-14",
+          "confianza_elegida": 60,
+          "entrenamiento_ops": 22,
+          "entrenamiento_win_rate": 0.5909,
+          "prueba_ops": 1,
+          "prueba_win_rate": 1.0,
+          "prueba_pnl_por_dolar": 0.85
+        }
+      ],
+      "total_prueba": {
+        "operaciones": 38,
+        "ganadas": 20,
+        "win_rate": 0.5263,
+        "ic95_inf": 0.3726,
+        "ic95_sup": 0.6752,
+        "pnl_por_dolar": -1.0,
+        "punto_equilibrio": 0.5405,
+        "veredicto": "SIN VENTAJA"
+      },
+      "total_prueba_antes_del_corte": {
+        "operaciones": 0,
+        "ganadas": 0,
+        "win_rate": 0.0,
+        "ic95_inf": 0.0,
+        "ic95_sup": 0.0,
+        "pnl_por_dolar": 0.0,
+        "veredicto": "MUESTRA INSUFICIENTE"
+      },
+      "total_prueba_despues_del_corte": {
+        "operaciones": 38,
+        "ganadas": 20,
+        "win_rate": 0.5263,
+        "ic95_inf": 0.3726,
+        "ic95_sup": 0.6752,
+        "pnl_por_dolar": -1.0,
+        "veredicto": "SIN VENTAJA"
+      },
+      "corte_utc": "2026-04-29"
+    },
+    "monte_carlo": {
+      "ok": true,
+      "operaciones": 110,
+      "iteraciones": 5000,
+      "resultado_total_real": 2.85,
+      "orden": {
+        "caida_maxima_real": 8.9,
+        "caida_maxima_p50": 8.9,
+        "caida_maxima_p95": 13.85,
+        "peor_racha_real": 6,
+        "peor_racha_p50": 5.0,
+        "peor_racha_p95": 8.0
+      },
+      "bootstrap": {
+        "resultado_p5": -13.8,
+        "resultado_p50": 2.85,
+        "resultado_p95": 19.5,
+        "prob_terminar_ganando": 0.6144,
+        "win_rate_p2_5": 0.4636,
+        "win_rate_p97_5": 0.6455
+      }
+    },
+    "ruido_precios": {
+      "ok": true,
+      "corridas": 30,
+      "nivel_ruido": 0.1,
+      "ruido_sigma_precio": 2.491,
+      "base_operaciones": 110,
+      "base_win_rate": 0.5545,
+      "ruido_win_rate_media": 0.5621,
+      "ruido_win_rate_desv": 0.0325,
+      "ruido_win_rate_min": 0.4851,
+      "ruido_win_rate_max": 0.6132,
+      "ruido_operaciones_media": 104.4,
+      "ruido_pnl_media": 4.29,
+      "corridas_sobre_equilibrio": 22
+    }
+  }
+]
