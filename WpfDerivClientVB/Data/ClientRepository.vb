@@ -37,19 +37,20 @@ Namespace WpfDerivClientVB
                             client_id INTEGER NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
                             account_id_real VARCHAR(50),
                             app_id_real VARCHAR(100),
-                            api_token_real VARCHAR(200),
+                            api_token_real TEXT,
                             account_id_virtual VARCHAR(50),
                             app_id_virtual VARCHAR(100),
-                            api_token_virtual VARCHAR(200),
+                            api_token_virtual TEXT,
                             UNIQUE(client_id)
                         );"
 
                     Dim sqlMigrateReal = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS account_id_real VARCHAR(50);"
                     Dim sqlMigrateVir = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS account_id_virtual VARCHAR(50);"
                     Dim sqlMigrateAppIdReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN app_id_real TYPE VARCHAR(100);"
-                    Dim sqlMigrateTokenReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_real TYPE VARCHAR(200);"
+                    ' TEXT: un token cifrado con DPAPI ocupa ~300 caracteres (no cabe en VARCHAR(200))
+                    Dim sqlMigrateTokenReal = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_real TYPE TEXT;"
                     Dim sqlMigrateAppIdVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN app_id_virtual TYPE VARCHAR(100);"
-                    Dim sqlMigrateTokenVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_virtual TYPE VARCHAR(200);"
+                    Dim sqlMigrateTokenVir = "ALTER TABLE public.client_deriv_credentials ALTER COLUMN api_token_virtual TYPE TEXT;"
                     Dim sqlMigrateTelReal = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS telefono_real VARCHAR(50);"
                     Dim sqlMigrateTelVir  = "ALTER TABLE public.client_deriv_credentials ADD COLUMN IF NOT EXISTS telefono_virtual VARCHAR(50);"
 
@@ -68,10 +69,44 @@ Namespace WpfDerivClientVB
                         Catch
                         End Try
                     Next
+
+                    ' Cifrar tokens que sigan en texto plano (idempotente)
+                    Await MigrarTokensACifradoAsync(conn)
                 End Using
             Catch ex As Exception
                 Throw New Exception("Error al inicializar tablas: " & ex.Message)
             End Try
+        End Function
+
+        ''' <summary>
+        ''' Cifra con DPAPI los tokens que aun esten en texto plano.
+        ''' Idempotente: los ya cifrados (prefijo "dpapi:") no se tocan.
+        ''' </summary>
+        Private Async Function MigrarTokensACifradoAsync(conn As NpgsqlConnection) As Task
+            Dim pendientes As New List(Of Tuple(Of Integer, String, String))()
+            Dim sqlSel = "SELECT id, COALESCE(api_token_real,''), COALESCE(api_token_virtual,'') " &
+                         "FROM public.client_deriv_credentials " &
+                         "WHERE (COALESCE(api_token_real,'') <> '' AND api_token_real NOT LIKE 'dpapi:%') " &
+                         "   OR (COALESCE(api_token_virtual,'') <> '' AND api_token_virtual NOT LIKE 'dpapi:%')"
+            Using cmd As New NpgsqlCommand(sqlSel, conn)
+                Using reader = Await cmd.ExecuteReaderAsync()
+                    While Await reader.ReadAsync()
+                        pendientes.Add(Tuple.Create(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)))
+                    End While
+                End Using
+            End Using
+            If pendientes.Count = 0 Then Return
+
+            For Each p In pendientes
+                Using cmd As New NpgsqlCommand(
+                    "UPDATE public.client_deriv_credentials SET api_token_real = @r, api_token_virtual = @v WHERE id = @id", conn)
+                    cmd.Parameters.AddWithValue("r", SecretProtector.Protect(p.Item2))
+                    cmd.Parameters.AddWithValue("v", SecretProtector.Protect(p.Item3))
+                    cmd.Parameters.AddWithValue("id", p.Item1)
+                    Await cmd.ExecuteNonQueryAsync()
+                End Using
+            Next
+            AppLogger.Info("[ClientRepository] Tokens cifrados con DPAPI en " & pendientes.Count & " registro(s).")
         End Function
 
         ''' <summary>
@@ -128,11 +163,11 @@ Namespace WpfDerivClientVB
                                 Return New ClientDerivCredentials With {
                                     .AccountIdReal = safe("account_id_real"),
                                     .AppIdReal = safe("app_id_real"),
-                                    .ApiTokenReal = safe("api_token_real"),
+                                    .ApiTokenReal = SecretProtector.Unprotect(safe("api_token_real")),
                                     .TelefonoReal = safe("telefono_real"),
                                     .AccountIdVirtual = safe("account_id_virtual"),
                                     .AppIdVirtual = safe("app_id_virtual"),
-                                    .ApiTokenVirtual = safe("api_token_virtual"),
+                                    .ApiTokenVirtual = SecretProtector.Unprotect(safe("api_token_virtual")),
                                     .TelefonoVirtual = safe("telefono_virtual")
                                 }
                             End If
@@ -188,11 +223,11 @@ Namespace WpfDerivClientVB
                                     cmdCreds.Parameters.AddWithValue("cid", clientId)
                                     cmdCreds.Parameters.AddWithValue("acir", If(client.DerivCredentials.AccountIdReal, ""))
                                     cmdCreds.Parameters.AddWithValue("air", If(client.DerivCredentials.AppIdReal, ""))
-                                    cmdCreds.Parameters.AddWithValue("atr", If(client.DerivCredentials.ApiTokenReal, ""))
+                                    cmdCreds.Parameters.AddWithValue("atr", SecretProtector.Protect(If(client.DerivCredentials.ApiTokenReal, "")))
                                     cmdCreds.Parameters.AddWithValue("telr", If(client.DerivCredentials.TelefonoReal, ""))
                                     cmdCreds.Parameters.AddWithValue("aciv", If(client.DerivCredentials.AccountIdVirtual, ""))
                                     cmdCreds.Parameters.AddWithValue("aiv", If(client.DerivCredentials.AppIdVirtual, ""))
-                                    cmdCreds.Parameters.AddWithValue("atv", If(client.DerivCredentials.ApiTokenVirtual, ""))
+                                    cmdCreds.Parameters.AddWithValue("atv", SecretProtector.Protect(If(client.DerivCredentials.ApiTokenVirtual, "")))
                                     cmdCreds.Parameters.AddWithValue("telv", If(client.DerivCredentials.TelefonoVirtual, ""))
                                     Await cmdCreds.ExecuteNonQueryAsync()
                                 End Using

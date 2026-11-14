@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS public.client_deriv_credentials (
     id SERIAL PRIMARY KEY,
     client_id INTEGER NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
     app_id_real VARCHAR(50),
-    api_token_real VARCHAR(100),
+    api_token_real TEXT,
     app_id_virtual VARCHAR(50),
-    api_token_virtual VARCHAR(100),
+    api_token_virtual TEXT,
     UNIQUE(client_id)
 );
 

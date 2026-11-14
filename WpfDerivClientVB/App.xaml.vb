@@ -56,6 +56,16 @@ Namespace WpfDerivClientVB
 
             AppLogger.Info("Handlers de excepción globales registrados OK")
 
+            ' ── Seguridad: cifrar con DPAPI los tokens de Deriv que sigan en
+            '    texto plano en la BD (idempotente, en segundo plano).
+            Task.Run(Async Function()
+                         Try
+                             Await New ClientRepository().EnsureTablesExistAsync()
+                         Catch ex As Exception
+                             AppLogger.Warn("[App] Migracion de cifrado de tokens: " & ex.Message)
+                         End Try
+                     End Function)
+
             ' ── Singletons del modulo Servidor (cliente SignalR + controller live) ──
             ' Subscribir CommandRouter al evento de instrucciones del cliente SignalR.
             ' Esto se hace UNA sola vez para toda la app; los servicios viven mas alla
