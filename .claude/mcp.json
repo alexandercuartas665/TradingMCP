@@ -3,8 +3,10 @@
     "indicadores-deriv": {
       "command": "powershell",
       "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "C:\\DesarrolloIA\\Traiding\\mcp_indicadores.ps1"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\DesarrolloIA\\Traiding\\scripts\\mcp\\mcp_indicadores.ps1"
       ]
     }
   }

@@ -1,0 +1,229 @@
+<Window x:Class="HeavyOperacionesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Detalle de Operaciones"
+        Width="1280" Height="780"
+        Background="#07090d"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True">
+
+    <Window.Resources>
+        <Style x:Key="MicroLbl" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6c7790"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="BtnGhost" TargetType="Button">
+            <Setter Property="Background" Value="#121723"/>
+            <Setter Property="Foreground" Value="#e7ecf5"/>
+            <Setter Property="BorderBrush" Value="#1f2638"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header titulo -->
+        <Border Grid.Row="0" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="20,12">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🧪" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="txtTitulo" Text="Detalle de Operaciones"
+                                   Foreground="#5ee0d0" FontSize="16" FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock x:Name="txtSub" Text="" Foreground="#aab3c5"
+                               FontSize="11" FontFamily="Consolas" Margin="30,2,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="btnCerrar" Content="✕ Cerrar ventana" Style="{StaticResource BtnGhost}"
+                        Margin="20,12" Click="btnCerrar_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Info de la estrategia + configuracion + periodo -->
+        <Border Grid.Row="1" Background="#10141d" BorderBrush="#1f2638" BorderThickness="0,0,0,1" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Col 1: Estrategia -->
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Text="ESTRATEGIA" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoEstrategia" Text="—" Foreground="#5ee0d0"
+                               FontSize="13" FontWeight="Bold" Margin="0,2,0,4"/>
+                    <TextBlock Text="ACTIVO / TF" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoSymbolTf" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Col 2: Config riesgo -->
+                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Text="CONFIANZA MINIMA" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoConf" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,4"/>
+                    <TextBlock Text="PAYOUT %" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoPay" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,4"/>
+                    <TextBlock Text="DURACION VELAS" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoDur" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Col 3: Periodo -->
+                <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                    <TextBlock Text="PERIODO PROBADO · DESDE" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoDesde" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,4"/>
+                    <TextBlock Text="HASTA" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoHasta" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,4"/>
+                    <TextBlock Text="DURACION DEL RANGO" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoDuracionRango" Text="—" Foreground="#ffb454"
+                               FontSize="12" FontFamily="Consolas" FontWeight="Bold" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Col 4: Ejecucion -->
+                <StackPanel Grid.Column="3">
+                    <TextBlock Text="ID SESION" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoId" Text="—" Foreground="#5ee0d0"
+                               FontSize="12" FontFamily="Consolas" FontWeight="Bold" Margin="0,2,0,4"/>
+                    <TextBlock Text="EJECUTADA EL" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoEjecutada" Text="—" Foreground="#e7ecf5"
+                               FontSize="12" FontFamily="Consolas" Margin="0,2,0,4"/>
+                    <TextBlock Text="NOTAS" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="infoNotas" Text="—" Foreground="#aab3c5"
+                               FontSize="11" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- KPI strip -->
+        <Border Grid.Row="2" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="16,10">
+                    <TextBlock Text="TOTAL OPS" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kTotalOps" Text="—" Foreground="#e7ecf5" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="16,10">
+                    <TextBlock Text="GANADAS" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kGanadas" Text="—" Foreground="#3fd17a" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="16,10">
+                    <TextBlock Text="PERDIDAS" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kPerdidas" Text="—" Foreground="#ff5c7a" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Margin="16,10">
+                    <TextBlock Text="WIN%" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kWin" Text="—" Foreground="#e7ecf5" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4" Margin="16,10">
+                    <TextBlock Text="PNL TOTAL" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kPnl" Text="—" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="5" Margin="16,10">
+                    <TextBlock Text="DRAWDOWN" Style="{StaticResource MicroLbl}"/>
+                    <TextBlock x:Name="kDD" Text="—" Foreground="#ffb454" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Filtros -->
+        <Border Grid.Row="3" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,0,0,1" Padding="16,8">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="btnFTodas" Content="Todas" Style="{StaticResource BtnGhost}"
+                        Tag="all" Click="btnFiltro_Click" Margin="0,0,4,0"/>
+                <Button x:Name="btnFGanadas" Content="Solo ganadas" Style="{StaticResource BtnGhost}"
+                        Tag="win" Click="btnFiltro_Click" Margin="0,0,4,0"/>
+                <Button x:Name="btnFPerdidas" Content="Solo perdidas" Style="{StaticResource BtnGhost}"
+                        Tag="loss" Click="btnFiltro_Click" Margin="0,0,16,0"/>
+                <TextBlock x:Name="txtFiltroInfo" Text="" Foreground="#6c7790"
+                           FontSize="10" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Button x:Name="btnExportarCsv" Content="📥 Exportar CSV" Style="{StaticResource BtnGhost}"
+                        Click="btnExportarCsv_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="4" x:Name="dgOperaciones" AutoGenerateColumns="False" IsReadOnly="True"
+                  Background="#07090d" Foreground="#e7ecf5"
+                  RowBackground="#0c1018" AlternatingRowBackground="#10141d"
+                  BorderBrush="#1f2638" GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#1f2638" CanUserSortColumns="True">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#2a3142"/>
+                    <Setter Property="Foreground" Value="#ffffff"/>
+                    <Setter Property="BorderBrush" Value="#3a4258"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="Padding" Value="8,6"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="FontSize" Value="11"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding Idx}" Width="50"/>
+                <DataGridTextColumn Header="Apertura" Binding="{Binding AperturaStr}" Width="140"/>
+                <DataGridTextColumn Header="Cierre" Binding="{Binding CierreStr}" Width="140"/>
+                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="60"/>
+                <DataGridTextColumn Header="Entrada" Binding="{Binding EntradaStr}" Width="100"/>
+                <DataGridTextColumn Header="Salida" Binding="{Binding SalidaStr}" Width="100"/>
+                <DataGridTextColumn Header="Monto" Binding="{Binding MontoStr}" Width="80"/>
+                <DataGridTemplateColumn Header="Estado" Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Estado}" Foreground="{Binding EstadoBrush}"
+                                       FontWeight="SemiBold" Margin="6,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="PnL" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding PnlStr}" Foreground="{Binding PnlBrush}"
+                                       FontWeight="Bold" Margin="6,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Balance" Binding="{Binding BalanceStr}" Width="100"/>
+                <DataGridTextColumn Header="Conf%" Binding="{Binding ConfianzaStr}" Width="65"/>
+                <DataGridTextColumn Header="Motivo" Binding="{Binding MotivoSenal}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="5" Background="#0c1018" BorderBrush="#1f2638" BorderThickness="0,1,0,0">
+            <TextBlock x:Name="txtStatus" Text="" Foreground="#aab3c5"
+                       FontSize="10" FontFamily="Consolas" Margin="20,6"/>
+        </Border>
+    </Grid>
+</Window>

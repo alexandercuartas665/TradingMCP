@@ -1,0 +1,22 @@
+﻿{
+  "nombre": "TestSiempre",
+  "descripcion": "Estrategia de prueba: siempre genera CALL (RSI > 0). Usado para diagnosticar el motor.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "rsi", "tipo": "RSI", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "rsi", "op": "mayor_que", "valor": 0 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "rsi", "op": "menor_que", "valor": 0 }
+    ]
+  },
+  "confianza_base": 70,
+  "ajustes_confianza": []
+}

@@ -1,0 +1,358 @@
+<UserControl x:Class="EstrategiasLivePanelControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#11111B"
+             MinWidth="280">
+    <UserControl.Resources>
+        <!-- Estilo botoncito icono cuadrado -->
+        <Style x:Key="IconBtnStyle" TargetType="Button">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ============ Cabecera: SALDO TOTAL ============ -->
+        <Border Grid.Row="0" Background="#1E1E2E" CornerRadius="6"
+                Padding="12,10" Margin="8,8,8,4">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Linea 1: titulo + indicador -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="&#x1F4B0;" FontSize="13"
+                               Foreground="#89B4FA" Margin="0,0,6,0"/>
+                    <TextBlock Grid.Column="1" Text="SALDO TOTAL" Foreground="#A6ADC8"
+                               FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Ellipse Grid.Column="2" x:Name="indConexion" Width="8" Height="8"
+                             Fill="#A6E3A1" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Linea 2: saldo grande -->
+                <TextBlock Grid.Row="1" x:Name="txtSaldoTotal" Text="$0.00"
+                           Foreground="#CDD6F4" FontSize="22" FontWeight="Bold"
+                           Margin="0,4,0,0"/>
+
+                <!-- Linea 3: PnL hoy / semana / mes -->
+                <Grid Grid.Row="2" Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="HOY" Foreground="#6C7086" FontSize="9" FontWeight="Bold"/>
+                        <TextBlock x:Name="txtPnlHoy" Text="$0.00"
+                                   Foreground="#A6E3A1" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="SEMANA" Foreground="#6C7086" FontSize="9" FontWeight="Bold"/>
+                        <TextBlock x:Name="txtPnlSemana" Text="$0.00"
+                                   Foreground="#A6E3A1" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="MES" Foreground="#6C7086" FontSize="9" FontWeight="Bold"/>
+                        <TextBlock x:Name="txtPnlMes" Text="$0.00"
+                                   Foreground="#A6E3A1" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ============ Cabecera lista ============ -->
+        <Grid Grid.Row="1" Margin="14,8,14,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="ESTRATEGIAS ACTIVAS"
+                       Foreground="#89B4FA" FontSize="11" FontWeight="Bold"/>
+            <Border Grid.Column="1" Background="#313244" CornerRadius="8"
+                    Padding="6,1" MinWidth="22">
+                <TextBlock x:Name="txtCountActivas" Text="0"
+                           Foreground="#CDD6F4" FontSize="10" FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+            </Border>
+        </Grid>
+
+        <!-- ============ Lista scrollable de tarjetas ============ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" Padding="8,0,8,8">
+            <ItemsControl x:Name="lstEstrategiasActivas">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#1E1E2E" CornerRadius="6"
+                                Padding="12,10" Margin="0,0,0,8"
+                                BorderBrush="#313244" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Linea 1: estado + nombre estrategia -->
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8"
+                                             Fill="{Binding ColorEstadoBrush}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding Nombre}"
+                                               Foreground="#CDD6F4" FontSize="13"
+                                               FontWeight="Bold"/>
+                                </StackPanel>
+
+                                <!-- Linea 2: symbol/tf + tiempo activo + velas analizadas -->
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
+                                    <Border Background="#313244" CornerRadius="3"
+                                            Padding="5,1" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding SymbolTimeframe}"
+                                                   Foreground="#A6ADC8" FontSize="10"/>
+                                    </Border>
+                                    <TextBlock Text="&#x1F552;" Foreground="#6C7086"
+                                               FontSize="10" Margin="0,0,3,0"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding HoraInicioStr}"
+                                               Foreground="#6C7086" FontSize="10"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding TiempoActivoStr}"
+                                               Foreground="#A6ADC8" FontSize="10"
+                                               FontWeight="Bold" VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                    <TextBlock Text="&#x1F4CA;" Foreground="#6C7086"
+                                               FontSize="10" Margin="0,0,3,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="Velas analizadas"/>
+                                    <TextBlock Text="{Binding VelasAnalizadasStr}"
+                                               Foreground="#89B4FA" FontSize="10"
+                                               FontWeight="Bold" VerticalAlignment="Center"
+                                               ToolTip="Velas analizadas desde el inicio"/>
+                                </StackPanel>
+
+                                <!-- Linea 3: 3 stat boxes (Abiertas / Ganadas / Perdidas) -->
+                                <Grid Grid.Row="2" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#252535" CornerRadius="4"
+                                            Padding="0,6" Margin="0,0,3,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="ABIERTAS" Foreground="#6C7086"
+                                                       FontSize="9" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Abiertas}"
+                                                       Foreground="#CDD6F4" FontSize="14" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="1" Background="#252535" CornerRadius="4"
+                                            Padding="0,6" Margin="3,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="GANADAS" Foreground="#A6E3A1"
+                                                       FontSize="9" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Ganadas}"
+                                                       Foreground="#A6E3A1" FontSize="14" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding GanadasMonto}"
+                                                       Foreground="#A6E3A1" FontSize="9"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="2" Background="#252535" CornerRadius="4"
+                                            Padding="0,6" Margin="3,0,0,0">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="PERDIDAS" Foreground="#F38BA8"
+                                                       FontSize="9" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Perdidas}"
+                                                       Foreground="#F38BA8" FontSize="14" FontWeight="Bold"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding PerdidasMonto}"
+                                                       Foreground="#F38BA8" FontSize="9"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Linea 4: PnL + botones -->
+                                <Grid Grid.Row="3" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="BENEFICIO (PnL)"
+                                                   Foreground="#6C7086" FontSize="9" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding PnlStr}"
+                                                   Foreground="{Binding PnlBrush}"
+                                                   FontSize="14" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                VerticalAlignment="Bottom">
+                                        <Button Content="&#x1F4C4;" Style="{StaticResource IconBtnStyle}"
+                                                Background="#1E2A3A" BorderBrush="#89B4FA"
+                                                ToolTip="Ver detalle"
+                                                Tag="{Binding Id}"
+                                                Click="btnVerDetalle_Click"/>
+                                        <Button Content="{Binding TextoBotonPausa}" Style="{StaticResource IconBtnStyle}"
+                                                Background="{Binding ColorBotonPausa}"
+                                                BorderBrush="{Binding ColorBordePausa}"
+                                                ToolTip="{Binding TooltipPausa}"
+                                                Tag="{Binding Id}"
+                                                Click="btnPausarReanudar_Click"/>
+                                        <Button Content="&#x25A0;" Style="{StaticResource IconBtnStyle}"
+                                                Background="#3B1E2E" BorderBrush="#F38BA8"
+                                                ToolTip="Detener" Margin="0"
+                                                Tag="{Binding Id}"
+                                                Click="btnDetener_Click"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Linea 5: Acordeon de configuracion avanzada -->
+                                <Expander Grid.Row="4" Margin="0,8,0,0"
+                                          Foreground="#A6ADC8" FontSize="10"
+                                          Background="Transparent" BorderBrush="#313244">
+                                    <Expander.Header>
+                                        <TextBlock Text="Configuracion avanzada"
+                                                   Foreground="#A6ADC8" FontSize="10"
+                                                   FontWeight="Bold"/>
+                                    </Expander.Header>
+                                    <Border Background="#181825" CornerRadius="4"
+                                            Padding="8,6" Margin="0,4,0,0"
+                                            BorderBrush="#313244" BorderThickness="1">
+                                        <StackPanel>
+                                            <!-- Bloque editable: Monto / Conf min / Duracion -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Margin="0,0,4,4">
+                                                    <TextBlock Text="MONTO $" Foreground="#6C7086" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding Monto, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#45475A" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="2,0,2,4">
+                                                    <TextBlock Text="CONF. MIN %" Foreground="#6C7086" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding MinConfianza, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#45475A" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Margin="4,0,0,4">
+                                                    <TextBlock Text="DURACION" Foreground="#6C7086" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding DuracionVelas, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#45475A" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Bloque limites: Horas / Lim Ganancia / Lim Perdida -->
+                                            <Grid Margin="0,4,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Margin="0,0,4,4">
+                                                    <TextBlock Text="HORAS (0=∞)" Foreground="#F9E2AF" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding HorasOperacion, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#F9E2AF" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"
+                                                             ToolTip="Auto-pausar despues de N horas. 0 = sin limite"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="2,0,2,4">
+                                                    <TextBlock Text="LIM GANANCIA $" Foreground="#A6E3A1" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding LimiteGanancia, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#A6E3A1" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"
+                                                             ToolTip="Auto-pausar al alcanzar +$X. 0 = sin limite"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Margin="4,0,0,4">
+                                                    <TextBlock Text="LIM PERDIDA $" Foreground="#F38BA8" FontSize="8" FontWeight="Bold"/>
+                                                    <TextBox Text="{Binding LimitePerdida, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                             Background="#1E1E2E" Foreground="#CDD6F4"
+                                                             BorderBrush="#F38BA8" BorderThickness="1"
+                                                             FontSize="11" Padding="3,1"
+                                                             ToolTip="Auto-pausar al alcanzar -$X. 0 = sin limite"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Read-only info: Payout / Ventana / Senales / Tiempo -->
+                                            <Grid Margin="0,6,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,4,0">
+                                                    <TextBlock Text="Payout: " Foreground="#6C7086" FontSize="9"/>
+                                                    <TextBlock Text="{Binding PayoutPctStr}" Foreground="#A6ADC8" FontSize="9" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="Ventana: " Foreground="#6C7086" FontSize="9"/>
+                                                    <TextBlock Text="{Binding VentanaIndicadoresStr}" Foreground="#A6ADC8" FontSize="9" FontWeight="Bold"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <TextBlock Text="Tiempo: " Foreground="#6C7086" FontSize="9"/>
+                                                    <TextBlock Text="{Binding HorasTranscurridasStr}" Foreground="#F9E2AF" FontSize="9" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="ID:" Foreground="#6C7086" FontSize="9" Margin="0,0,2,0"/>
+                                                    <TextBlock Text="{Binding Id}" Foreground="#89B4FA" FontSize="9"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Boton Aplicar -->
+                                            <Button Content="✓ Aplicar cambios"
+                                                    Tag="{Binding Id}"
+                                                    Click="btnAplicarConfig_Click"
+                                                    Background="#1E2A3A" Foreground="#89B4FA"
+                                                    BorderBrush="#89B4FA" BorderThickness="1"
+                                                    FontSize="10" FontWeight="Bold"
+                                                    Padding="6,3" Margin="0,8,0,0"
+                                                    HorizontalAlignment="Stretch"
+                                                    Cursor="Hand"
+                                                    ToolTip="Envia la config nueva al motor en runtime (sin detener la sesion)"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Expander>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

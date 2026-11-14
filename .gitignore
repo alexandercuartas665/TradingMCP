@@ -98,3 +98,15 @@ Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 ProfilePictures.db
+
+# Secretos locales
+.env
+
+# Dependencias y logs que no van en git
+node_modules/
+build*.log
+build_errors*.txt
+
+# Backups de base de datos: nunca en git (contienen datos y credenciales)
+backups/
+*.dump

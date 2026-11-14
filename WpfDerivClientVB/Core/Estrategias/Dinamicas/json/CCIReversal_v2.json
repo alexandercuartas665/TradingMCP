@@ -1,0 +1,34 @@
+{
+  "nombre": "CCIReversal_v2",
+  "descripcion": "v2: confianza gradiente basada en 357 ops reales en OTC_DJI/4h. CALL: mientras mas profundo el CCI mejor (CCI<-300 gana 66.7%, -300..-200 60%, -200..-123 57.5%). PUT: la zona CCI 200-300 PIERDE (42.2%) y se penaliza con -15; solo extremos >300 ganan (70%). Base 50: usar min_confianza 55-60 para filtrar la zona muerta.",
+  "version": "2.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.0 } },
+    { "id": "cci", "tipo": "CCI",            "params": { "periodo": 20 } },
+    { "id": "atr", "tipo": "ATR",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_igual", "valor": "bb.Lower" },
+      { "campo": "cci",   "op": "menor_que",   "valor": -100 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_igual", "valor": "bb.Upper" },
+      { "campo": "cci",   "op": "mayor_que",   "valor": 100 }
+    ]
+  },
+  "confianza_base": 50,
+  "ajustes_confianza": [
+    { "si": { "campo": "cci", "op": "menor_que", "valor": -200 }, "sumar": 10 },
+    { "si": { "campo": "cci", "op": "menor_que", "valor": -300 }, "sumar": 5 },
+    { "si": { "operador": "AND", "condiciones": [
+        { "campo": "cci", "op": "mayor_que", "valor": 200 },
+        { "campo": "cci", "op": "menor_que", "valor": 300 }
+      ] }, "sumar": -15 },
+    { "si": { "campo": "cci", "op": "mayor_igual", "valor": 300 }, "sumar": 10 }
+  ]
+}

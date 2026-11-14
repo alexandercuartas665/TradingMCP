@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deriv Trading - Live Streaming</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+/* Replica de Window.Resources de MainWindow.xaml (paleta Catppuccin) */
+.mw { --base:#1E1E2E; --mantle:#181825; --crust:#11111B; --s0:#313244; --s1:#45475A; --txt:#CDD6F4; --sub:#A6ADC8;
+      --ov:#6C7086; --blue:#89B4FA; --green:#A6E3A1; --red:#F38BA8; --peach:#FAB387; --mauve:#CBA6F7; --yellow:#F9E2AF; --sky:#89DCEB;
+      background: var(--base); color: var(--txt); font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px;
+      display: grid; grid-template-columns: minmax(0,1fr) 300px; height: 100%; min-height: 860px; min-width: 1100px; }
+.mw * { box-sizing: border-box; }
+.mw .main { margin: 10px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.mw .side { background: var(--crust); border-left: 1px solid var(--s0); display: flex; flex-direction: column; min-height: 0; }
+.mw .row { display: flex; align-items: center; }
+.mw .wrap { display: flex; flex-wrap: wrap; align-items: center; row-gap: 4px; }
+.mw .lbl { padding: 5px; }               /* WPF Label default padding 5 */
+.mw .bar { background: var(--mantle); border-radius: 6px; }
+.mw .card { background: var(--mantle); border: 1px solid var(--s1); border-radius: 6px; }
+.mw .hdr { color: var(--blue); font-weight: 700; }
+.mw .mono { font-family: Consolas, "Cascadia Mono", monospace; }
+.mw .fill { flex: 1; min-width: 0; }
+
+/* TextBox */
+.mw .tb { background: var(--s0); color: var(--txt); border: 1px solid var(--s1); padding: 3px 4px; font: inherit; font-size: 12px;
+          height: 23px; outline: none; }
+/* ComboBox con template */
+.mw .cb { position: relative; height: 28px; background: var(--s0); border: 1px solid var(--s1); border-radius: 3px;
+          display: inline-flex; align-items: center; color: var(--txt); padding: 0 24px 0 8px; white-space: nowrap; overflow: hidden; cursor: default; }
+.mw .cb:hover { border-color: var(--blue); }
+.mw .cb::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: var(--s1); border-radius: 0 3px 3px 0;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='4'><path d='M0 0 L4 4 L8 0 Z' fill='%23CDD6F4'/></svg>");
+          background-repeat: no-repeat; background-position: center; }
+/* DatePicker (plantilla WPF por defecto) */
+.mw .dp { display: inline-flex; align-items: center; height: 24px; background: var(--s0); border: 1px solid var(--s1); color: var(--txt);
+          padding: 0 2px 0 4px; font-size: 12px; }
+.mw .dp span { flex: 1; }
+.mw .dp i { width: 18px; height: 16px; border: 1px solid #8a8a8a; background: linear-gradient(#fff 0 30%, #d8e5f5 30%); border-radius: 2px;
+          font-style: normal; font-size: 8px; color: #333; display: grid; place-items: center; }
+
+/* Buttons */
+.mw .btn { background: var(--blue); color: var(--base); font-weight: 700; border: 0; padding: 5px 10px; font: inherit; font-weight: 700;
+           cursor: pointer; white-space: nowrap; }
+.mw .btn:hover { background: #BEE6FD; }
+.mw .btn.dis { background: #F4F4F4; color: #838383; border: 1px solid #ADB2B5; cursor: default; }
+.mw .danger { background: var(--red); color: var(--base); border-radius: 4px; border: 0; padding: 5px 10px; font: inherit; font-weight: 700; cursor: pointer; }
+.mw .danger:hover { background: #EF7090; }
+.mw .danger.dis { background: #5A3040; opacity: .6; cursor: default; }
+.mw .success { background: var(--green); color: var(--base); border-radius: 4px; border: 0; padding: 5px 10px; font: inherit; font-weight: 700; cursor: pointer; }
+.mw .success:hover { background: #86C381; }
+.mw .success.dis { background: #304530; opacity: .6; cursor: default; }
+.mw .outline { border: 1px solid; font: inherit; cursor: pointer; padding: 3px 8px; font-size: 10px; font-weight: 700; }
+
+/* TabControl / TabItem */
+.mw .tabctl { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.mw .tabstrip { display: flex; padding-left: 2px; }
+.mw .ti { background: var(--s0); border: 1px solid var(--s1); border-bottom: 0; border-radius: 4px 4px 0 0; padding: 6px 14px; margin-right: 2px;
+          color: var(--txt); font-weight: 600; cursor: pointer; font: inherit; font-weight: 600; white-space: nowrap; }
+.mw .ti:hover { background: var(--s1); }
+.mw .ti.active { background: var(--base); border-color: var(--blue); color: var(--blue); position: relative; z-index: 1; margin-bottom: -1px; }
+.mw .ti.active:hover { background: var(--s1); }
+.mw .tabbody { flex: 1; border: 1px solid var(--s1); background: var(--base); min-height: 0; display: flex; flex-direction: column; }
+.mw .tp { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mw .tp[hidden] { display: none !important; }
+
+/* DataGrid */
+.mw .dg { flex: 1; min-height: 0; overflow: auto; background: var(--mantle); border: 1px solid var(--s1); }
+.mw .dg table { border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+.mw .dg th { height: 28px; background: var(--s0); color: var(--blue); font-weight: 600; text-align: left; padding: 5px 8px;
+             border-right: 1px solid var(--s1); border-bottom: 1px solid var(--s1); white-space: nowrap; overflow: hidden; }
+.mw .dg td { padding: 2px 4px; height: 22px; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mw .dg tbody tr:nth-child(odd) td { background: var(--base); }
+.mw .dg tbody tr:nth-child(even) td { background: var(--mantle); }
+.mw .dg tbody tr:hover td { background: #252535; }
+.mw .dg tbody tr.sel td { background: #2A3A5A; color: #fff; }
+.mw .dg.din tbody tr:nth-child(odd) td { background: #252535; }
+.mw .dg.din tbody tr:nth-child(even) td { background: var(--base); }
+.mw .dg.din td { border-bottom: 1px solid var(--s1); }
+
+/* Expander (plantilla WPF por defecto) */
+.mw details > summary { list-style: none; display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 2px 0; }
+.mw details > summary::-webkit-details-marker { display: none; }
+.mw details > summary .chev { width: 19px; height: 19px; border-radius: 50%; border: 1px solid #8a8a8a; background: #f3f3f3; color: #333;
+          display: grid; place-items: center; font-size: 9px; line-height: 1; flex: none; }
+.mw details[open] > summary .chev { transform: rotate(180deg); }
+
+/* ProgressBar */
+.mw .pb { height: 16px; background: var(--s0); }
+.mw .pb > div { height: 100%; background: var(--blue); width: 0; }
+
+/* StatusBar */
+.mw .status { background: var(--mantle); margin-top: 6px; display: flex; align-items: center; height: 24px; padding: 0 4px; }
+.mw .status .sep { width: 1px; height: 16px; background: #A0A0A0; margin: 0 4px; opacity: .5; }
+
+/* ListBox / ListView */
+.mw .lb { background: var(--s0); border: 1px solid var(--s1); color: var(--txt); overflow: auto; }
+.mw .lb div { padding: 1px 3px; }
+.mw .lb div.sel { background: #26A0DA33; outline: 1px solid #26A0DA; }
+.mw .lv { background: var(--base); border: 1px solid var(--s1); overflow: auto; }
+.mw .lv .it { border-bottom: 1px solid var(--s1); padding: 6px 8px; cursor: default; }
+.mw .lv .it:hover { background: #252535; }
+.mw .lv .it.sel { background: #1A3A5A; border-left: 2px solid var(--blue); padding-left: 6px; }
+.mw .chk { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.mw .chk i { width: 13px; height: 13px; border: 1px solid #707070; background: #fff; display: inline-block; flex: none; }
+
+/* Panel lateral (EstrategiasLivePanelControl) */
+.mw .scard { background: var(--base); border: 1px solid var(--s0); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+.mw .stat { background: #252535; border-radius: 4px; padding: 6px 0; text-align: center; }
+.mw .stat .t { font-size: 9px; font-weight: 700; }
+.mw .stat .v { font-size: 14px; font-weight: 700; }
+.mw .ibtn { width: 30px; height: 26px; margin-right: 4px; border: 1px solid; font-size: 11px; font-weight: 700; color: var(--txt); cursor: pointer; padding: 0; }
+.mw .mini { background: var(--base); color: var(--txt); border: 1px solid var(--s1); font-size: 11px; padding: 1px 3px; width: 100%; font-family: inherit; }
+.mw .k8 { font-size: 8px; font-weight: 700; display: block; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Deriv Trading - Live Streaming</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+  <div class="mw">
+
+    <!-- ================= CONTENIDO PRINCIPAL ================= -->
+    <div class="main">
+
+      <!-- Barra superior de streaming -->
+      <div class="bar row" style="padding:8px 10px;margin-bottom:8px">
+        <span style="margin-right:5px">Simbolo:</span>
+        <input class="tb" value="R_100" style="width:100px;margin-right:12px">
+        <span style="margin-right:5px">Temporalidad:</span>
+        <span class="cb" style="width:70px;margin-right:12px">1m</span>
+        <button class="btn" style="width:145px;margin-right:8px">▶  Iniciar Streaming</button>
+        <button class="danger dis" style="width:100px">⏹  Detener</button>
+      </div>
+
+      <!-- TabControl -->
+      <div class="tabctl">
+        <div class="tabstrip" role="tablist">
+          <button class="ti active" data-tab="t1">📊  Tabla de Velas</button>
+          <button class="ti" data-tab="t2">📈  Grafico</button>
+          <button class="ti" data-tab="t3">💰  Trading Live</button>
+          <button class="ti" data-tab="t4">⬇  Descarga Historica</button>
+          <button class="ti" data-tab="t5">🖥 Server</button>
+          <button class="ti" data-tab="t6">🤖  Estrategias</button>
+        </div>
+        <div class="tabbody">
+
+          <!-- TAB 1: Tabla de Velas -->
+          <div class="tp" id="t1">
+            <div class="dg" style="border:0">
+              <table>
+                <colgroup><col style="width:155px"><col style="width:105px"><col style="width:105px"><col style="width:105px"><col style="width:105px"><col style="width:110px"></colgroup>
+                <thead><tr><th>Hora (Local)</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Estado</th></tr></thead>
+                <tbody>
+                  <tr><td>12/11/2026 10:42:00</td><td>1248.51230</td><td>1249.10450</td><td>1248.20110</td><td>1248.87620</td><td>En curso</td></tr>
+                  <tr><td>12/11/2026 10:41:00</td><td>1247.93410</td><td>1248.77300</td><td>1247.61080</td><td>1248.51230</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:40:00</td><td>1248.40220</td><td>1248.55910</td><td>1247.70440</td><td>1247.93410</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:39:00</td><td>1247.88050</td><td>1248.61270</td><td>1247.52390</td><td>1248.40220</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:38:00</td><td>1248.95170</td><td>1249.02880</td><td>1247.73610</td><td>1247.88050</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:37:00</td><td>1248.31940</td><td>1249.20560</td><td>1248.11720</td><td>1248.95170</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:36:00</td><td>1247.60330</td><td>1248.48850</td><td>1247.40190</td><td>1248.31940</td><td>Cerrada</td></tr>
+                  <tr><td>12/11/2026 10:35:00</td><td>1247.12780</td><td>1247.81020</td><td>1246.95460</td><td>1247.60330</td><td>Cerrada</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 2: Grafico -->
+          <div class="tp" id="t2" hidden>
+            <div id="chartHost" style="flex:1;min-height:260px;background:#1E1E2E;position:relative"></div>
+            <details style="background:#181825;border:1px solid #45475A;margin-top:4px;color:#CDD6F4;padding:2px 4px">
+              <summary><span class="chev">⌄</span> ⚙ Configuracion de Colores</summary>
+              <div class="row" style="margin:8px 10px">
+                <span class="lbl">Alcista:</span><input class="tb" value="#26A69A" style="width:90px;margin:0 12px 0 4px">
+                <span class="lbl">Bajista:</span><input class="tb" value="#EF5350" style="width:90px;margin:0 12px 0 4px">
+                <span class="lbl">Mechas:</span><input class="tb" value="#888888" style="width:90px;margin:0 12px 0 4px">
+                <span class="lbl">Fondo:</span><input class="tb" value="#1E1E2E" style="width:90px;margin:0 12px 0 4px">
+                <button class="btn" style="width:120px;margin-right:12px">💾 Guardar</button>
+                <span style="width:18px;height:18px;border-radius:3px;background:#26A69A;margin:0 4px"></span>
+                <span style="width:18px;height:18px;border-radius:3px;background:#EF5350;margin:0 4px 0 2px"></span>
+                <span style="width:18px;height:18px;border-radius:3px;background:#888888;margin-left:2px"></span>
+              </div>
+            </details>
+            <div class="card" style="margin-top:8px;padding:8px 10px">
+              <div class="row">
+                <span style="color:#A6ADC8">Activo: </span>
+                <b style="color:#89B4FA;margin:0 18px 0 3px">R_100</b>
+                <span style="color:#A6ADC8;margin-right:5px">Monto $:</span>
+                <input class="tb" value="10" style="width:60px;margin-right:18px">
+                <span style="color:#A6ADC8;margin-right:5px">Duración (ticks):</span>
+                <input class="tb" value="5" style="width:50px">
+                <span class="fill"></span>
+                <button class="success" style="width:160px;margin-right:10px">📈 COMPRAR (CALL)</button>
+                <button class="danger" style="width:160px">📉 VENDER (PUT)</button>
+              </div>
+              <div style="background:#0D89B4FA;border-radius:4px;padding:4px 8px;margin-top:6px;color:#89B4FA;font-size:11px">⚡ Conecta una cuenta en el tab 'Trading Live' para operar.</div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Trading Live -->
+          <div class="tp" id="t3" hidden style="padding:8px">
+            <div class="bar row" style="padding:10px 12px;margin-bottom:8px">
+              <span style="margin-right:6px">Cliente:</span>
+              <span class="cb" style="width:160px;margin-right:10px">Cliente Demo</span>
+              <span style="margin-right:6px">Cuenta:</span>
+              <span class="cb" style="width:100px;margin-right:12px">Demo</span>
+              <button class="btn" style="width:110px;margin-right:10px">⚡ Conectar</button>
+              <button class="danger dis" style="width:130px">⏹ Desconectar</button>
+              <span class="fill"></span>
+              <span style="color:#A6ADC8">Balance: </span>
+              <b style="font-size:16px;color:#A6E3A1;margin:0 15px 0 3px">--</b>
+              <span style="background:#313244;border-radius:4px;padding:3px 8px;margin-right:12px;color:#F38BA8;font-size:11px;font-weight:700">Desconectado</span>
+            </div>
+
+            <div class="card" style="padding:10px 12px;margin-bottom:8px">
+              <div class="row">
+                <div class="wrap fill">
+                  <span style="margin-right:5px">Símbolo:</span>
+                  <span class="cb" style="width:110px;margin-right:12px">R_100</span>
+                  <span style="margin-right:5px">Monto $:</span>
+                  <input class="tb" value="1" style="width:60px;margin-right:12px">
+                  <span style="margin-right:5px">Duración:</span>
+                  <input class="tb" value="5" style="width:42px;margin-right:4px">
+                  <span class="cb" style="width:65px;margin-right:12px">ticks</span>
+                </div>
+                <button class="success dis" style="width:110px;margin-right:6px">📈 CALL</button>
+                <button class="danger dis" style="width:110px">📉 PUT</button>
+              </div>
+              <details style="margin-top:8px;color:#89B4FA;font-weight:600">
+                <summary><span class="chev">⌄</span> ⚙ Opciones Avanzadas</summary>
+                <div style="background:#1E1E2E;border:1px solid #45475A;border-radius:4px;padding:10px 12px;margin-top:6px;color:#CDD6F4">
+                  <div class="wrap" style="margin-bottom:8px">
+                    <span style="margin-right:5px">Tipo contrato:</span>
+                    <span class="cb" style="width:165px;margin-right:16px">📈 CALL — Sube</span>
+                    <span style="margin-right:5px">Base:</span>
+                    <span class="cb" style="width:100px;margin-right:16px">Stake (pago fijo)</span>
+                    <span style="margin-right:5px">Moneda:</span>
+                    <span class="cb" style="width:70px">USD</span>
+                  </div>
+                  <div class="row">
+                    <span style="color:#A6ADC8;margin-right:6px">Cotización:</span>
+                    <span style="color:#89B4FA;font-size:11px;font-weight:600">— presiona Cotizar primero —</span>
+                    <span class="fill"></span>
+                    <button class="btn dis" style="width:95px;margin-right:8px">💱 Cotizar</button>
+                    <button class="success dis" style="width:95px">✅ Ejecutar</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="row" style="margin-bottom:6px">
+              <b style="color:#89B4FA;font-size:12px;margin-right:15px">OPERACIONES</b>
+              <button class="outline" style="color:#89B4FA;background:#1E2A3A;border-color:#89B4FA;margin-right:8px">🔄 Sincronizar con Deriv</button>
+              <button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;margin-right:15px">✖ Cerrar todas las Abierto</button>
+              <span style="color:#A6ADC8;font-size:11px"></span>
+            </div>
+            <div class="dg">
+              <table>
+                <colgroup><col style="width:100px"><col style="width:80px"><col style="width:140px"><col style="width:50px"><col style="width:80px"><col style="width:65px"><col style="width:75px"><col style="width:75px"><col style="width:80px"><col style="width:70px"><col style="width:75px"><col style="width:70px"><col style="width:50px"><col style="width:140px"></colgroup>
+                <thead><tr><th>Fecha</th><th>Hora</th><th>Estrategia</th><th>Tipo</th><th>Símbolo</th><th>Monto $</th><th>Entrada</th><th>Spot</th><th>Estado</th><th>Expira</th><th>P/L</th><th>Cerrar</th><th>Quitar</th><th>Contract ID</th></tr></thead>
+                <tbody>
+                  <tr><td>12/11/2026</td><td>10:41:58</td><td>Manual</td><td>CALL</td><td>R_100</td><td>1.00</td><td>1248.51</td><td>1248.88</td><td style="color:#89B4FA;font-weight:600">Abierto</td><td>00:03</td><td style="color:#A6E3A1;font-weight:600">0.95</td><td><button class="danger" style="font-size:10px;padding:1px 3px;border-radius:0">✖ Vender</button></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291847563021</td></tr>
+                  <tr><td>12/11/2026</td><td>10:38:12</td><td>EMA Cross v2</td><td>PUT</td><td>R_75</td><td>1.00</td><td>45312.80</td><td>45298.14</td><td style="color:#A6E3A1;font-weight:600">Ganado</td><td>—</td><td style="color:#A6E3A1;font-weight:600">0.95</td><td></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291847102877</td></tr>
+                  <tr><td>12/11/2026</td><td>10:31:45</td><td>RSI Rebote</td><td>CALL</td><td>R_50</td><td>2.00</td><td>198.4521</td><td>198.3107</td><td style="color:#F38BA8;font-weight:600">Perdido</td><td>—</td><td style="color:#F38BA8;font-weight:600">-2.00</td><td></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291846455190</td></tr>
+                  <tr><td>12/11/2026</td><td>10:24:03</td><td>Manual</td><td>PUT</td><td>1HZ100V</td><td>1.00</td><td>873.21</td><td>872.65</td><td style="color:#A6E3A1;font-weight:600">Ganado</td><td>—</td><td style="color:#A6E3A1;font-weight:600">0.95</td><td></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291845730664</td></tr>
+                  <tr><td>12/11/2026</td><td>10:17:29</td><td>EMA Cross v2</td><td>CALL</td><td>R_25</td><td>1.00</td><td>2841.337</td><td>2841.902</td><td style="color:#A6E3A1;font-weight:600">Ganado</td><td>—</td><td style="color:#A6E3A1;font-weight:600">0.95</td><td></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291844981235</td></tr>
+                  <tr><td>12/11/2026</td><td>10:09:50</td><td>RSI Rebote</td><td>PUT</td><td>R_10</td><td>1.00</td><td>6312.448</td><td>6312.913</td><td style="color:#F38BA8;font-weight:600">Perdido</td><td>—</td><td style="color:#F38BA8;font-weight:600">-1.00</td><td></td><td><button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;padding:1px 3px;font-weight:400">🗑</button></td><td>291844207718</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 4: Descarga Historica -->
+          <div class="tp" id="t4" hidden style="padding:8px">
+            <div class="bar wrap" style="padding:8px 10px;margin-bottom:8px">
+              <span class="lbl">Simbolo:</span><input class="tb" value="R_100" style="width:100px;margin:0 12px 0 2px">
+              <span class="lbl">Temporalidad:</span><span class="cb" style="width:70px;margin:0 12px 0 2px">1m</span>
+              <span class="lbl">Desde:</span><span class="dp" style="width:125px;margin:0 12px 0 2px"><span>13/10/2026</span><i>15</i></span>
+              <span class="lbl">Hasta:</span><span class="dp" style="width:125px;margin:0 16px 0 2px"><span>12/11/2026</span><i>15</i></span>
+              <button class="success" style="width:165px;margin-right:8px">⬇  Descargar Historial</button>
+              <button class="danger dis" style="width:100px;margin-right:16px">⏹  Detener</button>
+              <span style="width:2px;height:28px;background:#45475A;margin-right:16px"></span>
+              <span class="lbl">Período MA:</span><input class="tb" value="20" style="width:45px;margin:0 8px 0 2px">
+              <button class="btn" style="width:185px">🔬  Calcular Indicadores</button>
+            </div>
+            <div class="bar" style="padding:6px 10px;margin-bottom:8px;color:#A6ADC8;font-size:11px">
+              <b style="color:#89B4FA">Capacidad Deriv: </b> 1m ≈ 16h por pagina | 5m ≈ 3.5 dias | 1h ≈ 42 dias | 1d ≈ 2.7 anos — por pagina de 1.000 velas. Se paginan automaticamente.
+            </div>
+            <div class="bar" style="padding:8px 10px;margin-bottom:8px">
+              <div class="row" style="margin-bottom:6px"><b>Listo para descargar.</b><span class="mono" style="margin-left:12px;color:#A6ADC8"></span></div>
+              <div class="pb"><div></div></div>
+            </div>
+            <div class="card mono" style="flex:1;min-height:120px;overflow:auto;padding:10px;color:#A6ADC8;font-size:11px;line-height:18px"></div>
+          </div>
+
+          <!-- TAB 5: Server -->
+          <div class="tp" id="t5" hidden style="padding:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;margin-bottom:8px;align-items:start">
+              <div class="card" style="padding:10px 12px;margin-right:6px">
+                <div class="hdr" style="font-size:13px;margin-bottom:8px">🌐 API SERVER</div>
+                <div class="row" style="margin-bottom:6px">
+                  <span style="margin-right:6px">Puerto:</span>
+                  <input class="tb" value="8765" style="width:55px;margin-right:10px">
+                  <button class="btn">▶ Iniciar Servidor</button>
+                </div>
+                <div class="mono" style="color:#A6E3A1;font-size:11px;margin-bottom:6px"></div>
+                <div style="color:#A6ADC8;font-size:10px">curl http://localhost:8765/api/status<br>curl -X POST http://localhost:8765/api/trade -H "Content-Type: application/json" -d "{contract_type:CALL,...}"</div>
+              </div>
+              <div class="card" style="padding:10px 12px;margin-left:6px">
+                <div class="hdr" style="font-size:13px;margin-bottom:8px">📊 ANÁLISIS DE MERCADO</div>
+                <div class="row" style="margin-bottom:6px"><span style="margin-right:6px">Símbolo:</span><span class="cb" style="width:110px">R_100</span></div>
+                <div class="row" style="margin-bottom:8px"><span style="margin-right:6px">Período:</span><span class="cb" style="width:90px">20 min</span></div>
+                <button class="success dis" style="width:100%;margin-bottom:4px">🔍 Analizar Mercado</button>
+                <button class="btn dis" style="width:100%;margin:4px 0 6px">🤖 Analizar y Operar</button>
+                <div style="background:#181825;border:1px solid #45475A;border-radius:4px;padding:8px;margin-top:6px;color:#A6ADC8;font-size:11px" class="mono">— Pulsa Analizar para ver recomendación —</div>
+              </div>
+            </div>
+            <div class="row" style="margin-bottom:6px">
+              <b class="fill" style="color:#89B4FA;font-size:12px">PETICIONES API</b>
+              <button class="btn" style="padding:3px 6px;font-size:11px">🗑 Limpiar</button>
+            </div>
+            <textarea readonly class="mono" style="flex:1;min-height:120px;resize:none;background:#0D1117;color:#A6E3A1;font-size:11px;border:1px solid #45475A;padding:2px 4px;white-space:pre;outline:none">[Sistema] API Server listo. Pulsa ▶ Iniciar Servidor para comenzar.</textarea>
+          </div>
+
+          <!-- TAB 6: Estrategias -->
+          <div class="tp" id="t6" hidden style="padding:8px">
+            <div style="display:grid;grid-template-columns:220px 1fr;margin-bottom:8px">
+              <div style="margin-right:8px">
+                <div class="hdr" style="font-size:11px;margin-bottom:4px">ESTRATEGIAS JSON</div>
+                <div class="lb" style="height:120px">
+                  <div class="sel">ema_cross_v2.json</div>
+                  <div>rsi_rebote.json</div>
+                  <div>bollinger_squeeze.json</div>
+                  <div>macd_momentum.json</div>
+                  <div>seykota_trend.json</div>
+                </div>
+                <div class="row" style="margin-top:4px"><button class="btn" style="padding:3px 6px;font-size:11px;margin-right:4px">↺ Recargar</button></div>
+              </div>
+              <div>
+                <div class="row" style="margin-bottom:4px">
+                  <b style="color:#89B4FA;margin-right:4px">Fuente:</b><span class="cb" style="width:110px;margin-right:10px">Replay BD</span>
+                  <span style="margin-right:4px">Activo:</span><input class="tb" value="R_100" style="width:120px;height:28px;margin-right:8px;border-radius:3px">
+                  <span style="margin-right:4px">TF:</span><span class="cb" style="width:70px;margin-right:8px">1h</span>
+                  <span style="margin-right:4px">Payout%:</span><input class="tb" value="85" style="width:55px;margin-right:8px">
+                  <span style="margin-right:4px">Confianza%:</span><input class="tb" value="55" style="width:55px">
+                </div>
+                <div class="row" style="margin-bottom:4px">
+                  <span style="margin-right:4px">Duracion V:</span><input class="tb" value="5" style="width:55px;margin-right:8px">
+                  <span style="margin-right:4px">Monto:</span><input class="tb" value="1" style="width:55px;margin-right:8px">
+                  <span style="margin-right:4px">Desde:</span><span class="dp" style="width:110px;margin-right:8px"><span>13/10/2026</span><i>15</i></span>
+                  <span style="margin-right:4px">Hasta:</span><span class="dp" style="width:110px"><span>12/11/2026</span><i>15</i></span>
+                </div>
+                <div class="row" style="margin-top:2px">
+                  <button class="success" style="padding:4px 8px;margin-right:6px">▶ Backtest (BD)</button>
+                  <button class="btn" style="padding:4px 8px;margin-right:6px">🔴 Iniciar Live</button>
+                  <button class="btn dis" style="padding:4px 8px">⬛ Detener</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mono" style="background:#1A1A2E;border-radius:3px;padding:5px 8px;margin:6px 0 4px;color:#6C7086;font-size:10px">BD: —  (selecciona Replay BD para cargar activos disponibles)</div>
+
+            <div class="row" style="background:#313244;border-radius:4px;padding:7px 10px;margin-bottom:6px;white-space:nowrap">
+              <b style="color:#89B4FA">RESULTADO: </b>
+              <span class="fill" style="color:#A6ADC8;overflow:hidden;text-overflow:ellipsis;margin-left:3px">Backtest completado: ema_cross_v2 sobre R_100 1h</span>
+              <b style="color:#A6E3A1;margin-left:16px">Win 61.4%</b>
+              <b style="color:#A6E3A1;margin-left:16px">PnL +$18.35</b>
+              <span style="color:#A6ADC8;margin-left:16px">Ops 57</span>
+              <span style="color:#FAB387;margin-left:16px">DD -$6.20</span>
+              <span style="color:#6C7086;margin-left:16px">#a3f9c1</span>
+              <span style="color:#CBA6F7;margin-left:16px">v2</span>
+              <b style="color:#89DCEB;margin-left:16px">$1,018.35</b>
+            </div>
+
+            <div style="flex:1;min-height:0;display:grid;grid-template-columns:265px 1fr">
+              <div style="margin-right:8px;display:flex;flex-direction:column;min-height:0">
+                <div class="hdr" style="font-size:11px;margin-bottom:4px">BACKTESTS EJECUTADOS</div>
+                <div style="margin-bottom:4px">
+                  <div class="row" style="margin-bottom:3px"><span style="color:#A6ADC8;font-size:11px;margin-right:6px">Activo:</span><span class="cb fill">R_100</span></div>
+                  <label class="chk" style="color:#A6ADC8"><i></i>Ver todas las estrategias</label>
+                  <label class="chk" style="color:#A6E3A1;margin-top:2px"><i></i>Solo ganadoras (Win &gt; 50% y PnL &gt; 0)</label>
+                </div>
+                <div class="lv" style="flex:1;min-height:120px">
+                  <div class="it sel"><div class="row"><b style="color:#89B4FA;font-size:12px;margin-right:6px">#a3f9c1</b><span class="fill" style="color:#6C7086;font-size:11px">12/11 10:20</span><b style="color:#A6E3A1;font-size:12px">61.4%</b></div><div style="color:#A6ADC8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">ema_cross_v2 · R_100/1h · 57 ops · +$18.35</div></div>
+                  <div class="it"><div class="row"><b style="color:#89B4FA;font-size:12px;margin-right:6px">#7b02de</b><span class="fill" style="color:#6C7086;font-size:11px">12/11 09:48</span><b style="color:#F38BA8;font-size:12px">46.2%</b></div><div style="color:#A6ADC8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">rsi_rebote · R_100/1h · 39 ops · -$4.10</div></div>
+                  <div class="it"><div class="row"><b style="color:#89B4FA;font-size:12px;margin-right:6px">#55c8a0</b><span class="fill" style="color:#6C7086;font-size:11px">11/11 18:05</span><b style="color:#A6E3A1;font-size:12px">58.0%</b></div><div style="color:#A6ADC8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">bollinger_squeeze · R_100/1h · 50 ops · +$9.25</div></div>
+                  <div class="it"><div class="row"><b style="color:#89B4FA;font-size:12px;margin-right:6px">#e1d447</b><span class="fill" style="color:#6C7086;font-size:11px">11/11 15:32</span><b style="color:#A6E3A1;font-size:12px">55.6%</b></div><div style="color:#A6ADC8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">macd_momentum · R_100/1h · 72 ops · +$5.60</div></div>
+                  <div class="it"><div class="row"><b style="color:#89B4FA;font-size:12px;margin-right:6px">#0f9b3e</b><span class="fill" style="color:#6C7086;font-size:11px">10/11 21:14</span><b style="color:#F38BA8;font-size:12px">49.1%</b></div><div style="color:#A6ADC8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">seykota_trend · R_100/1h · 53 ops · -$1.85</div></div>
+                </div>
+                <button class="outline" style="color:#F38BA8;background:#3B1E2E;border-color:#F38BA8;font-size:11px;font-weight:700;padding:4px 6px;margin-top:5px;width:100%">Eliminar sesion</button>
+              </div>
+              <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
+                <div style="background:#252535;border-radius:4px;padding:7px 10px;margin-bottom:5px;white-space:nowrap;overflow:hidden">
+                  <div class="row" style="font-size:11px">
+                    <b style="color:#89B4FA">SESION </b><b style="color:#89B4FA;margin:0 12px 0 3px">#a3f9c1</b>
+                    <b style="color:#CBA6F7;margin-right:10px">ema_cross_v2</b>
+                    <span style="margin-right:10px">R_100 / 1h</span>
+                    <span style="color:#6C7086;font-size:10px">Dur:</span><span style="margin:0 10px 0 2px">5</span>
+                    <span style="color:#6C7086;font-size:10px">Payout:</span><span style="margin:0 10px 0 2px">85%</span>
+                    <span style="color:#6C7086;font-size:10px">Conf:</span><span style="margin-left:2px">55%</span>
+                  </div>
+                  <div class="row" style="font-size:10px;margin-top:3px">
+                    <span style="color:#6C7086">Rango:</span><span style="color:#A6ADC8;margin:0 12px 0 4px">13/10/2026 → 12/11/2026</span>
+                    <span style="color:#6C7086">Senales:</span><span style="color:#A6ADC8;margin:0 12px 0 4px">84</span>
+                    <span style="color:#6C7086">Ops:</span><span style="color:#A6ADC8;margin:0 12px 0 4px">57</span>
+                    <span style="color:#6C7086">WinRate:</span><b style="color:#A6E3A1;margin:0 12px 0 4px">61.4%</b>
+                    <span style="color:#6C7086">PnL:</span><b style="color:#A6E3A1;margin:0 12px 0 4px">+$18.35</b>
+                    <span style="color:#6C7086">PF:</span><span style="color:#FAB387;margin-left:4px">1.42</span>
+                  </div>
+                </div>
+                <div class="hdr" style="font-size:11px;margin-bottom:4px">OPERACIONES</div>
+                <div class="dg din" style="background:#1E1E2E">
+                  <table>
+                    <colgroup><col style="width:50px"><col style="width:135px"><col style="width:135px"><col style="width:85px"><col style="width:85px"><col style="width:75px"><col style="width:72px"><col style="width:50px"><col style="width:90px"><col style="width:90px"></colgroup>
+                    <thead><tr><th>Tipo</th><th>Apertura</th><th>Cierre</th><th>Entrada</th><th>Salida</th><th>Estado</th><th>PnL</th><th>Conf.</th><th>Saldo Post</th><th>Cuenta</th></tr></thead>
+                    <tbody>
+                      <tr><td>CALL</td><td>11/11/2026 22:00</td><td>12/11/2026 03:00</td><td>1243.18</td><td>1246.02</td><td>WIN</td><td>+0.85</td><td>68</td><td>1018.35</td><td>Replay</td></tr>
+                      <tr><td>PUT</td><td>11/11/2026 14:00</td><td>11/11/2026 19:00</td><td>1251.77</td><td>1249.30</td><td>WIN</td><td>+0.85</td><td>61</td><td>1017.50</td><td>Replay</td></tr>
+                      <tr><td>CALL</td><td>11/11/2026 06:00</td><td>11/11/2026 11:00</td><td>1248.92</td><td>1247.40</td><td>LOSS</td><td>-1.00</td><td>57</td><td>1016.65</td><td>Replay</td></tr>
+                      <tr><td>CALL</td><td>10/11/2026 20:00</td><td>11/11/2026 01:00</td><td>1239.55</td><td>1244.10</td><td>WIN</td><td>+0.85</td><td>72</td><td>1017.65</td><td>Replay</td></tr>
+                      <tr><td>PUT</td><td>10/11/2026 11:00</td><td>10/11/2026 16:00</td><td>1245.63</td><td>1247.81</td><td>LOSS</td><td>-1.00</td><td>56</td><td>1016.80</td><td>Replay</td></tr>
+                      <tr><td>CALL</td><td>10/11/2026 02:00</td><td>10/11/2026 07:00</td><td>1236.20</td><td>1240.48</td><td>WIN</td><td>+0.85</td><td>64</td><td>1017.80</td><td>Replay</td></tr>
+                      <tr><td>PUT</td><td>09/11/2026 17:00</td><td>09/11/2026 22:00</td><td>1242.91</td><td>1238.06</td><td>WIN</td><td>+0.85</td><td>59</td><td>1016.95</td><td>Replay</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- StatusBar -->
+      <div class="status">
+        <span style="color:#A6ADC8;padding:0 3px">Desconectado</span>
+        <span class="sep"></span>
+        <span style="color:#6C7086;font-size:10px;padding:0 3px">BD: localhost:8083/traiding_db</span>
+      </div>
+    </div>
+
+    <!-- ================= PANEL LATERAL (EstrategiasLivePanelControl) ================= -->
+    <div class="side">
+      <div style="background:#1E1E2E;border-radius:6px;padding:10px 12px;margin:8px 8px 4px">
+        <div class="row">
+          <span style="font-size:13px;color:#89B4FA;margin-right:6px">💰</span>
+          <b class="fill" style="color:#A6ADC8;font-size:11px">SALDO TOTAL</b>
+          <span style="width:8px;height:8px;border-radius:50%;background:#A6E3A1"></span>
+        </div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px">$1,024.70</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;margin-top:6px">
+          <div><div style="color:#6C7086;font-size:9px;font-weight:700">HOY</div><b style="color:#A6E3A1;font-size:12px">$3.80</b></div>
+          <div><div style="color:#6C7086;font-size:9px;font-weight:700">SEMANA</div><b style="color:#A6E3A1;font-size:12px">$12.45</b></div>
+          <div><div style="color:#6C7086;font-size:9px;font-weight:700">MES</div><b style="color:#A6E3A1;font-size:12px">$24.70</b></div>
+        </div>
+      </div>
+      <div class="row" style="margin:8px 14px 4px">
+        <b class="fill" style="color:#89B4FA;font-size:11px">ESTRATEGIAS ACTIVAS</b>
+        <span style="background:#313244;border-radius:8px;padding:1px 6px;min-width:22px;text-align:center;font-size:10px;font-weight:700">2</span>
+      </div>
+      <div style="flex:1;overflow:auto;padding:0 8px 8px">
+        <div class="scard">
+          <div class="row"><span style="width:8px;height:8px;border-radius:50%;background:#A6E3A1;margin-right:8px"></span><b style="font-size:13px">ema_cross_v2</b></div>
+          <div class="row" style="margin-top:4px;font-size:10px">
+            <span style="background:#313244;border-radius:3px;padding:1px 5px;margin-right:8px;color:#A6ADC8">R_100 / 1m</span>
+            <span style="color:#6C7086;margin-right:3px">🕒</span><span style="color:#6C7086;margin-right:8px">09:15</span>
+            <b style="color:#A6ADC8;margin-right:8px">1h 27m</b>
+            <span style="color:#6C7086;margin-right:3px">📊</span><b style="color:#89B4FA">87</b>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+            <div class="stat"><div class="t" style="color:#6C7086">ABIERTAS</div><div class="v">1</div></div>
+            <div class="stat" style="color:#A6E3A1"><div class="t">GANADAS</div><div class="v">7</div><div style="font-size:9px">+$6.65</div></div>
+            <div class="stat" style="color:#F38BA8"><div class="t">PERDIDAS</div><div class="v">3</div><div style="font-size:9px">-$3.00</div></div>
+          </div>
+          <div class="row" style="margin-top:8px;align-items:flex-end">
+            <div class="fill"><div style="color:#6C7086;font-size:9px;font-weight:700">BENEFICIO (PnL)</div><b style="color:#A6E3A1;font-size:14px">+$3.65</b></div>
+            <button class="ibtn" style="background:#1E2A3A;border-color:#89B4FA">📄</button>
+            <button class="ibtn" style="background:#3A3420;border-color:#F9E2AF">⏸</button>
+            <button class="ibtn" style="background:#3B1E2E;border-color:#F38BA8;margin:0">■</button>
+          </div>
+          <details style="margin-top:8px;color:#A6ADC8;font-size:10px">
+            <summary><span class="chev">⌄</span><b>Configuracion avanzada</b></summary>
+            <div style="background:#181825;border:1px solid #313244;border-radius:4px;padding:6px 8px;margin-top:4px">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+                <div><span class="k8" style="color:#6C7086">MONTO $</span><input class="mini" value="1"></div>
+                <div><span class="k8" style="color:#6C7086">CONF. MIN %</span><input class="mini" value="55"></div>
+                <div><span class="k8" style="color:#6C7086">DURACION</span><input class="mini" value="5"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px">
+                <div><span class="k8" style="color:#F9E2AF">HORAS (0=∞)</span><input class="mini" value="0" style="border-color:#F9E2AF"></div>
+                <div><span class="k8" style="color:#A6E3A1">LIM GANANCIA $</span><input class="mini" value="20" style="border-color:#A6E3A1"></div>
+                <div><span class="k8" style="color:#F38BA8">LIM PERDIDA $</span><input class="mini" value="10" style="border-color:#F38BA8"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:6px;font-size:9px">
+                <div><span style="color:#6C7086">Payout: </span><b style="margin-right:8px">85%</b><span style="color:#6C7086">Ventana: </span><b>50</b></div>
+                <div><span style="color:#6C7086">Tiempo: </span><b style="color:#F9E2AF;margin-right:8px">1.45h</b><span style="color:#6C7086">ID:</span><span style="color:#89B4FA">a3f9c1</span></div>
+              </div>
+              <button class="outline" style="width:100%;margin-top:8px;color:#89B4FA;background:#1E2A3A;border-color:#89B4FA;padding:3px 6px">✓ Aplicar cambios</button>
+            </div>
+          </details>
+        </div>
+        <div class="scard">
+          <div class="row"><span style="width:8px;height:8px;border-radius:50%;background:#F9E2AF;margin-right:8px"></span><b style="font-size:13px">rsi_rebote</b></div>
+          <div class="row" style="margin-top:4px;font-size:10px">
+            <span style="background:#313244;border-radius:3px;padding:1px 5px;margin-right:8px;color:#A6ADC8">1HZ100V / 1m</span>
+            <span style="color:#6C7086;margin-right:3px">🕒</span><span style="color:#6C7086;margin-right:8px">10:02</span>
+            <b style="color:#A6ADC8;margin-right:8px">40m</b>
+            <span style="color:#6C7086;margin-right:3px">📊</span><b style="color:#89B4FA">40</b>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+            <div class="stat"><div class="t" style="color:#6C7086">ABIERTAS</div><div class="v">0</div></div>
+            <div class="stat" style="color:#A6E3A1"><div class="t">GANADAS</div><div class="v">2</div><div style="font-size:9px">+$1.90</div></div>
+            <div class="stat" style="color:#F38BA8"><div class="t">PERDIDAS</div><div class="v">2</div><div style="font-size:9px">-$2.00</div></div>
+          </div>
+          <div class="row" style="margin-top:8px;align-items:flex-end">
+            <div class="fill"><div style="color:#6C7086;font-size:9px;font-weight:700">BENEFICIO (PnL)</div><b style="color:#F38BA8;font-size:14px">-$0.10</b></div>
+            <button class="ibtn" style="background:#1E2A3A;border-color:#89B4FA">📄</button>
+            <button class="ibtn" style="background:#1E3A2A;border-color:#A6E3A1">▶</button>
+            <button class="ibtn" style="background:#3B1E2E;border-color:#F38BA8;margin:0">■</button>
+          </div>
+          <details style="margin-top:8px;color:#A6ADC8;font-size:10px">
+            <summary><span class="chev">⌄</span><b>Configuracion avanzada</b></summary>
+            <div style="background:#181825;border:1px solid #313244;border-radius:4px;padding:6px 8px;margin-top:4px">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+                <div><span class="k8" style="color:#6C7086">MONTO $</span><input class="mini" value="1"></div>
+                <div><span class="k8" style="color:#6C7086">CONF. MIN %</span><input class="mini" value="60"></div>
+                <div><span class="k8" style="color:#6C7086">DURACION</span><input class="mini" value="3"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px">
+                <div><span class="k8" style="color:#F9E2AF">HORAS (0=∞)</span><input class="mini" value="2" style="border-color:#F9E2AF"></div>
+                <div><span class="k8" style="color:#A6E3A1">LIM GANANCIA $</span><input class="mini" value="10" style="border-color:#A6E3A1"></div>
+                <div><span class="k8" style="color:#F38BA8">LIM PERDIDA $</span><input class="mini" value="5" style="border-color:#F38BA8"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:6px;font-size:9px">
+                <div><span style="color:#6C7086">Payout: </span><b style="margin-right:8px">85%</b><span style="color:#6C7086">Ventana: </span><b>14</b></div>
+                <div><span style="color:#6C7086">Tiempo: </span><b style="color:#F9E2AF;margin-right:8px">0.67h</b><span style="color:#6C7086">ID:</span><span style="color:#89B4FA">7b02de</span></div>
+              </div>
+              <button class="outline" style="width:100%;margin-top:8px;color:#89B4FA;background:#1E2A3A;border-color:#89B4FA;padding:3px 6px">✓ Aplicar cambios</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<div class="maqueta-flag">MAQUETA</div>
+
+<script>
+// Cambio de tabs
+document.querySelectorAll('.mw .ti').forEach(function (t) {
+  t.addEventListener('click', function () {
+    document.querySelectorAll('.mw .ti').forEach(function (x) { x.classList.toggle('active', x === t); });
+    document.querySelectorAll('.mw .tp').forEach(function (p) { p.hidden = p.id !== t.dataset.tab; });
+    if (t.dataset.tab === 't2') drawChart();
+  });
+});
+// Seleccion visual en listas/grids
+document.querySelectorAll('.mw .dg tbody tr').forEach(function (r) {
+  r.addEventListener('click', function () { r.parentNode.querySelectorAll('tr').forEach(function (x) { x.classList.toggle('sel', x === r); }); });
+});
+document.querySelectorAll('.mw .lv .it, .mw .lb div').forEach(function (r) {
+  r.addEventListener('click', function () { r.parentNode.querySelectorAll(':scope > div').forEach(function (x) { x.classList.toggle('sel', x === r); }); });
+});
+// Placeholder de grafico de velas (SVG inline) en chartHost
+function drawChart() {
+  var host = document.getElementById('chartHost');
+  var w = host.clientWidth || 800, h = host.clientHeight || 320;
+  var n = 60, seed = 7, p = 1248, data = [];
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var i = 0; i < n; i++) {
+    var o = p, c = o + (rnd() - 0.48) * 2.4, hi = Math.max(o, c) + rnd() * 0.9, lo = Math.min(o, c) - rnd() * 0.9;
+    data.push([o, hi, lo, c]); p = c;
+  }
+  var max = Math.max.apply(null, data.map(function (d) { return d[1]; })), min = Math.min.apply(null, data.map(function (d) { return d[2]; }));
+  var padR = 70, padT = 14, padB = 22, cw = (w - padR - 10) / n;
+  function y(v) { return padT + (max - v) / (max - min) * (h - padT - padB); }
+  var s = '<svg width="' + w + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg" style="display:block;font-family:Segoe UI,sans-serif">';
+  for (var g = 0; g <= 5; g++) {
+    var v = min + (max - min) * g / 5, yy = y(v);
+    s += '<line x1="0" x2="' + (w - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="#313244" stroke-width="1"/>';
+    s += '<text x="' + (w - padR + 6) + '" y="' + (yy + 4) + '" fill="#A6ADC8" font-size="10">' + v.toFixed(2) + '</text>';
+  }
+  data.forEach(function (d, i) {
+    var x = 10 + i * cw + cw / 2, up = d[3] >= d[0], col = up ? '#26A69A' : '#EF5350';
+    s += '<line x1="' + x + '" x2="' + x + '" y1="' + y(d[1]) + '" y2="' + y(d[2]) + '" stroke="#888888" stroke-width="1"/>';
+    var top = y(Math.max(d[0], d[3])), bh = Math.max(1, Math.abs(y(d[0]) - y(d[3])));
+    s += '<rect x="' + (x - cw * 0.35) + '" y="' + top + '" width="' + (cw * 0.7) + '" height="' + bh + '" fill="' + col + '"/>';
+  });
+  var last = data[n - 1][3];
+  s += '<line x1="0" x2="' + (w - padR) + '" y1="' + y(last) + '" y2="' + y(last) + '" stroke="#89B4FA" stroke-dasharray="4 3"/>';
+  s += '<rect x="' + (w - padR + 2) + '" y="' + (y(last) - 8) + '" width="' + (padR - 4) + '" height="16" fill="#89B4FA"/>';
+  s += '<text x="' + (w - padR + 6) + '" y="' + (y(last) + 4) + '" fill="#1E1E2E" font-size="10" font-weight="700">' + last.toFixed(2) + '</text>';
+  s += '<text x="10" y="' + (h - 6) + '" fill="#6C7086" font-size="10">R_100 · 1m</text></svg>';
+  host.innerHTML = s;
+}
+window.addEventListener('resize', function () { if (!document.getElementById('t2').hidden) drawChart(); });
+</script>
+</body>
+</html>

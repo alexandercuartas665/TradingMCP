@@ -1,0 +1,29 @@
+{
+  "nombre": "DemoSimple",
+  "descripcion": "Estrategia DEMO. Alterna CALL/PUT segun RSI(5). Solo para verificar el flujo del sistema, NO usar en operacion real.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "rsi", "tipo": "RSI", "params": { "periodo": 5 } },
+    { "id": "sma_rapida", "tipo": "SMA", "params": { "periodo": 3 } },
+    { "id": "sma_lenta", "tipo": "SMA", "params": { "periodo": 8 } }
+  ],
+  "senal_call": {
+    "operador": "OR",
+    "condiciones": [
+      { "campo": "rsi", "op": "mayor_que", "valor": 50 },
+      { "campo": "sma_rapida", "op": "mayor_que", "valor": "sma_lenta" }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "rsi", "op": "menor_igual", "valor": 50 },
+      { "campo": "sma_rapida", "op": "menor_igual", "valor": "sma_lenta" }
+    ]
+  },
+  "confianza_base": 80,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 70 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 30 }, "sumar": 10 }
+  ]
+}

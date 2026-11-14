@@ -9,45 +9,54 @@
     <AssemblyName>WpfDerivClientVB</AssemblyName>
     <EnableDefaultPageItems>false</EnableDefaultPageItems>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
-    <Page Include="Views\MainWindow.xaml" />
-    <Page Include="Dashboard\AdminDashboard.xaml" />
-    <Page Include="Dashboard\controls\AdminSidebar.xaml" />
-    <Page Include="CandleManager\CandleViewerWindow.xaml" />
-    <Page Include="CandleManager\controls\CandleHeaderControl.xaml" />
-    <Page Include="CandleManager\controls\CandleChartControl.xaml" />
-    <Page Include="CandleManager\controls\CandleAgentControl.xaml" />
-    <Page Include="CandleManager\controls\CandleTransactionsControl.xaml" />
-    <Page Include="CandleManager\DbConfigWindow.xaml" />
-    <Page Include="CandleManager\controls\DbConfigControl.xaml" />
-    <Page Include="Dashboard\views\SettingsView.xaml" />
-    <Page Include="Dashboard\views\ClientsView.xaml" />
-    <Page Include="CandleManager\Modals\TradingSettingsModal.xaml" />
+    <Page Include="UI\Backtest\Controls\HeavyDetailDrawer.xaml" />
+    <Page Include="UI\Backtest\HeavyOperacionesWindow.xaml" />
+    <Page Include="UI\Backtest\HeavyStrategyTesterWindow.xaml" />
+    <Page Include="UI\Dashboard\AdminDashboard.xaml" />
+    <Page Include="UI\Dashboard\controls\AdminSidebar.xaml" />
+    <Page Include="UI\Dashboard\views\ClientsView.xaml" />
+    <Page Include="UI\Dashboard\views\SettingsView.xaml" />
+    <Page Include="UI\ServidorLive\Controls\EstrategiasLivePanelControl.xaml" />
+    <Page Include="UI\ServidorLive\ServidorLiveWindow.xaml" />
+    <Page Include="UI\Trading\MainWindow.xaml" />
+    <Page Include="UI\Velas\CandleViewerWindow.xaml" />
+    <Page Include="UI\Velas\DbConfigWindow.xaml" />
+    <Page Include="UI\Velas\Modals\TradingSettingsModal.xaml" />
+    <Page Include="UI\Velas\controls\CandleAgentControl.xaml" />
+    <Page Include="UI\Velas\controls\CandleChartControl.xaml" />
+    <Page Include="UI\Velas\controls\CandleHeaderControl.xaml" />
+    <Page Include="UI\Velas\controls\CandleTransactionsControl.xaml" />
+    <Page Include="UI\Velas\controls\DbConfigControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Security" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
   </ItemGroup>
 
+  <!-- El proyecto de pruebas puede ver los miembros Friend (puntos de inyeccion) -->
   <ItemGroup>
-    <Folder Include="CandleManager\" />
-    <Folder Include="Funciones\" />
-    <Folder Include="EstrategiasDinamicas\" />
+    <InternalsVisibleTo Include="WpfDerivClientVB.Tests" />
   </ItemGroup>
 
   <!-- Estrategias JSON: se copian al output para que el registry las encuentre -->
   <ItemGroup>
-    <Content Include="EstrategiasDinamicas\estrategias\*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="Core\Estrategias\Dinamicas\json\*.json">
+      <Link>EstrategiasDinamicas\estrategias\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

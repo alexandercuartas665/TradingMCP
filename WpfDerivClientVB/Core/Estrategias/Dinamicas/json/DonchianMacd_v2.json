@@ -1,0 +1,28 @@
+﻿{
+  "nombre": "DonchianMacd_v2",
+  "descripcion": "Donchian Middle como filtro de tendencia + MACD histogram como trigger de entrada. En vez de esperar ruptura de canal (muy rara), usa la linea media como separador alcista/bajista. Genera 10x mas senales que v1.",
+  "version": "2.0",
+  "indicadores": [
+    { "id": "dc",   "tipo": "DonchianChannel", "params": { "periodo": 10 } },
+    { "id": "macd", "tipo": "MACD",            "params": { "rapido": 12, "lento": 26, "senal": 9 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",          "op": "mayor_que", "valor": "dc" },
+      { "campo": "macd.Histogram", "op": "mayor_que", "valor": 0 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close",          "op": "menor_que", "valor": "dc" },
+      { "campo": "macd.Histogram", "op": "menor_que", "valor": 0 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": [
+    { "si": { "campo": "macd.Histogram", "op": "mayor_que", "valor": 0 }, "sumar": 10 },
+    { "si": { "campo": "macd.Histogram", "op": "menor_que", "valor": 0 }, "sumar": 10 }
+  ]
+}

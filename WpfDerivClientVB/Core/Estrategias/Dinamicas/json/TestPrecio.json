@@ -1,0 +1,20 @@
+﻿{
+  "nombre": "TestPrecio",
+  "descripcion": "Test: CALL si close > 0. Sin indicadores. Debe disparar en TODOS los windows.",
+  "version": "1.0",
+  "indicadores": [],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_que", "valor": 0 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_que", "valor": 0 }
+    ]
+  },
+  "confianza_base": 70,
+  "ajustes_confianza": []
+}

@@ -1,0 +1,36 @@
+{
+  "nombre": "EmaRsiCruce_v4",
+  "descripcion": "v4: mismas senales que v3 (pullback a EMA13 en tendencia EMA50) pero con confianza GRADIENTE basada en datos de 261 ops reales en OTC_NDX/4h. RSI cerca del extremo de la zona de rebote = mayor probabilidad (RSI 40-45 gano 82.4% vs 62.9% en 45-50). Base 50: usar min_confianza 55-65 para filtrar calidad.",
+  "version": "4.0",
+  "indicadores": [
+    { "id": "ema_rapida",    "tipo": "EMA", "params": { "periodo": 13 } },
+    { "id": "ema_tendencia", "tipo": "EMA", "params": { "periodo": 50 } },
+    { "id": "rsi",           "tipo": "RSI", "params": { "periodo": 14 } },
+    { "id": "atr",           "tipo": "ATR", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_que",   "valor": "ema_tendencia" },
+      { "campo": "close", "op": "menor_igual", "valor": "ema_rapida" },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 32 },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 50 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_que",   "valor": "ema_tendencia" },
+      { "campo": "close", "op": "mayor_igual", "valor": "ema_rapida" },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 68 },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 50 }
+    ]
+  },
+  "confianza_base": 50,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 48 }, "sumar": 5 },
+    { "si": { "campo": "rsi", "op": "menor_que", "valor": 45 }, "sumar": 10 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 52 }, "sumar": 5 },
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 55 }, "sumar": 10 }
+  ]
+}

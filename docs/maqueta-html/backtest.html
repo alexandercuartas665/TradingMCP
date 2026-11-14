@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heavy Strategy Tester</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  /* ===== HeavyStrategyTesterWindow.xaml : Window.Resources ===== */
+  .hst { background:#07090d; height:100%; display:grid; grid-template-rows:56px 1fr 30px; position:relative; min-width:1280px; font-family:"Segoe UI",sans-serif; font-size:12px; color:#e7ecf5; }
+  .mono { font-family:Consolas,"Cascadia Mono",monospace; }
+  .LabelHdr { color:#aab3c5; font-size:11px; font-weight:700; margin:0 0 8px; }
+  .MicroLbl { color:#6c7790; font-size:9px; font-weight:700; }
+  .Chip { background:#121723; color:#aab3c5; border:1px solid #1f2638; padding:4px 10px; font-family:Consolas,monospace; font-size:11px;
+          margin:0 4px 4px 0; border-radius:3px; cursor:pointer; display:inline-block; line-height:13px; }
+  .Chip:hover { border-color:#2d3651; }
+  .Chip.on { background:#0d2a30; color:#5ee0d0; border-color:#5ee0d0; }
+  .InputDark { background:#121723; color:#e7ecf5; border:1px solid #1f2638; padding:3px 6px; font-family:Consolas,monospace; font-size:11px;
+               height:26px; width:100%; outline:none; }
+  .BtnPrimary, .BtnGhost, .BtnDanger { border:1px solid; padding:6px 10px; font-weight:600; font-size:11px; cursor:pointer; font-family:"Segoe UI",sans-serif; white-space:nowrap; line-height:13px; }
+  .BtnPrimary { background:#0d2a30; color:#5ee0d0; border-color:#5ee0d0; }
+  .BtnGhost { background:#121723; color:#aab3c5; border-color:#1f2638; }
+  .BtnGhost:hover { border-color:#2d3651; }
+  .BtnDanger { background:#3a2230; color:#ffffff; border-color:#ff5c7a; }
+  .BtnDanger:disabled { background:#1a1f2a; color:#5a6378; border-color:#2a3142; cursor:default; }
+  .Pill { background:#121723; border:1px solid #1f2638; border-radius:3px; padding:4px 10px; color:#aab3c5; font-size:10px; font-family:Consolas,monospace; margin-right:8px; white-space:nowrap; }
+  /* WPF Aero2 checkbox */
+  .wcb { appearance:none; -webkit-appearance:none; width:13px; height:13px; border:1px solid #333; background:#fff; margin:0 5px 0 0; vertical-align:-2px; position:relative; cursor:pointer; flex:none; }
+  .wcb:checked::after { content:""; position:absolute; left:3px; top:0px; width:4px; height:8px; border:solid #212121; border-width:0 2px 2px 0; transform:rotate(45deg); }
+
+  /* ===== HEADER ===== */
+  .hdr { background:#0c1018; border-bottom:1px solid #1f2638; display:flex; align-items:center; justify-content:space-between; }
+  .hdr .brand { display:flex; align-items:center; margin:0 20px; }
+  .hdr .brand .ico { font-size:20px; margin-right:10px; }
+  .hdr .ttl1 { color:#5ee0d0; font-size:14px; font-weight:700; }
+  .hdr .ttl2 { color:#6c7790; font-size:10px; font-family:Consolas,monospace; }
+  .hdr .pills { display:flex; align-items:center; margin:0 20px; }
+  .apibox { background:#121723; border:1px solid #1f2638; border-radius:3px; padding:2px 6px; margin-right:4px; display:flex; align-items:center; }
+  .apibox .t { color:#aab3c5; font-size:10px; font-family:Consolas,monospace; margin-right:4px; }
+  .apibox input { width:46px; height:20px; background:#0c1018; color:#e7ecf5; border:1px solid #1f2638; font-family:Consolas,monospace; font-size:10px; padding:0 2px; }
+  .apibox button { background:#0d2a30; color:#5ee0d0; border:1px solid #5ee0d0; padding:2px 6px; font-size:10px; font-weight:600; margin-left:4px; cursor:pointer; }
+
+  /* ===== MAIN ===== */
+  .main { display:grid; grid-template-columns:320px 1fr 380px; min-height:0; }
+  .left { background:#0c1018; border-right:1px solid #1f2638; overflow-y:auto; }
+  .left .inner { padding:14px; }
+  .hrow { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .hrow .cnt { color:#6c7790; font-size:9px; font-family:Consolas,monospace; }
+  .chips { margin-bottom:16px; display:flex; flex-wrap:wrap; }
+  .strats { background:#121723; border:1px solid #1f2638; border-radius:3px; margin-bottom:16px; max-height:200px; overflow-y:auto; padding:4px; }
+  .strats .cat { color:#6c7790; font-size:9px; font-weight:700; font-family:Consolas,monospace; margin:8px 2px 4px; }
+  .strats label { display:flex; align-items:center; color:#e7ecf5; font-family:Consolas,monospace; font-size:11px; margin:1px 4px; cursor:pointer; }
+  .tri { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; margin-bottom:12px; }
+  .tri .InputDark:nth-child(1) { margin-right:4px; } .tri .InputDark:nth-child(2) { margin:0 2px; width:calc(100% - 4px); } .tri .InputDark:nth-child(3) { margin-left:4px; width:calc(100% - 4px); }
+  .tri .InputDark:nth-child(1) { width:calc(100% - 4px); }
+  .dp { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .datepicker { background:#121723; border:1px solid #abadb3; display:flex; align-items:center; height:24px; padding:1px; }
+  .datepicker span { flex:1; background:#fff; color:#000; font-size:12px; padding:2px 4px; height:100%; line-height:18px; }
+  .datepicker i { width:20px; height:100%; display:grid; place-items:center; font-style:normal; font-size:11px; color:#333; background:#121723; }
+
+  /* center */
+  .center { background:#07090d; display:flex; flex-direction:column; min-width:0; min-height:0; }
+  .kpis { background:#0c1018; border-bottom:1px solid #1f2638; display:grid; grid-template-columns:repeat(6,1fr); }
+  .kpis > div { padding:12px 16px; min-width:0; }
+  .kpis .v { color:#e7ecf5; font-size:20px; font-weight:700; line-height:27px; }
+  .kpis .s { color:#6c7790; font-size:9px; font-family:Consolas,monospace; }
+  .filters { background:#0c1018; border-bottom:1px solid #1f2638; padding:8px 14px; display:flex; align-items:center; overflow-x:auto; }
+  .filters .lbl { color:#aab3c5; font-size:10px; }
+  .filters input { width:50px; height:24px; background:#121723; color:#e7ecf5; border:1px solid #1f2638; font-family:Consolas,monospace; font-size:11px; padding:0 3px; }
+  /* Expander */
+  .exp { background:#10141d; border-bottom:1px solid #1f2638; color:#e7ecf5; }
+  .exp-h { display:flex; align-items:center; padding:3px; cursor:pointer; user-select:none; }
+  .exp-h .arrow { width:19px; height:19px; border:1px solid #333; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:8px; color:#333; }
+  .exp.open .exp-h .arrow { transform:rotate(180deg); }
+  .exp-b { background:#0c1018; padding:12px 14px; display:none; }
+  .exp.open .exp-b { display:block; }
+  .fgrid { display:grid; grid-template-columns:repeat(4,1fr); }
+  .fgrid > .c { margin:0 4px 8px; } .fgrid > .c.c0 { margin:0 8px 8px 0; } .fgrid > .c.c3 { margin:0 0 8px 8px; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:3px; }
+  .combo { margin-top:3px; height:26px; background:#121723; color:#e7ecf5; border:1px solid #1f2638; font-size:12px; display:flex; align-items:center; justify-content:space-between; padding:0 6px; }
+  .combo::after { content:"\2304"; font-size:11px; color:#aab3c5; margin-top:-6px; }
+  .frow4 { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+  .frow4 label { color:#e7ecf5; font-size:11px; margin-right:16px; display:inline-flex; align-items:center; }
+
+  /* DataGrid WPF */
+  .dgwrap { flex:1; overflow:auto; min-height:0; background:#07090d; border:1px solid #1f2638; }
+  table.dg { border-collapse:collapse; table-layout:fixed; width:100%; min-width:1340px; font-size:12px; color:#e7ecf5; }
+  table.dg th { background:#2a3142; color:#fff; border-right:1px solid #3a4258; border-bottom:1px solid #3a4258; padding:6px 8px; font-weight:600; font-size:11px; text-align:left; white-space:nowrap; position:sticky; top:0; z-index:1; }
+  table.dg td { padding:0 2px; height:24px; border-bottom:1px solid #1f2638; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  table.dg tbody tr:nth-child(odd) td { background:#0c1018; }
+  table.dg tbody tr:nth-child(even) td { background:#10141d; }
+  table.dg tbody tr { cursor:default; }
+  table.dg tbody tr.sel td { background:#0078d7; color:#fff; }
+  table.dg td.cc { text-align:center; }
+  .rowBtn { background:#0d2a30; color:#5ee0d0; border:1px solid #5ee0d0; padding:2px 6px; font-size:10px; font-weight:600; margin:3px; cursor:pointer; display:inline-block; line-height:12px; }
+  .tb { margin:0 6px; }
+  .g { color:#3fd17a; } .r { color:#ff5c7a; } .n { color:#aab3c5; }
+
+  /* right: cola */
+  .right { background:#0c1018; border-left:1px solid #1f2638; display:grid; grid-template-rows:auto 1fr auto; min-height:0; }
+  .qhead { padding:14px; }
+  .qhead .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .qcount { background:#121723; border:1px solid #1f2638; border-radius:8px; padding:1px 6px; color:#aab3c5; font-size:9px; font-family:Consolas,monospace; }
+  .qhead .full { width:100%; margin-bottom:4px; display:block; }
+  .qhead .two { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:4px; }
+  .qhead .BtnDanger { width:100%; padding:7px 10px; }
+  .jobs { overflow-y:auto; padding:0 14px 8px; min-height:0; }
+  .job { background:#121723; border:1px solid #1f2638; border-radius:3px; padding:8px 10px; margin-bottom:6px; font-family:Consolas,monospace; }
+  .job .r1 { display:flex; align-items:center; margin-bottom:4px; }
+  .job .id { color:#475066; font-size:10px; margin-right:8px; }
+  .job .st { font-size:9px; font-weight:700; margin-left:auto; }
+  .job .x { color:#6c7790; font-size:10px; margin-left:6px; width:18px; text-align:center; cursor:pointer; }
+  .job .nm { color:#e7ecf5; font-size:11px; margin-bottom:4px; }
+  .job .meta { color:#6c7790; font-size:9px; }
+  .job .tm { display:flex; justify-content:space-between; margin-top:3px; font-size:9px; }
+  .job .tm .a { color:#8a93a8; } .job .tm .b { color:#ffb454; font-weight:700; }
+  .job .vv { display:flex; align-items:center; margin-top:4px; font-size:9px; font-weight:700; }
+  .job .vv .v { color:#5cb6ff; flex:1; margin-left:3px; } .job .vv .w { color:#3fd17a; }
+  .job .pb { height:3px; background:#0c1018; margin-top:6px; } .job .pb i { display:block; height:100%; background:#5ee0d0; }
+  .cap { background:#10141d; border-top:1px solid #1f2638; padding:10px 14px; }
+  .cap .tot { color:#5ee0d0; font-size:22px; font-weight:700; margin:4px 0 2px; line-height:28px; }
+  .cap .sub { color:#6c7790; font-size:10px; font-family:Consolas,monospace; margin-bottom:8px; }
+  .cap .kv { display:grid; grid-template-columns:1fr auto; font-size:10px; row-gap:1px; }
+  .cap .kv span:nth-child(odd) { color:#aab3c5; } .cap .kv span:nth-child(even) { color:#e7ecf5; font-weight:700; }
+
+  /* status bar */
+  .sbar { background:#0c1018; border-top:1px solid #1f2638; display:flex; justify-content:space-between; align-items:center; font-family:Consolas,monospace; font-size:10px; padding:0 20px; }
+
+  /* ===== DRAWER OVERLAY ===== */
+  .overlay { position:absolute; inset:0; background:rgba(0,0,0,.533); display:none; z-index:20; }
+  .overlay.open { display:block; }
+  .drawer { position:absolute; top:0; right:0; bottom:0; width:900px; max-width:100%; background:#0c1018; display:grid; grid-template-rows:auto auto 1fr; min-width:500px; }
+  .dr-h { background:#121723; border-bottom:1px solid #1f2638; padding:14px 20px; display:flex; justify-content:space-between; }
+  .dr-h .t { color:#e7ecf5; font-size:20px; font-weight:700; }
+  .dr-h .s { color:#aab3c5; font-size:11px; font-family:Consolas,monospace; margin-top:4px; white-space:pre; }
+  .dr-h .x { width:32px; height:32px; background:transparent; border:0; color:#aab3c5; font-size:16px; cursor:pointer; }
+  .dr-tabs { background:#0c1018; border-bottom:1px solid #1f2638; padding:0 20px; display:flex; }
+  .dr-tab { background:#0c1018; color:#aab3c5; border:0; font-size:12px; font-weight:600; padding:10px 14px; cursor:pointer; font-family:"Segoe UI",sans-serif; border-bottom:2px solid transparent; }
+  .dr-tab.on { color:#5ee0d0; border-bottom-color:#5ee0d0; }
+  .dr-body { overflow-y:auto; min-height:0; }
+  .dr-kpis { display:grid; grid-template-columns:repeat(4,1fr); background:#0c1018; }
+  .dr-kpis > div { border-right:1px solid #1f2638; border-bottom:1px solid #1f2638; padding:14px 16px; }
+  .dr-kpis > div:last-child { border-right:0; }
+  .ValBig { color:#e7ecf5; font-size:22px; font-weight:700; margin-top:4px; line-height:29px; }
+  .dr-sec { border-bottom:1px solid #1f2638; padding:18px 20px; }
+  .dr-sec .MicroLbl { margin-bottom:12px; }
+  .cv { background:#07090d; display:block; width:100%; }
+  table.dg.ops { min-width:0; }
+  /* dgOps no define ColumnHeaderStyle: cabecera WPF por defecto */
+  table.dg.ops th { background:#f0f0f0; color:#000; font-weight:400; font-size:12px; border-right:1px solid #d5d5d5; border-bottom:1px solid #d5d5d5; padding:4px 5px; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Heavy Strategy Tester</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+  <div class="hst">
+
+    <!-- HEADER -->
+    <div class="hdr">
+      <div class="brand">
+        <span class="ico">🧪</span>
+        <div>
+          <div class="ttl1">HEAVY STRATEGY TESTER</div>
+          <div class="ttl2">Backtesting masivo · sin API server · solo BD</div>
+        </div>
+      </div>
+      <div class="pills">
+        <span class="Pill">Engine v0.9 · idle</span>
+        <span class="Pill">Source: Replay BD</span>
+        <span class="Pill">Jobs: 6</span>
+        <span class="apibox"><span class="t">API:</span><input value="8766"><button>▶ Iniciar</button></span>
+        <span class="Pill" style="margin-right:0">API: stopped</span>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <!-- LEFT: CONFIG -->
+      <div class="left"><div class="inner">
+        <div class="hrow"><div class="LabelHdr">ACTIVOS</div><div class="cnt">3 sel</div></div>
+        <div class="chips">
+          <span class="Chip">R_10</span><span class="Chip">R_25</span><span class="Chip on">R_50</span><span class="Chip on">R_75</span><span class="Chip on">R_100</span><span class="Chip">1HZ100V</span>
+        </div>
+
+        <div class="hrow"><div class="LabelHdr">ESTRATEGIAS</div><div class="cnt">3 sel</div></div>
+        <div class="strats">
+          <div class="cat">MOMENTUM</div>
+          <label><input type="checkbox" class="wcb">BollingerMomentum_v1</label>
+          <label><input type="checkbox" class="wcb" checked>BollingerMomentum_v2</label>
+          <div class="cat">PULLBACK</div>
+          <label><input type="checkbox" class="wcb" checked>IndicePullbackLong_v1</label>
+          <div class="cat">REVERSAL</div>
+          <label><input type="checkbox" class="wcb">CCIReversal_v2</label>
+          <div class="cat">TREND</div>
+          <label><input type="checkbox" class="wcb" checked>EmaRsiCruce_v4</label>
+        </div>
+
+        <div class="LabelHdr">TEMPORALIDADES</div>
+        <div class="chips">
+          <span class="Chip">1m</span><span class="Chip on">5m</span><span class="Chip on">15m</span><span class="Chip">30m</span><span class="Chip on">1h</span><span class="Chip">4h</span><span class="Chip">1d</span>
+        </div>
+
+        <div class="LabelHdr" title="Si el 3er campo (step) es mayor al rango (max-min), las 3 casillas se interpretan como 3 valores discretos. Ej: 65/75/90 → genera 3 confianzas. 55/75/10 → genera 55,65,75.">CONFIANZA % · min/max/step ó 3 valores</div>
+        <div class="tri"><input class="InputDark" value="55"><input class="InputDark" value="75"><input class="InputDark" value="10"></div>
+
+        <div class="LabelHdr" title="Mismo comportamiento que Confianza. Ej: 85/90/95 → genera 3 payouts.">PAYOUT % · min/max/step ó 3 valores</div>
+        <div class="tri"><input class="InputDark" value="80"><input class="InputDark" value="90"><input class="InputDark" value="5"></div>
+
+        <div class="LabelHdr" title="Igual que Confianza/Payout. Ej: 1/3/5 → genera 1,3,5 velas.">DURACION VELAS · min/max/step ó 3 valores</div>
+        <div class="tri"><input class="InputDark" value="3"><input class="InputDark" value="7"><input class="InputDark" value="2"></div>
+
+        <div class="LabelHdr">CAPITAL $ · multiselect</div>
+        <div class="chips">
+          <span class="Chip on">$100</span><span class="Chip">$200</span><span class="Chip">$300</span><span class="Chip">$400</span><span class="Chip">$500</span><span class="Chip">$700</span><span class="Chip">$1000</span>
+        </div>
+
+        <div class="LabelHdr">PERIODO DE PRUEBA</div>
+        <div class="dp">
+          <div class="datepicker"><span>01/10/2026</span><i>&#9638;</i></div>
+          <div class="datepicker"><span>11/11/2026</span><i>&#9638;</i></div>
+        </div>
+
+        <div class="LabelHdr">CONCURRENCIA · 1..8</div>
+        <input class="InputDark" value="2" style="margin-bottom:16px">
+      </div></div>
+
+      <!-- CENTER: RESULTADOS -->
+      <div class="center">
+        <div class="kpis">
+          <div><div class="MicroLbl">COMBINACIONES</div><div class="v">248</div><div class="s">ejecutadas</div></div>
+          <div><div class="MicroLbl">GANADORAS</div><div class="v" style="color:#3fd17a">97</div><div class="s">win&gt;50% &amp; PnL&gt;0</div></div>
+          <div><div class="MicroLbl">OPS/SEM PROM</div><div class="v">21.6</div><div class="s">por estrategia</div></div>
+          <div><div class="MicroLbl">TOTAL OPS</div><div class="v">64,318</div><div class="s">acumulado</div></div>
+          <div><div class="MicroLbl">PNL NETO</div><div class="v" style="color:#3fd17a">+1842.35</div><div class="s">USD agregado</div></div>
+          <div><div class="MicroLbl">MEJOR COMBINACION</div><div style="color:#5ee0d0;font-size:11px;font-weight:700">BollingerMomentum_v2 · R_75/5m</div><div class="s">PnL: +184.20  ·  Win: 64.8%</div></div>
+        </div>
+
+        <div class="filters">
+          <button class="BtnPrimary" style="margin-right:4px">Todos</button>
+          <button class="BtnGhost" style="margin-right:4px">Ganadoras</button>
+          <button class="BtnGhost" style="margin-right:4px">Perdedoras</button>
+          <button class="BtnGhost" style="margin-right:16px">Top 10</button>
+          <button class="BtnGhost" style="margin-right:16px">📥 Exportar CSV</button>
+          <button class="BtnGhost" style="margin-right:4px" title="Marca todas las filas visibles según el filtro actual">☑ Seleccionar todas</button>
+          <button class="BtnGhost" style="margin-right:16px" title="Quita la selección de todas las filas">☐ Deseleccionar</button>
+          <a class="BtnGhost" style="margin-right:4px" href="backtest-operaciones.html" target="_blank">👁 Ver operaciones</a>
+          <button class="BtnDanger" style="margin-right:4px">🗑 Eliminar seleccionados</button>
+          <span class="mono" id="lblSel" style="color:#aab3c5;font-size:10px;margin:0 16px 0 8px">2 sel</span>
+          <span class="lbl" style="margin-right:4px">Monto $</span>
+          <input value="1.00" title="Monto por operacion para las estrategias enviadas al Servidor Live">
+          <button class="BtnPrimary" style="margin-left:4px" title="Pone al aire las combinaciones marcadas con checkbox usando el motor live (LiveStrategiesController)">📡 Enviar a Servidor Live</button>
+        </div>
+
+        <div class="exp" id="exp">
+          <div class="exp-h" onclick="document.getElementById('exp').classList.toggle('open')">
+            <span class="arrow">&#9660;</span>
+            <span style="font-size:14px;margin:0 8px 0 6px">🔍</span>
+            <span style="color:#5ee0d0;font-weight:700;font-size:11px">FILTROS AVANZADOS</span>
+            <span class="mono" style="color:#aab3c5;font-size:10px;margin-left:14px">248 filas</span>
+          </div>
+          <div class="exp-b">
+            <div class="fgrid">
+              <div class="c c0"><div class="MicroLbl">ESTRATEGIA (contiene)</div><input class="InputDark" style="margin-top:3px"></div>
+              <div class="c"><div class="MicroLbl">ACTIVO</div><div class="combo">(todos)</div></div>
+              <div class="c"><div class="MicroLbl">TIMEFRAME</div><div class="combo">(todos)</div></div>
+              <div class="c c3"><div class="MicroLbl">ESTADO</div><div class="combo">(todos)</div></div>
+
+              <div class="c c0"><div class="MicroLbl">CONFIANZA % · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c"><div class="MicroLbl">PAYOUT % · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c"><div class="MicroLbl">DURACION VELAS · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c c3"><div class="MicroLbl">CAPITAL $ · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+
+              <div class="c c0"><div class="MicroLbl">WIN % · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c"><div class="MicroLbl">PNL · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c"><div class="MicroLbl">OPERACIONES · min-max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+              <div class="c c3"><div class="MicroLbl">SHARPE min · DD% max</div><div class="pair"><input class="InputDark"><input class="InputDark"></div></div>
+            </div>
+            <div class="frow4">
+              <div>
+                <label><input type="checkbox" class="wcb">Solo ganadoras (Win≥50% y PnL&gt;0)</label>
+                <label><input type="checkbox" class="wcb">Solo guardadas en BD</label>
+                <label><input type="checkbox" class="wcb">Con operaciones (Ops&gt;0)</label>
+              </div>
+              <button class="BtnGhost" style="margin-right:4px">Limpiar filtros</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgwrap">
+          <table class="dg" id="dgResultados">
+            <colgroup>
+              <col style="width:36px"><col style="width:70px"><col style="width:50px"><col><col style="width:80px"><col style="width:50px">
+              <col style="width:60px"><col style="width:60px"><col style="width:50px"><col style="width:80px"><col style="width:60px"><col style="width:70px">
+              <col style="width:65px"><col style="width:80px"><col style="width:60px"><col style="width:65px"><col style="width:80px"><col style="width:75px"><col style="width:75px"><col style="width:80px">
+            </colgroup>
+            <thead><tr>
+              <th style="text-align:center" title="Marcar/desmarcar todos"><input type="checkbox" class="wcb" style="margin:0"></th>
+              <th>Ver</th><th>#</th><th>Estrategia</th><th>Activo</th><th>TF</th><th>Conf</th><th>Pay</th><th>Dur</th><th>Cap</th><th>Ops</th><th>Ops/Sem</th>
+              <th>Win%</th><th>PnL</th><th>DD%</th><th>Sharpe</th><th>Estado</th><th>Inicio</th><th>Fin</th><th>Duración</th>
+            </tr></thead>
+            <tbody id="tbRes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT: COLA -->
+      <div class="right">
+        <div class="qhead">
+          <div class="top"><div class="LabelHdr" style="margin:0">COLA DE EJECUCION</div><span class="qcount">6 jobs</span></div>
+          <button class="BtnPrimary full">＋ Generar combinaciones</button>
+          <div class="two"><button class="BtnGhost">Limpiar</button><button class="BtnPrimary">▶ Ejecutar</button></div>
+          <button class="BtnDanger" disabled>■ Detener ejecución</button>
+        </div>
+        <div class="jobs" id="jobs"></div>
+        <div class="cap">
+          <div class="MicroLbl">CAPACIDAD ESTIMADA</div>
+          <div class="tot">729</div>
+          <div class="sub">combinaciones potenciales</div>
+          <div class="kv">
+            <span>Activos</span><span>3</span>
+            <span>Estrategias</span><span>3</span>
+            <span>Temporalidades</span><span>3</span>
+            <span>Niveles riesgo</span><span>27</span>
+            <span>Montos capital</span><span>1</span>
+            <span>Tiempo estimado</span><span style="color:#ffb454">~ 18 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="sbar">
+      <div><span style="color:#3fd17a;margin-right:16px">● Conectado · Replay BD</span><span style="color:#aab3c5">248 sesiones previas cargadas desde BD.</span></div>
+      <div style="color:#6c7790"><span style="margin-right:16px">v0.9.2-beta</span><span>14:32:07</span></div>
+    </div>
+
+    <!-- DRAWER OVERLAY (HeavyDetailDrawer) -->
+    <div class="overlay open" id="overlay">
+      <div class="drawer" id="drawer">
+        <div class="dr-h">
+          <div><div class="t" id="drT">—</div><div class="s" id="drS">—</div></div>
+          <button class="x" id="drX">✕</button>
+        </div>
+        <div class="dr-tabs">
+          <button class="dr-tab on" data-t="overview">Overview</button>
+          <button class="dr-tab" data-t="ops">Operaciones</button>
+          <button class="dr-tab" data-t="weekly">Distribución semanal</button>
+          <button class="dr-tab" data-t="risk">Riesgo</button>
+        </div>
+        <div class="dr-body">
+          <div class="tabpanel" data-p="overview">
+            <div class="dr-kpis">
+              <div><div class="MicroLbl">TOTAL OPS</div><div class="ValBig" id="ovOps">—</div></div>
+              <div><div class="MicroLbl">WIN RATE</div><div class="ValBig" id="ovWin">—</div></div>
+              <div><div class="MicroLbl">PNL NETO</div><div class="ValBig" id="ovPnl">—</div></div>
+              <div><div class="MicroLbl">DRAWDOWN MAX</div><div class="ValBig" id="ovDD" style="color:#FA8072">—</div></div>
+            </div>
+            <div class="dr-sec"><div class="MicroLbl">CURVA DE EQUITY · USD ACUMULADO</div><svg class="cv" id="cvEq" height="220" viewBox="0 0 860 220" preserveAspectRatio="none"></svg></div>
+            <div class="dr-sec"><div class="MicroLbl">DRAWDOWN ROLLING · % SOBRE PEAK</div><svg class="cv" id="cvDD" height="140" viewBox="0 0 860 140" preserveAspectRatio="none"></svg></div>
+          </div>
+          <div class="tabpanel" data-p="ops" hidden>
+            <div style="max-height:600px;overflow:auto;border:1px solid #1f2638;background:#07090d">
+              <table class="dg ops">
+                <colgroup><col style="width:40px"><col style="width:140px"><col style="width:140px"><col style="width:60px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:80px"><col></colgroup>
+                <thead><tr><th>#</th><th>Apertura</th><th>Cierre</th><th>Tipo</th><th>Entrada</th><th>Salida</th><th>Resultado</th><th>PnL</th><th style="border-right:0"></th></tr></thead>
+                <tbody id="tbDrOps"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tabpanel" data-p="weekly" hidden>
+            <div class="dr-sec"><div class="MicroLbl">OPERACIONES POR SEMANA</div><svg class="cv" id="cvSem" height="220" viewBox="0 0 860 220" preserveAspectRatio="none"></svg></div>
+            <div class="dr-sec"><div class="MicroLbl">WIN RATE SEMANAL · %</div><svg class="cv" id="cvWin" height="160" viewBox="0 0 860 160" preserveAspectRatio="none"></svg></div>
+          </div>
+          <div class="tabpanel" data-p="risk" hidden>
+            <div class="dr-kpis">
+              <div><div class="MicroLbl">DRAWDOWN MAX</div><div class="ValBig" id="rkDD">—</div></div>
+              <div><div class="MicroLbl">SHARPE</div><div class="ValBig" id="rkSh">—</div></div>
+              <div><div class="MicroLbl">PROFIT FACTOR</div><div class="ValBig" id="rkPF">—</div></div>
+              <div><div class="MicroLbl">EXP. RETURN</div><div class="ValBig" id="rkER">—</div></div>
+            </div>
+            <div class="dr-sec"><div class="MicroLbl">DISTRIBUCION DE PNL · HISTOGRAMA</div><svg class="cv" id="cvHist" height="220" viewBox="0 0 860 220" preserveAspectRatio="none"></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<script>
+// ---- Datos de ejemplo (maqueta) ----
+var ROWS = [
+ // estrategia, activo, tf, conf, pay, dur, cap, ops, opsSem, win, pnl, dd, sharpe, ini, fin, durStr, sel
+ ["BollingerMomentum_v2","R_75","5m",65,85,5,100,412,32.1,64.8,184.20,6.4,2.31,"14:02:11","14:03:48","1m 37s",1],
+ ["EmaRsiCruce_v4","R_100","15m",70,90,3,100,236,18.4,66.1,152.75,5.1,2.08,"14:02:11","14:03:02","51s",1],
+ ["IndicePullbackLong_v1","R_50","1h",60,85,3,100,98,7.6,67.3,118.40,4.2,1.94,"14:03:02","14:03:29","27s",0],
+ ["BollingerMomentum_v1","R_75","15m",65,80,5,100,301,23.4,61.5,96.10,8.9,1.62,"14:03:29","14:04:40","1m 11s",0],
+ ["CCIReversal_v2","1HZ100V","5m",55,85,7,100,522,40.6,58.2,71.35,11.3,1.21,"14:03:48","14:05:59","2m 11s",0],
+ ["EmaRsiCruce_v4","R_25","30m",75,90,3,100,144,11.2,62.5,64.80,7.0,1.48,"14:04:40","14:05:14","34s",0],
+ ["BollingerMomentum_v2","R_10","1m",65,85,3,100,688,53.5,56.4,22.60,14.8,0.72,"14:05:14","14:08:03","2m 49s",0],
+ ["CCIReversal_v2","R_50","15m",60,80,5,100,266,20.7,55.3,-18.45,16.2,-0.31,"14:05:59","14:07:01","1m 2s",0],
+ ["IndicePullbackLong_v1","R_100","30m",70,85,7,100,132,10.3,55.0,-27.90,13.5,-0.44,"14:07:01","14:07:33","32s",0],
+ ["BollingerMomentum_v1","R_25","5m",55,80,3,100,457,35.5,55.8,-41.20,18.9,-0.67,"14:07:33","14:09:21","1m 48s",0]
+];
+function f2(n){ return (n>0?"+":"")+n.toFixed(2); }
+function cls(n){ return n>0?"g":(n<0?"r":"n"); }
+
+var tb = document.getElementById("tbRes");
+ROWS.forEach(function(r,i){
+  var tr = document.createElement("tr");
+  tr.innerHTML =
+    '<td class="cc"><input type="checkbox" class="wcb" style="margin:0"'+(r[16]?' checked':'')+'></td>'+
+    '<td><a class="rowBtn" href="backtest-operaciones.html" target="_blank" title="Abrir ventana con todas las operaciones de esta sesión">👁 Ver</a></td>'+
+    '<td>#'+(i+1)+'</td><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'%</td><td>'+r[4]+'%</td><td>'+r[5]+'</td>'+
+    '<td>$'+r[6]+'</td><td>'+r[7]+'</td><td>'+r[8].toFixed(1)+'</td>'+
+    '<td><span class="tb '+(r[9]>=50?'g':'r')+'" style="font-weight:600">'+r[9].toFixed(1)+'%</span></td>'+
+    '<td><span class="tb '+cls(r[10])+'" style="font-weight:700">'+f2(r[10])+'</span></td>'+
+    '<td>'+r[11].toFixed(1)+'%</td><td>'+r[12].toFixed(2)+'</td><td>COMPLETADO</td><td>'+r[13]+'</td><td>'+r[14]+'</td><td>'+r[15]+'</td>';
+  tr.addEventListener("click", function(e){
+    if (e.target.closest("a,input")) return;
+    [].forEach.call(tb.children, function(x){ x.classList.remove("sel"); });
+    tr.classList.add("sel"); openDrawer(i);
+  });
+  tb.appendChild(tr);
+});
+
+// ---- Cola de jobs ----
+var JOBS = [
+ ["7F3A91C2","COMPLETADO","#3fd17a","BollingerMomentum_v2","R_75","5m",65,85,5,100,"⏱ 14:02:11 → 14:03:48","1m 37s","18,240 / 18,240 velas","✓267G  ✕145P",100],
+ ["B04E6D1F","COMPLETADO","#3fd17a","EmaRsiCruce_v4","R_100","15m",70,90,3,100,"⏱ 14:02:11 → 14:03:02","51s","6,080 / 6,080 velas","✓156G  ✕80P",100],
+ ["2C9D8E04","EJECUTANDO","#ffb454","IndicePullbackLong_v1","R_50","1h",60,85,3,100,"⏱ 14:09:21 → ...","42s","912 / 1,520 velas","✓41G  ✕19P",60],
+ ["E8A1F377","PENDIENTE","#6c7790","EmaRsiCruce_v4","R_75","1h",65,85,5,100,"","","","",0],
+ ["91D2C0AB","PENDIENTE","#6c7790","BollingerMomentum_v2","R_100","15m",75,90,7,100,"","","","",0],
+ ["4B6E2F18","PENDIENTE","#6c7790","IndicePullbackLong_v1","R_75","5m",55,80,3,100,"","","","",0]
+];
+document.getElementById("jobs").innerHTML = JOBS.map(function(j){
+  return '<div class="job"><div class="r1"><span class="id">'+j[0]+'</span><span class="st" style="color:'+j[2]+'">'+j[1]+'</span><span class="x" title="Eliminar job">✕</span></div>'+
+    '<div class="nm">'+j[3]+' · '+j[4]+'/'+j[5]+'</div>'+
+    '<div class="meta">conf:'+j[6]+'% pay:'+j[7]+'% dur:'+j[8]+'v cap:$'+j[9]+'</div>'+
+    '<div class="tm"><span class="a">'+j[10]+'</span><span class="b">'+j[11]+'</span></div>'+
+    '<div class="vv"><span style="font-weight:400">'+(j[12]?'📊':'📊')+'</span><span class="v">'+j[12]+'</span><span class="w">'+j[13]+'</span></div>'+
+    '<div class="pb"><i style="width:'+j[14]+'%"></i></div></div>';
+}).join("");
+
+// ---- Charts SVG (estilo DibujarLinea / DibujarBarras del drawer) ----
+function rnd(seed){ var s=seed; return function(){ s=(s*9301+49297)%233280; return s/233280; }; }
+function gridLines(h,padY){ var out="",plotH=h-2*padY; for(var i=0;i<4;i++){ var y=padY+plotH*i/3; out+='<line x1="8" x2="852" y1="'+y+'" y2="'+y+'" stroke="#1f2638" stroke-width="0.5"/>'; } return out; }
+function linea(id,vals,color,fill){
+  var svg=document.getElementById(id), h=+svg.getAttribute("height"), w=860, pad=8, pw=w-2*pad, ph=h-2*pad;
+  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals); if(Math.abs(mx-mn)<1e-4) mx+=1;
+  var pts=vals.map(function(v,i){ return (pad+pw*i/(vals.length-1)).toFixed(1)+","+(pad+ph*(1-(v-mn)/(mx-mn))).toFixed(1); });
+  var out=gridLines(h,pad);
+  if(fill) out+='<polygon points="'+pts.join(" ")+' '+(pad+pw)+','+(pad+ph)+' '+pad+','+(pad+ph)+'" fill="'+color+'" fill-opacity="0.157"/>';
+  out+='<polyline points="'+pts.join(" ")+'" fill="none" stroke="'+color+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/>';
+  svg.innerHTML=out;
+}
+function barras(id,vals,labels,color){
+  var svg=document.getElementById(id), h=+svg.getAttribute("height"), w=860, padX=8, padY=18, pw=w-2*padX, ph=h-2*padY;
+  var mx=Math.max.apply(null,vals); if(mx<=0) mx=1; var esp=pw/vals.length, an=Math.max(1,esp*0.7), out="";
+  vals.forEach(function(v,i){ var bh=ph*v/mx, x=padX+esp*i+(esp-an)/2, y=padY+ph-bh;
+    out+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+an.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="'+color+'"/>';
+    out+='<text x="'+(x+an/2).toFixed(1)+'" y="'+(h-4)+'" fill="#6c7790" font-size="8" font-family="Consolas" text-anchor="middle">'+labels[i]+'</text>'; });
+  svg.innerHTML=out;
+}
+
+function openDrawer(i){
+  var r=ROWS[i], R=rnd(17+i*31), n=r[7], win=r[9]/100, pay=r[4]/100, cap=r[6];
+  document.getElementById("drT").textContent = r[0]+" · "+r[1]+" / "+r[2];
+  document.getElementById("drS").textContent = "conf: "+r[3]+"%   pay: "+r[4]+"%   dur: "+r[5]+" velas   cap: $"+cap+"   ops: "+n;
+  document.getElementById("ovOps").textContent = n;
+  var ow=document.getElementById("ovWin"); ow.textContent=r[9].toFixed(1)+"%"; ow.style.color = r[9]>=50?"#90EE90":"#FA8072";
+  var op=document.getElementById("ovPnl"); op.textContent=f2(r[10]); op.style.color = r[10]>=0?"#90EE90":"#FA8072";
+  document.getElementById("ovDD").textContent = r[11].toFixed(1)+"%";
+  document.getElementById("rkDD").textContent = r[11].toFixed(2)+"%";
+  document.getElementById("rkSh").textContent = r[12].toFixed(2);
+  document.getElementById("rkPF").textContent = (win*pay/(1-win)).toFixed(2);
+  document.getElementById("rkER").textContent = f2(r[10]/n);
+  // equity + dd
+  var eq=[cap], peak=cap, dd=[0], pnls=[];
+  var stake=1, drift=r[10]/n;
+  for(var k=0;k<n;k++){ var w=R()<win; var p=w?stake*pay*1.0:-stake; p+= (drift-(win*pay-(1-win)))*0; pnls.push(p); }
+  // escala para que el total coincida con el PnL de la fila
+  var tot=pnls.reduce(function(a,b){return a+b;},0), adj=(r[10]-tot)/n;
+  pnls=pnls.map(function(p){return p+adj;});
+  pnls.forEach(function(p){ var v=eq[eq.length-1]+p; eq.push(v); if(v>peak) peak=v; dd.push(-(peak-v)/peak*100); });
+  linea("cvEq",eq,"#5ee0d0",true);
+  linea("cvDD",dd,"#ff5c7a",false);
+  // semanal
+  var sem=[],wl=[],lab=[]; for(var s=0;s<12;s++){ sem.push(Math.round(n/12*(0.7+R()*0.6))); wl.push(r[9]+(R()-0.5)*14); lab.push("S"+(s+40)); }
+  barras("cvSem",sem,lab,"#8b7dff");
+  linea("cvWin",wl,"#3fd17a",true);
+  // histograma
+  var hist=[],hl=[]; for(var b=0;b<20;b++){ var c=-1+b*(1+pay)/19; hl.push(c.toFixed(2)); hist.push(b<2?Math.round(n*(1-win)/2):(b>17?Math.round(n*win/2):Math.round(R()*6))); }
+  barras("cvHist",hist,hl,"#ffb454");
+  // ops
+  var html="", t0=Date.UTC(2026,9,1,0,0)/1000, step={"1m":60,"5m":300,"15m":900,"30m":1800,"1h":3600}[r[2]], price=r[1]=="R_10"?6342.118:(r[1]=="R_25"?2817.402:(r[1]=="R_50"?412.551:(r[1]=="R_75"?98214.36:(r[1]=="R_100"?1532.774:2410.305))));
+  function fd(e){ var d=new Date(e*1000); function z(x){return (x<10?"0":"")+x;} return z(d.getUTCDate())+"/"+z(d.getUTCMonth()+1)+"/"+String(d.getUTCFullYear()).slice(2)+" "+z(d.getUTCHours())+":"+z(d.getUTCMinutes()); }
+  for(var q=0;q<12;q++){
+    var ent=t0+Math.round(R()*40+q*55)*step, sal=ent+r[5]*step, call=R()>0.5, mv=(R()-0.42)*price*0.002;
+    var ganado=pnls[q]>0, ex=price+(call?1:-1)*(ganado?Math.abs(mv):-Math.abs(mv));
+    html+='<tr><td>'+(q+1)+'</td><td>'+fd(ent)+'</td><td>'+fd(sal)+'</td><td>'+(call?"CALL":"PUT")+'</td><td>'+price.toFixed(5)+'</td><td>'+ex.toFixed(5)+'</td><td>'+(ganado?"Ganado":"Perdido")+'</td><td>'+f2(pnls[q])+'</td><td></td></tr>';
+    price=ex;
+  }
+  document.getElementById("tbDrOps").innerHTML=html;
+  document.getElementById("overlay").classList.add("open");
+}
+
+// tabs del drawer
+[].forEach.call(document.querySelectorAll(".dr-tab"), function(b){
+  b.addEventListener("click", function(){
+    [].forEach.call(document.querySelectorAll(".dr-tab"), function(x){ x.classList.toggle("on", x===b); });
+    [].forEach.call(document.querySelectorAll(".dr-body .tabpanel"), function(p){ p.hidden = p.getAttribute("data-p")!==b.getAttribute("data-t"); });
+  });
+});
+// cerrar drawer: boton X o click en el fondo
+document.getElementById("drX").onclick=function(){ document.getElementById("overlay").classList.remove("open"); };
+document.getElementById("overlay").addEventListener("click", function(e){ if(e.target.id==="overlay") this.classList.remove("open"); });
+// chips toggle
+[].forEach.call(document.querySelectorAll(".Chip"), function(c){ c.addEventListener("click", function(){ c.classList.toggle("on"); }); });
+
+// estado inicial: primera fila seleccionada y drawer abierto
+tb.children[0].classList.add("sel"); openDrawer(0);
+</script>
+<div class="maqueta-flag">MAQUETA</div>
+</body>
+</html>

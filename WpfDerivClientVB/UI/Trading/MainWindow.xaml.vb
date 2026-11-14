@@ -1,0 +1,202 @@
+' ============================================================
+' MainWindow.xaml.vb  ← ARCHIVO PRINCIPAL
+' Contenido: declaración de campos, constructor, lifecycle
+'   de la ventana y helpers compartidos por todos los tabs.
+'
+' Los demás archivos son Partial Class del mismo MainWindow:
+'   MainWindow.Streaming.vb  → Tab Gráfico + Tab Streaming
+'   MainWindow.Descarga.vb   → Tab Descarga Histórica
+'   MainWindow.Trading.vb    → Tab Trading Live
+'   MainWindow.ApiServer.vb  → Tab Server + Análisis
+' ============================================================
+Imports System.Collections.ObjectModel
+Imports System.Linq
+Imports System.Net.WebSockets
+Imports System.Text
+Imports System.Threading
+Imports System.Threading.Tasks
+Imports System.Windows.Media
+Imports System.Windows.Data
+Imports Newtonsoft.Json.Linq
+
+Namespace WpfDerivClientVB
+
+    Partial Public Class MainWindow
+        Inherits System.Windows.Window
+
+        ' ===== Constantes y config =====
+        Private _apiUri As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
+        Private Const PLATFORM As String = "Deriv"
+
+        ' ===== Streaming (Tab Streaming) =====
+        Private _webSocket As ClientWebSocket
+        Private _cancellationTokenSource As CancellationTokenSource
+        Private _candles As ObservableCollection(Of CandleModel)
+        Private _currentOpenEpoch As Long = 0
+        Private _currentSymbol As String = ""
+        Private _currentTimeframe As String = ""
+
+        ' ===== Gráfico y ajustes =====
+        Private _settings As ChartSettings
+        Private _suppressColorChange As Boolean = False
+        Private _chartCanvas As CandleChart
+
+        ' ===== Persistencia =====
+        Private _repo            As CandleRepository
+        Private _descargaService As DescargaService
+
+        ' ===== Credenciales (cargadas desde BD) =====
+        Private _appIdVirtual As String = ""
+        Private _tokenVirtual As String = ""
+        Private _appIdReal As String = ""
+        Private _tokenReal As String = ""
+        Private _activeToken As String = ""
+
+        Private ReadOnly TIMEFRAME_MAP As New Dictionary(Of String, Integer) From {
+            {"1m", 60}, {"5m", 300}, {"15m", 900}, {"1h", 3600}, {"4h", 14400}, {"1d", 86400}
+        }
+
+        ' ===== Trading Live (Tab Trading Live) =====
+        ' La conexion vive en DerivTradingService (ver MainWindow.Trading.vb).
+        ' Aqui solo queda el estado de la interfaz.
+        Private _tradingOperaciones As New ObservableCollection(Of OperacionModel)()
+        Private _tradingClienteActual As ClientModel
+        Private _tradingCredsActual As ClientDerivCredentials
+        Private _pendingProposalAmount As Double = 0
+        Private _pendingProposalId As String = ""
+
+        ' ===== API Server embebido (Tab Server) =====
+        Private _apiServer As TradingApiServer
+        ' Las compras automaticas ya no usan variables compartidas: cada una se correlaciona
+        ' por req_id (ver MainWindow.TradingEnvio.vb).
+
+        ' ===== Evento de vela cerrada (Live Test Motor) =====
+        ''' <summary>
+        ''' Se dispara cada vez que una vela se cierra en el streaming activo.
+        ''' El LiveTestMotor se suscribe a este evento para procesar senales.
+        ''' </summary>
+        ' Firma extendida: pasa symbol/timeframe junto al candle para que cada motor
+        ' filtre si la vela aplica a su configuracion (multi-estrategia).
+        Public Event OnCandleCerrada As Action(Of CandleModel, String, String)
+
+        ' Subscriber multi-WebSocket: maneja N suscripciones background, una por
+        ' cada (symbol, timeframe) requerido por estrategias live activas.
+        ' Permite operar varios activos al tiempo sin tocar el chart visible.
+        Friend _multiSub As BackgroundStreamingSubscriber = Nothing
+
+        ' ===================================================
+        '  CONSTRUCTOR
+        ' ===================================================
+        Public Sub New()
+            InitializeComponent()
+
+            _candles = New ObservableCollection(Of CandleModel)()
+            gridCandles.ItemsSource = _candles
+
+            _chartCanvas = New CandleChart()
+            _chartCanvas.Width = Double.NaN
+            _chartCanvas.Height = Double.NaN
+            CType(chartHost, System.Windows.Controls.Canvas).Children.Add(_chartCanvas)
+            System.Windows.Controls.Canvas.SetLeft(_chartCanvas, 0)
+            System.Windows.Controls.Canvas.SetTop(_chartCanvas, 0)
+            AddHandler chartHost.SizeChanged, AddressOf SyncChartSize
+
+            _settings = SettingsManager.GetChart()
+            ApplySettingsToUI()
+            _chartCanvas.SetData(_candles, _settings)
+
+            Dim dbConfig = ConfigManager.LoadDbConfig()
+            _repo            = New CandleRepository(dbConfig.GetConnectionString())
+            _descargaService = New DescargaService(_repo)
+
+            txtHistSymbol.Text = "R_100"
+            dpDesde.SelectedDate = DateTime.Today.AddDays(-30)
+            dpHasta.SelectedDate = DateTime.Today
+
+            CargarAppIdDeriv()
+            CargarClientesTrading()
+
+            ' Subscriber multi-WebSocket: las velas que recibe se enrutan al
+            ' mismo evento global OnCandleCerrada que usa el foreground streaming.
+            ' BeginInvoke a Background priority para NUNCA bloquear Input/Render.
+            _multiSub = New BackgroundStreamingSubscriber()
+            _multiSub.OnCandleCerrada = Sub(c As CandleModel, sym As String, tf As String)
+                                            Try
+                                                Dispatcher.BeginInvoke(Sub() RaiseEvent OnCandleCerrada(c, sym, tf),
+                                                                       System.Windows.Threading.DispatcherPriority.Background)
+                                            Catch
+                                            End Try
+                                        End Sub
+
+            InicializarTabDinamicas()
+
+            ' El trading con Deriv lo maneja DerivTradingService (registrado en App.OnStartup).
+            ' Esta ventana solo se suscribe a sus eventos para mostrar el estado.
+            InicializarTradingServicio()
+        End Sub
+
+        Protected Overrides Sub OnSourceInitialized(e As EventArgs)
+            MyBase.OnSourceInitialized(e)
+            ThemeHelper.ApplyDarkTitleBar(Me)
+        End Sub
+
+        ''' <summary>Carga App ID y tokens de Deriv del cliente Alexander desde BD.</summary>
+        Private Async Sub CargarAppIdDeriv()
+            Try
+                Dim clientRepo As New ClientRepository()
+                Dim clientes = Await clientRepo.GetAllAsync()
+                Dim alexander = clientes.FirstOrDefault(
+                    Function(c) c.Name.ToLower().Contains("alexander"))
+
+                If alexander IsNot Nothing Then
+                    Dim creds = Await clientRepo.GetDerivCredentialsAsync(alexander.Id)
+                    If creds IsNot Nothing Then
+                        _tokenReal = creds.ApiTokenReal
+                        _tokenVirtual = creds.ApiTokenVirtual
+                        _activeToken = If(Not String.IsNullOrWhiteSpace(_tokenVirtual), _tokenVirtual, _tokenReal)
+                    End If
+                End If
+            Catch
+            End Try
+        End Sub
+
+        ' ===================================================
+        '  LIFECYCLE DE LA VENTANA
+        ' ===================================================
+        Private Sub Window_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles Me.Closing
+            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
+            If _descargaService IsNot Nothing Then _descargaService.Detener()
+            ' La conexion de trading NO se cierra: vive en DerivTradingService y puede seguir
+            ' operando para el Servidor Live / API sin esta ventana. Solo dejamos de escuchar.
+            DesuscribirTradingServicio()
+            If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then _apiServer.Stop()
+        End Sub
+
+        Private Sub tabMain_SelectionChanged(sender As Object, e As System.Windows.Controls.SelectionChangedEventArgs) Handles tabMain.SelectionChanged
+            If tabChart IsNot Nothing AndAlso tabChart.IsSelected Then
+                _chartCanvas.SetData(_candles, _settings)
+            End If
+        End Sub
+
+        ' ===================================================
+        '  HELPERS COMPARTIDOS (usados por múltiples tabs)
+        ' ===================================================
+        Private Sub RefreshChart()
+            If tabChart IsNot Nothing AndAlso tabChart.IsSelected Then
+                _chartCanvas.Redraw()
+            End If
+        End Sub
+
+        Private Sub GoToBottom()
+            If gridCandles.Items.Count > 0 Then
+                gridCandles.ScrollIntoView(gridCandles.Items(gridCandles.Items.Count - 1))
+            End If
+        End Sub
+
+        Private Shared Function EpochToString(epoch As Long) As String
+            Dim base As New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            Return base.AddSeconds(epoch).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+        End Function
+
+    End Class
+End Namespace

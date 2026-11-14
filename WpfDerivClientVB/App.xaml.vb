@@ -55,6 +55,59 @@ Namespace WpfDerivClientVB
                 End Sub
 
             AppLogger.Info("Handlers de excepción globales registrados OK")
+
+            ' ── Seguridad: token de las APIs locales 8765/8766 (se crea una vez).
+            Try
+                AgentAuth.GetOrCreateToken()
+            Catch ex As Exception
+                AppLogger.Warn("[App] No se pudo preparar el token de API local: " & ex.Message)
+            End Try
+
+            ' ── Seguridad: cifrar con DPAPI los tokens de Deriv que sigan en
+            '    texto plano en la BD (idempotente, en segundo plano).
+            Task.Run(Async Function()
+                         Try
+                             Await New ClientRepository().EnsureTablesExistAsync()
+                         Catch ex As Exception
+                             AppLogger.Warn("[App] Migracion de cifrado de tokens: " & ex.Message)
+                         End Try
+                     End Function)
+
+            ' ── Singletons del modulo Servidor (cliente SignalR + controller live) ──
+            ' Subscribir CommandRouter al evento de instrucciones del cliente SignalR.
+            ' Esto se hace UNA sola vez para toda la app; los servicios viven mas alla
+            ' de las ventanas que abre/cierra el usuario.
+            Try
+                Dim signalRSvc = WpfDerivClientVB.Servidor.SignalRClientService.GetInstance()
+                AddHandler signalRSvc.InstruccionRecibida,
+                    AddressOf WpfDerivClientVB.Servidor.CommandRouter.Handle
+                AddHandler signalRSvc.BroadcastRecibido,
+                    Sub(instruccion As String, parametros As String, timestamp As String)
+                        ' Broadcast = misma logica pero sin clienteId ni correlationId
+                        WpfDerivClientVB.Servidor.CommandRouter.Handle("ALL", instruccion, parametros, "", timestamp)
+                    End Sub
+
+                ' Forzar instanciacion del controller de estrategias para que ya este listo
+                ' cuando lleguen las primeras instrucciones del servidor.
+                Dim _ctrl = WpfDerivClientVB.Servidor.LiveStrategiesController.GetInstance()
+
+                ' Servicio de trading con Deriv (sin ventana): lo usan Servidor Live, la API
+                ' y SignalR. Antes solo existia si se abria la ventana "Pruebas".
+                WpfDerivClientVB.Servidor.TradingServiceLocator.Register(
+                    WpfDerivClientVB.Servidor.DerivTradingService.Instance)
+                AppLogger.Info("Modulo Servidor (SignalR + LiveCtrl) inicializado.")
+            Catch ex As Exception
+                AppLogger.Warn("[App] No se pudo inicializar modulo Servidor: " & ex.Message)
+            End Try
+
+            ' ── Modo agente: argumentos CLI (--heavy-api, --signalr-connect,
+            '    --open-trading, --minimized). Permite control externo total
+            '    sin interaccion con la UI. Ver Servidor/AgentHost.vb.
+            Try
+                WpfDerivClientVB.Servidor.AgentHost.IniciarDesdeArgs(e.Args)
+            Catch ex As Exception
+                AppLogger.Warn("[App] AgentHost: " & ex.Message)
+            End Try
         End Sub
 
         Protected Overrides Sub OnExit(e As ExitEventArgs)

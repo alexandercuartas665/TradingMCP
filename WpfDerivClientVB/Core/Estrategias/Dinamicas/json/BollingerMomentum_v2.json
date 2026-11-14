@@ -1,0 +1,37 @@
+{
+  "nombre": "BollingerMomentum_v2",
+  "descripcion": "v2: corrige los ajustes de confianza de v1 que estaban INVERTIDOS segun los datos (298 ops en OTC_NDX/1h). v1 premiaba RSI>80 con +15 pero los datos muestran que gana solo 54.2% (agotamiento); la zona dulce CALL es RSI 70-80 (68.6%). En PUT, la zona RSI 20-30 pierde (47.2%) y solo RSI<=20 gana (66.7%). BandWidth>2 mejora CALL a 70.7%. Base 50: usar min_confianza 55-60.",
+  "version": "2.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.5 } },
+    { "id": "rsi", "tipo": "RSI",            "params": { "periodo": 14 } },
+    { "id": "atr", "tipo": "ATR",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "mayor_igual", "valor": "bb.Upper" },
+      { "campo": "rsi",   "op": "mayor_que",   "valor": 70 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "close", "op": "menor_igual", "valor": "bb.Lower" },
+      { "campo": "rsi",   "op": "menor_que",   "valor": 30 }
+    ]
+  },
+  "confianza_base": 50,
+  "ajustes_confianza": [
+    { "si": { "campo": "rsi", "op": "mayor_que", "valor": 80 }, "sumar": -15 },
+    { "si": { "operador": "AND", "condiciones": [
+        { "campo": "rsi", "op": "mayor_que", "valor": 70 },
+        { "campo": "bb.BandWidth", "op": "mayor_que", "valor": 2 }
+      ] }, "sumar": 10 },
+    { "si": { "operador": "AND", "condiciones": [
+        { "campo": "rsi", "op": "menor_que", "valor": 30 },
+        { "campo": "rsi", "op": "mayor_que", "valor": 20 }
+      ] }, "sumar": -15 },
+    { "si": { "campo": "rsi", "op": "menor_igual", "valor": 20 }, "sumar": 15 }
+  ]
+}

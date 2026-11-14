@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración de Base de Datos</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  body { background:#0A0A0A; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; }
+  .dbc { display:flex; flex-direction:column; height:100%; min-height:460px; background:#0A0A0A; }
+  .win-body { display:flex; flex-direction:column; }
+  .dbc-h { flex:none; padding:24px 30px 20px; background:linear-gradient(135deg, #0D0D0D 0%, #0D2A30 100%); }
+  .dbc-hr { display:flex; align-items:center; margin-bottom:6px; }
+  .dbc-ic { width:36px; height:36px; border-radius:8px; background:#0D2A30; display:grid; place-items:center; font-size:18px; margin-right:14px; flex:none; }
+  .dbc-t1 { font-size:13px; font-weight:900; color:#e0e6ed; }
+  .dbc-t2 { font-size:9px; color:#3B4A4D; }
+  .dbc-desc { font-size:10px; color:#5A6A6D; margin-top:4px; }
+  .dbc-f { flex:1; min-height:0; overflow-y:auto; padding-right:4px; }
+  .dbc-fi { margin:24px 30px; }
+  .FieldLabel2 { display:block; font-size:9px; font-weight:700; color:#5A6A6D; margin-bottom:4px; }
+  .DbTextBox { width:100%; background:#1C1B1B; color:#e0e6ed; border:1px solid #2a2e39; border-radius:6px; padding:8px 10px;
+               font-family:Consolas, monospace; font-size:12px; outline:none; caret-color:#4CD6FB; }
+  .DbTextBox:hover { border-color:#2a5f6d; }
+  .DbTextBox:focus { border-color:#4CD6FB; }
+  .DbTextBox::selection { background:#4CD6FB; }
+  .row3 { display:grid; grid-template-columns:1fr 16px 110px; margin-bottom:18px; }
+  .row2 { display:grid; grid-template-columns:1fr 16px 1fr; margin-bottom:18px; }
+  .pwd { position:relative; }
+  .pwd .DbTextBox { padding-right:36px; letter-spacing:1px; }
+  .eye { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:28px; height:28px; background:transparent; border:0;
+         color:#5A6A6D; font-size:14px; cursor:pointer; padding:0; display:grid; place-items:center; }
+  .sepl { height:1px; background:#1C1B1B; margin:0 0 20px; }
+  .preview { background:#0D0D0D; border:1px solid #1C1B1B; border-radius:6px; padding:10px 12px; font-size:10px; color:#3B4A4D; word-break:break-all; }
+  .dbc-a { flex:none; background:#0D0D0D; border-top:1px solid #1C1B1B; padding:16px 20px; display:grid;
+           grid-template-columns:1fr auto 10px auto 10px auto; align-items:center; }
+  .dbc-info { font-size:9px; color:#3B4A4D; }
+  .SecondaryBtn, .TestBtn, .PrimaryBtn2 { font-family:Consolas, monospace; font-size:11px; padding:9px 18px; border-radius:6px; cursor:pointer; white-space:pre; line-height:1.2; }
+  .SecondaryBtn { background:#1C1B1B; color:#e0e6ed; border:1px solid #2a2e39; font-weight:700; }
+  .SecondaryBtn:hover, .TestBtn:hover { background:#2a2e39; }
+  .TestBtn { background:#1C1B1B; color:#00d4aa; border:1px solid #00d4aa; font-weight:700; }
+  .PrimaryBtn2 { background:#4CD6FB; color:#001F27; border:0; font-weight:900; }
+  .PrimaryBtn2:hover { background:#7DEAFF; }
+  .grip { position:fixed; right:2px; bottom:2px; width:12px; height:12px; pointer-events:none; opacity:.5;
+          background:radial-gradient(circle, #5A6A6D 1px, transparent 1.2px) 0 0/4px 4px;
+          clip-path:polygon(100% 0, 100% 100%, 0 100%); }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Pro Trading AI — Configuración de Base de Datos</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+    <div class="dbc">
+
+      <!-- HEADER -->
+      <div class="dbc-h">
+        <div class="dbc-hr">
+          <div class="dbc-ic">🗄</div>
+          <div>
+            <div class="dbc-t1 mono">CONFIGURACIÓN DE BASE DE DATOS</div>
+            <div class="dbc-t2 mono">PostgreSQL · Npgsql · Conexión directa</div>
+          </div>
+        </div>
+        <div class="dbc-desc">Configura los parámetros de conexión al servidor PostgreSQL donde se almacenan las velas históricas.</div>
+      </div>
+
+      <!-- FORM -->
+      <div class="dbc-f">
+        <div class="dbc-fi">
+          <div class="row3">
+            <div>
+              <label class="FieldLabel2 mono">SERVIDOR (HOST)</label>
+              <input class="DbTextBox" id="txtHost" value="localhost" title="IP o nombre del servidor PostgreSQL">
+            </div>
+            <div></div>
+            <div>
+              <label class="FieldLabel2 mono">PUERTO</label>
+              <input class="DbTextBox" id="txtPort" value="8083" title="Puerto por defecto: 5432">
+            </div>
+          </div>
+
+          <div style="margin-bottom:18px">
+            <label class="FieldLabel2 mono">BASE DE DATOS</label>
+            <input class="DbTextBox" id="txtDatabase" value="traiding_db" title="Nombre de la base de datos">
+          </div>
+
+          <div class="row2">
+            <div>
+              <label class="FieldLabel2 mono">USUARIO</label>
+              <input class="DbTextBox" id="txtUsername" value="traiding_user">
+            </div>
+            <div></div>
+            <div>
+              <label class="FieldLabel2 mono">CONTRASEÑA</label>
+              <div class="pwd">
+                <input class="DbTextBox" value="●●●●●●●●●●●●" readonly>
+                <button class="eye" type="button">👁</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:24px">
+            <label class="FieldLabel2 mono">SCHEMA</label>
+            <input class="DbTextBox" id="txtSchema" value="public" title="Schema de PostgreSQL (por defecto: public)">
+          </div>
+
+          <div class="sepl"></div>
+
+          <div>
+            <label class="FieldLabel2 mono">VISTA PREVIA DEL CONNECTION STRING</label>
+            <div class="preview mono" id="txtConnPreview">Host=localhost;Port=8083;Database=traiding_db;Username=traiding_user;Password=***;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="dbc-a">
+        <span class="dbc-info mono">Los cambios se guardan en settings.json</span>
+        <button class="SecondaryBtn">🔍  EXPLORAR BD</button>
+        <span></span>
+        <button class="TestBtn">⚡  PROBAR CONEXIÓN</button>
+        <span></span>
+        <button class="PrimaryBtn2">💾  GUARDAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="grip"></div>
+<script>
+(function () {
+  var ids = ["txtHost", "txtPort", "txtDatabase", "txtUsername"];
+  function upd() {
+    var v = ids.map(function (i) { return document.getElementById(i).value; });
+    document.getElementById("txtConnPreview").textContent =
+      "Host=" + v[0] + ";Port=" + v[1] + ";Database=" + v[2] + ";Username=" + v[3] + ";Password=***;";
+  }
+  ids.forEach(function (i) { document.getElementById(i).addEventListener("input", upd); });
+})();
+</script>
+<div class="maqueta-flag">MAQUETA</div>
+</body>
+</html>
