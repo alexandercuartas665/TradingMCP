@@ -47,7 +47,7 @@ switch ($Accion) {
     $sesiones = @()
     foreach ($p in $plan) {
       $body = @{ estrategia=$p.estrategia; symbol=$p.symbol; timeframe=$p.timeframe; confianza=$p.confianza;
-                 duracion=$p.duracion; payout=80; monto=1 } | ConvertTo-Json -Compress
+                 duracion=$p.duracion; payout=80; monto=1; autonomo=$true } | ConvertTo-Json -Compress
       $r = Invoke-RestMethod "$api/live/iniciar" -Method POST -Body $body -ContentType 'application/json' -TimeoutSec 60
       if (-not $r.ok) { Write-Output ("ERROR {0} {1}: {2}" -f $p.estrategia, $p.symbol, $r.error); continue }
       Write-Output ("Sesion {0}: {1} {2} {3}" -f $r.sesion_id, $p.estrategia, $p.symbol, $p.timeframe)

@@ -266,6 +266,14 @@ Namespace WpfDerivClientVB.Backtesting
                     Await WriteJson(res, 200, LivePausar(body))
                     Return
                 End If
+                ' Activa/quita la reanudacion automatica de una sesion: {"sesion_id":N, "activar":true}
+                If path = "/api/heavy/live/autonomo" AndAlso method = "POST" Then
+                    Dim sidA = If(body?("sesion_id") IsNot Nothing, CInt(body("sesion_id")), 0)
+                    Dim activar = body?("activar") Is Nothing OrElse CBool(body("activar"))
+                    Dim existe = sidA > 0 AndAlso Await New LiveTestRepository().MarcarReanudacionAutomaticaAsync(sidA, activar)
+                    Await WriteJson(res, 200, New JObject From {{"ok", existe}, {"sesion_id", sidA}, {"reanudacion_automatica", activar}})
+                    Return
+                End If
                 If path = "/api/heavy/live/reanudar-bd" AndAlso method = "POST" Then
                     Dim n = Await LiveStrategiesController.GetInstance().ReanudarActivasAsync()
                     Await WriteJson(res, 200, New JObject From {{"ok", True}, {"reanudadas", n}})
@@ -332,6 +340,20 @@ Namespace WpfDerivClientVB.Backtesting
                 ' Consulta de solo lectura por la conexion autenticada (lista blanca en el servicio)
                 If path = "/api/heavy/trading/consulta" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await DerivTradingService.Instance.ConsultarAsync(body))
+                    Return
+                End If
+
+                ' Salud del modo autonomo: conexion, sesiones, velas por sesion, alertas y mantenimiento
+                If path = "/api/heavy/salud" Then
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"salud", ModoAutonomo.Estado()}})
+                    Return
+                End If
+                ' Mantenimiento manual: {"velas":true, "respaldo":true}. Corre en segundo plano.
+                If path = "/api/heavy/mantenimiento/ejecutar" AndAlso method = "POST" Then
+                    Dim velas = If(body?("velas") IsNot Nothing, CBool(body("velas")), True)
+                    Dim respaldo = If(body?("respaldo") IsNot Nothing, CBool(body("respaldo")), True)
+                    Dim tarea = Task.Run(Function() ModoAutonomo.EjecutarMantenimientoAsync(velas, respaldo))
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"mensaje", "Mantenimiento iniciado. Ver GET /api/heavy/salud."}})
                     Return
                 End If
 
@@ -801,7 +823,10 @@ Namespace WpfDerivClientVB.Backtesting
                 Dim monto = If(body("monto") IsNot Nothing, CDec(body("monto")), 1D)
                 Dim sid = Await LiveStrategiesController.GetInstance().IniciarAsync(
                     nombre, symbol, tf, conf, pay, dur, monto)
-                Return New JObject From {{"ok", True}, {"sesion_id", sid}}
+                ' "autonomo": true -> el modo autonomo la reanudara tras un reinicio
+                Dim autonomo = body("autonomo") IsNot Nothing AndAlso CBool(body("autonomo"))
+                If autonomo Then Await New LiveTestRepository().MarcarReanudacionAutomaticaAsync(sid, True)
+                Return New JObject From {{"ok", True}, {"sesion_id", sid}, {"reanudacion_automatica", autonomo}}
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try

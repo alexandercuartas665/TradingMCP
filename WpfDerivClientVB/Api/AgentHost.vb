@@ -11,6 +11,9 @@
 '   WpfDerivClientVB.exe --open-trading         (abre MainWindow minimizada -> registra
 '                                                TradingService y permite conectar WS demo)
 '   WpfDerivClientVB.exe --minimized            (AdminDashboard arranca minimizado)
+'   WpfDerivClientVB.exe --autonomo             (implica --heavy-api: conecta la demo, reanuda
+'                                                sesiones live, vigila y avisa por WhatsApp,
+'                                                actualiza velas y hace copia de seguridad diaria)
 '
 ' Los servicios creados aqui son GLOBALES (viven mas alla de las
 ' ventanas). La ventana HeavyStrategyTester ADOPTA la cola y el
@@ -66,6 +69,12 @@ Namespace WpfDerivClientVB.Servidor
                 If idx > 0 Then Integer.TryParse(argApi.Substring(idx + 1), port)
                 If port < 1024 OrElse port > 65535 Then port = 8766
                 IniciarHeavyApi(port)
+            End If
+
+            ' ── --autonomo ──────────────────────────────────────────────
+            If lista.Contains("--autonomo") Then
+                If argApi Is Nothing Then IniciarHeavyApi(8766)
+                ModoAutonomo.Iniciar()
             End If
 
             ' ── --signalr-connect ───────────────────────────────────────

@@ -79,6 +79,11 @@ Namespace WpfDerivClientVB.Servidor
             End Try
         End Sub
 
+        ''' <summary>Estado de las suscripciones de velas de las sesiones live.</summary>
+        Public Function EstadoStreaming() As JArray
+            Return _subscriber.Estado()
+        End Function
+
         ''' <summary>Lista de sesionIds actualmente activas.</summary>
         Public ReadOnly Property SesionesActivas As List(Of Integer)
             Get
@@ -301,7 +306,7 @@ Namespace WpfDerivClientVB.Servidor
         ''' Lee de BD las sesiones live "Abierto" que quedaron sin cerrar y las
         ''' reanuda en memoria. Llamar al iniciar la app.
         ''' </summary>
-        Public Async Function ReanudarActivasAsync() As Task(Of Integer)
+        Public Async Function ReanudarActivasAsync(Optional soloMarcadasAutonomo As Boolean = False) As Task(Of Integer)
             Dim activas As List(Of BacktestSesion)
             Try
                 activas = Await _repo.GetSesionesLiveActivasAsync()
@@ -320,6 +325,13 @@ Namespace WpfDerivClientVB.Servidor
             Dim cuenta As Integer = 0
             For Each ses In activas
                 Try
+                    If _motors.ContainsKey(ses.Id) Then Continue For   ' ya esta en marcha
+                    ' El modo autonomo solo reanuda las sesiones marcadas para ello (no cualquier sesion vieja)
+                    If soloMarcadasAutonomo AndAlso If(ses.Notas, "").IndexOf(LiveTestRepository.MARCA_AUTONOMO, StringComparison.OrdinalIgnoreCase) < 0 Then
+                        Log(String.Format("[LiveCtrl] Sesion #{0} ({1} {2}/{3}) activa en BD pero sin marca {4}: no se reanuda.",
+                                          ses.Id, ses.Estrategia, ses.Symbol, ses.Timeframe, LiveTestRepository.MARCA_AUTONOMO))
+                        Continue For
+                    End If
                     Dim defEst = EstrategiasDinamicasRegistry.GetByNombre(ses.Estrategia)
                     If defEst Is Nothing Then
                         Log("[LiveCtrl] Estrategia '" & ses.Estrategia & "' no esta en el registry; sesion #" & ses.Id & " omitida.")

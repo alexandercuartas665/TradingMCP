@@ -46,6 +46,14 @@ Namespace WpfDerivClientVB
         ''' <summary>Si False (por defecto), las operaciones automaticas solo se ejecutan en cuenta DEMO.</summary>
         Public Property PermitirRealAutomatico As Boolean = False
 
+        ' ── Modo autonomo (--autonomo): mantenimiento diario ──
+        ''' <summary>Carpeta de las copias de seguridad diarias ("" = %LOCALAPPDATA%\WpfDerivClientVB\respaldos).</summary>
+        Public Property RespaldosCarpeta As String = ""
+        ''' <summary>Cuantas copias diarias se conservan.</summary>
+        Public Property RespaldosConservar As Integer = 14
+        ''' <summary>Contenedor Docker de PostgreSQL (para pg_dump).</summary>
+        Public Property DockerContenedorPostgres As String = "traiding_postgres"
+
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.
         ''' </summary>

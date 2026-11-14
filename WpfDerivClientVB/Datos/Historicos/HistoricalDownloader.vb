@@ -26,6 +26,11 @@ Namespace WpfDerivClientVB
             {"1m", 60}, {"5m", 300}, {"15m", 900}, {"1h", 3600}, {"4h", 14400}, {"1d", 86400}
         }
 
+        ''' <summary>
+        ''' True = sobrescribe las velas que ya existan (para el tramo que se solapa con lo guardado).
+        ''' </summary>
+        Public Property ActualizarExistentes As Boolean = False
+
         Public Sub New(repo As CandleRepository)
             _repo = repo
         End Sub
@@ -61,6 +66,7 @@ Namespace WpfDerivClientVB
                 Return
             End If
             Dim oldestAnterior As Long = Long.MaxValue
+            Dim esperasPorLimite As Integer = 0
             Try
 
                 Do While Not token.IsCancellationRequested
@@ -92,6 +98,18 @@ Namespace WpfDerivClientVB
 
                     If data.ContainsKey("error") Then
                         Dim errMsg As String = data("error")("message").ToString()
+                        ' Deriv limita las consultas de historico profundo: esperar y repetir la misma pagina
+                        If errMsg.Contains("RateLimit") AndAlso esperasPorLimite < 8 Then
+                            esperasPorLimite += 1
+                            pageNum -= 1
+                            onProgress(New DownloadProgress With {
+                                .PageNum = pageNum, .TotalSaved = totalSaved,
+                                .StatusMsg = String.Format("Limite de consultas de Deriv: esperando 60 s (#{0})...", esperasPorLimite),
+                                .IsComplete = False
+                            })
+                            Await Task.Delay(60000, token)
+                            Continue Do
+                        End If
                         onProgress(New DownloadProgress With {
                             .StatusMsg = "Error API: " & errMsg,
                             .HasError = True,
@@ -109,6 +127,7 @@ Namespace WpfDerivClientVB
                     End If
 
                     Dim arr As JArray = CType(data("candles"), JArray)
+                    esperasPorLimite = 0
 
                     If arr.Count = 0 Then
                         onProgress(New DownloadProgress With {
@@ -122,9 +141,15 @@ Namespace WpfDerivClientVB
 
                     ' Convertir a CandleModel
                     Dim candleList As New List(Of CandleModel)()
+                    Dim ahoraEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                     Dim idx As Integer = 0
                     Do While idx < arr.Count
                         Dim item As JObject = CType(arr(idx), JObject)
+                        ' La vela en curso todavia no esta cerrada: guardarla dejaria precios parciales
+                        If CLng(item("epoch")) + granularity > ahoraEpoch Then
+                            idx += 1
+                            Continue Do
+                        End If
                         Dim m As New CandleModel()
                         m.Epoch = CLng(item("epoch"))
                         m.OpenTime = EpochToLocal(m.Epoch)
@@ -138,7 +163,8 @@ Namespace WpfDerivClientVB
                     Loop
 
                     ' Guardar en BD (await aqui porque ya estamos en thread pool)
-                    Await _repo.SaveBatchAsync(platform, symbol, timeframe, candleList, isClosed:=True)
+                    Await _repo.SaveBatchAsync(platform, symbol, timeframe, candleList, isClosed:=True,
+                                               actualizarExistentes:=ActualizarExistentes)
                     totalSaved += candleList.Count
 
                     Dim oldestEpoch As Long = CLng(CType(arr(0), JObject)("epoch"))
@@ -172,8 +198,8 @@ Namespace WpfDerivClientVB
                     ' Mover el cursor hacia atras para la siguiente pagina
                     currentEndEpoch = oldestEpoch - 1
 
-                    ' Pausa para no saturar el API
-                    Await Task.Delay(400, token)
+                    ' Pausa para no saturar el API (el historico profundo tiene limite de consultas)
+                    Await Task.Delay(1000, token)
                 Loop
 
             Catch ex As OperationCanceledException
