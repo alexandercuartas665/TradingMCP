@@ -475,7 +475,7 @@ Namespace WpfDerivClientVB
                             Dim minVelas = If(TypeOf estrat Is EstrategiaSeykota, perE + 25, 35)
                             Dim candlesE = Await ObtenerVelasComoCandles(symE, minVelas, granE)
                             If candlesE Is Nothing OrElse candlesE.Count < 10 Then
-                                result = ErrorJson("Timeout o insuficientes velas para " & symE)
+                                result = ErrorJson("Sin velas suficientes para " & symE & If(Servidor.DerivTradingService.Instance.EstaConectado, "", ". " & DerivDatos.MENSAJE_SIN_CONEXION))
                             Else
                                 Dim resE = estrat.Analizar(candlesE)
                                 Dim datosArr As New JObject()
@@ -1088,58 +1088,13 @@ Namespace WpfDerivClientVB
         '  HELPER COMPARTIDO — Obtener velas como CandleModel
         ' ===================================================
         Private Async Function ObtenerVelasComoCandles(symbol As String, count As Integer, granularity As Integer) As Task(Of List(Of CandleModel))
-            Dim ws As New ClientWebSocket()
-            Dim cts As New CancellationTokenSource()
-            ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(15)
-            Try
-                Await ws.ConnectAsync(New Uri("wss://ws.derivws.com/websockets/v3?app_id=1089"), cts.Token)
-                Dim reqObj As New JObject()
-                reqObj.Add("ticks_history", symbol)
-                reqObj.Add("count", count)
-                reqObj.Add("end", "latest")
-                reqObj.Add("granularity", granularity)
-                reqObj.Add("style", "candles")
-                Dim reqBytes = Encoding.UTF8.GetBytes(reqObj.ToString())
-                Await ws.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, cts.Token)
-
-                Dim buf(65535) As Byte
-                Dim sbWs As New StringBuilder()
-                Dim recvTask As Task(Of Boolean) = Task.Run(Async Function() As Task(Of Boolean)
-                                                                Dim wsr As WebSocketReceiveResult
-                                                                Do
-                                                                    wsr = Await ws.ReceiveAsync(New ArraySegment(Of Byte)(buf), cts.Token)
-                                                                    sbWs.Append(Encoding.UTF8.GetString(buf, 0, wsr.Count))
-                                                                Loop While Not wsr.EndOfMessage
-                                                                Return True
-                                                            End Function)
-                Dim winner = Await Task.WhenAny(recvTask, Task.Delay(8000))
-                cts.Cancel()
-                Try : ws.Dispose() : Catch : End Try
-                If winner IsNot recvTask Then Return Nothing
-
-                Dim respObj = JObject.Parse(sbWs.ToString())
-                Dim candles = TryCast(respObj("candles"), JArray)
-                If candles Is Nothing Then Return Nothing
-
-                Dim lista As New List(Of CandleModel)()
-                For Each tok As JToken In candles
-                    Dim epoch As Long = CLng(tok("epoch"))
-                    Dim dt = New DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(epoch).ToLocalTime()
-                    lista.Add(New CandleModel With {
-                        .Epoch = epoch,
-                        .OpenTime = dt.ToString("yyyy-MM-dd HH:mm"),
-                        .OpenPrice = CDec(tok("open")),
-                        .High = CDec(tok("high")),
-                        .Low = CDec(tok("low")),
-                        .ClosePrice = CDec(tok("close"))
-                    })
-                Next
-                Return lista
-            Catch
-                cts.Cancel()
-                Try : ws.Dispose() : Catch : End Try
+            ' Por la conexion autenticada (la API publica antigua ya no existe)
+            Dim r = Await DerivDatos.PedirVelasAsync(symbol, count, granularity, 8000)
+            If r Is Nothing OrElse r("ok") Is Nothing OrElse Not CBool(r("ok")) Then
+                If LogAction IsNot Nothing Then LogAction.Invoke("  velas " & symbol & ": " & If(r?("error")?.ToString(), "sin respuesta"))
                 Return Nothing
-            End Try
+            End If
+            Return DerivDatos.ACandles(TryCast(r("candles"), JArray))
         End Function
 
         ' ===================================================
@@ -1150,7 +1105,7 @@ Namespace WpfDerivClientVB
                 Dim count = Math.Max(periodo, 30)
                 Dim candles = Await ObtenerVelasComoCandles(symbol, count, 60)
                 If candles Is Nothing OrElse candles.Count < 15 Then
-                    Return ErrorJson("Timeout o insuficientes velas de " & symbol)
+                    Return ErrorJson("Sin velas suficientes de " & symbol & If(Servidor.DerivTradingService.Instance.EstaConectado, "", ". " & DerivDatos.MENSAJE_SIN_CONEXION))
                 End If
 
                 Dim res = New EstrategiaEmaRsi().Analizar(candles)
@@ -1187,7 +1142,7 @@ Namespace WpfDerivClientVB
             Try
                 Dim candles = Await ObtenerVelasComoCandles(symbol, periodo + 25, granularity)
                 If candles Is Nothing OrElse candles.Count < periodo + 5 Then
-                    Return ErrorJson("Timeout o insuficientes velas de " & symbol)
+                    Return ErrorJson("Sin velas suficientes de " & symbol & If(Servidor.DerivTradingService.Instance.EstaConectado, "", ". " & DerivDatos.MENSAJE_SIN_CONEXION))
                 End If
 
                 Dim res = New EstrategiaSeykota(periodo).Analizar(candles)
@@ -1235,7 +1190,7 @@ Namespace WpfDerivClientVB
 
                 Dim candles = Await ObtenerVelasComoCandles(symbol, count, granularity)
                 If candles Is Nothing OrElse candles.Count = 0 Then
-                    Return ErrorJson("Timeout o sin velas para " & symbol)
+                    Return ErrorJson("Sin velas para " & symbol & If(Servidor.DerivTradingService.Instance.EstaConectado, "", ". " & DerivDatos.MENSAJE_SIN_CONEXION))
                 End If
 
                 Dim resultados = ind.Calculate(candles)

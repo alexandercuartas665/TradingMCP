@@ -262,36 +262,12 @@ Namespace WpfDerivClientVB
             txtLoadingActivos.Visibility = Visibility.Visible
             txtActivosError.Visibility = Visibility.Collapsed
 
-            Dim ws As New ClientWebSocket()
-            Dim cts As New CancellationTokenSource(TimeSpan.FromSeconds(12))
             Try
-                Await ws.ConnectAsync(New Uri("wss://ws.derivws.com/websockets/v3?app_id=1089"), cts.Token)
-
-                Dim req As New JObject()
-                req.Add("active_symbols", "brief")
-                req.Add("product_type", "basic")
-                Dim reqBytes = Encoding.UTF8.GetBytes(req.ToString())
-                Await ws.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, cts.Token)
-
-                Dim buf(65535) As Byte
-                Dim sb As New StringBuilder()
-                Dim recvTask As Task(Of Boolean) = Task.Run(Async Function() As Task(Of Boolean)
-                                                                Dim wsr As WebSocketReceiveResult
-                                                                Do
-                                                                    wsr = Await ws.ReceiveAsync(New ArraySegment(Of Byte)(buf), cts.Token)
-                                                                    sb.Append(Encoding.UTF8.GetString(buf, 0, wsr.Count))
-                                                                Loop While Not wsr.EndOfMessage
-                                                                Return True
-                                                            End Function)
-
-                Dim ganador = Await Task.WhenAny(recvTask, Task.Delay(10000))
-                cts.Cancel()
-
-                If ganador IsNot recvTask Then
-                    Throw New TimeoutException("Timeout al consultar simbolos de Deriv.")
+                ' Por la conexion autenticada (la API publica antigua ya no existe)
+                Dim resp = Await DerivDatos.ConsultarAsync(New JObject From {{"active_symbols", "brief"}}, 12000)
+                If resp("ok") Is Nothing OrElse Not CBool(resp("ok")) Then
+                    Throw New Exception(If(resp("error")?.ToString(), "sin respuesta de Deriv"))
                 End If
-
-                Dim resp = JObject.Parse(sb.ToString())
                 Dim symbols = TryCast(resp("active_symbols"), JArray)
                 If symbols Is Nothing Then
                     Throw New Exception(resp("error")?("message")?.ToString() & " (active_symbols)")
@@ -302,9 +278,9 @@ Namespace WpfDerivClientVB
                     If sym("market")?.ToString() = "synthetic_index" AndAlso
                        sym("is_trading_suspended")?.ToObject(Of Integer)() = 0 Then
                         lista.Add(New ActivoItem(
-                            sym("symbol").ToString(),
-                            sym("display_name").ToString(),
-                            If(sym("submarket_display_name")?.ToString(), "")
+                            If(sym("underlying_symbol")?.ToString(), sym("symbol")?.ToString()),
+                            If(sym("underlying_symbol_name")?.ToString(), sym("display_name")?.ToString()),
+                            If(sym("submarket_display_name")?.ToString(), If(sym("submarket")?.ToString(), ""))
                         ))
                     End If
                 Next
@@ -330,8 +306,6 @@ Namespace WpfDerivClientVB
                 txtActivosError.Text = "No se pudieron cargar los activos: " & ex.Message
                 txtActivosError.Visibility = Visibility.Visible
             Finally
-                cts.Cancel()
-                Try : ws.Dispose() : Catch : End Try
                 txtLoadingActivos.Visibility = Visibility.Collapsed
             End Try
         End Function

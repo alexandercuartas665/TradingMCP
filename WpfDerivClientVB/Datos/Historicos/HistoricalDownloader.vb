@@ -1,5 +1,4 @@
 Imports System.Collections.Generic
-Imports System.Net.WebSockets
 Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
@@ -20,7 +19,6 @@ Namespace WpfDerivClientVB
 
     Public Class HistoricalDownloader
 
-        Private ReadOnly API_URI As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
         Private ReadOnly _repo As CandleRepository
         Private _cts As CancellationTokenSource
 
@@ -52,13 +50,18 @@ Namespace WpfDerivClientVB
             Dim currentEndEpoch As Long = ToEpoch(toDate.AddHours(23).AddMinutes(59))
             Dim startEpoch As Long = ToEpoch(fromDate)
 
-            ' La API publica antigua (ws.derivws.com) ya no responde (HTTP 520). Si el servicio
-            ' de trading esta conectado, las paginas se piden por la API nueva autenticada.
-            Dim usarApiNueva = DerivTradingService.Instance.EstaConectado
-            Dim ws As New ClientWebSocket()
+            ' Las paginas se piden por la conexion autenticada: la API publica antigua
+            ' (ws.derivws.com) ya no existe y sin cuenta conectada no hay datos.
+            If Not DerivTradingService.Instance.EstaConectado Then
+                onProgress(New DownloadProgress With {
+                    .StatusMsg = DerivDatos.MENSAJE_SIN_CONEXION,
+                    .HasError = True,
+                    .IsComplete = True
+                })
+                Return
+            End If
             Dim oldestAnterior As Long = Long.MaxValue
             Try
-                If Not usarApiNueva Then Await ws.ConnectAsync(New Uri(API_URI), token)
 
                 Do While Not token.IsCancellationRequested
 
@@ -74,16 +77,9 @@ Namespace WpfDerivClientVB
                     requestJson("granularity") = granularity
                     requestJson("start") = startEpoch
 
-                    Dim data As JObject
-                    If usarApiNueva Then
-                        data = Await DerivTradingService.Instance.ConsultarAsync(requestJson, 30000)
-                        If data("ok") IsNot Nothing AndAlso Not CBool(data("ok")) AndAlso data("candles") Is Nothing Then
-                            data = New JObject From {{"error", New JObject From {{"message", If(data("error")?.ToString(), "error")}}}}
-                        End If
-                    Else
-                        Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(requestJson.ToString())
-                        Await ws.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, token)
-                        data = Await ReceiveMessageAsync(ws, token)
+                    Dim data As JObject = Await DerivTradingService.Instance.ConsultarAsync(requestJson, 30000)
+                    If data("ok") IsNot Nothing AndAlso Not CBool(data("ok")) AndAlso data("candles") Is Nothing Then
+                        data = New JObject From {{"error", New JObject From {{"message", If(data("error")?.ToString(), "error")}}}}
                     End If
 
                     If data Is Nothing Then
@@ -193,28 +189,7 @@ Namespace WpfDerivClientVB
                     .HasError = True,
                     .IsComplete = True
                 })
-            Finally
-                Try
-                    If ws.State = WebSocketState.Open Then
-                        ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Fin descarga", CancellationToken.None).Wait(2000)
-                    End If
-                Catch
-                End Try
-                ws.Dispose()
             End Try
-        End Function
-
-        Private Async Function ReceiveMessageAsync(ws As ClientWebSocket, token As CancellationToken) As Task(Of JObject)
-            Dim buffer(65535) As Byte
-            Dim sb As New StringBuilder()
-            Dim result As WebSocketReceiveResult
-            Do
-                result = Await ws.ReceiveAsync(New ArraySegment(Of Byte)(buffer), token)
-                sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count))
-            Loop While Not result.EndOfMessage
-
-            If result.MessageType = WebSocketMessageType.Close Then Return Nothing
-            Return JObject.Parse(sb.ToString())
         End Function
 
         Private Shared Function ToEpoch(dt As DateTime) As Long

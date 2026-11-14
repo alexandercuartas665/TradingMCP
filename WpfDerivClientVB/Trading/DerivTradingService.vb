@@ -54,6 +54,11 @@ Namespace WpfDerivClientVB.Servidor
         Public Event OperacionQuitada(op As OperacionModel)
         Public Event OperacionCerrada(op As OperacionModel)
         Public Event MensajeOperacion(texto As String, esError As Boolean)
+        ''' <summary>
+        ''' Las suscripciones de velas se pierden al reconectar o desconectar el WebSocket:
+        ''' quien las use debe volver a llamar SuscribirVelasAsync (si EstaConectado).
+        ''' </summary>
+        Public Event SuscripcionesVelasPerdidas()
 #End Region
 
 #Region "Estado"
@@ -185,6 +190,7 @@ Namespace WpfDerivClientVB.Servidor
                 End Try
             End If
             _saldo = Nothing
+            OlvidarSuscripcionesVelas()
             If Not silencioso Then RaiseEstado(False, "Desconectado")
         End Sub
 
@@ -227,6 +233,7 @@ Namespace WpfDerivClientVB.Servidor
 
                 RaiseEstado(True, If(_esDemo, "Demo", "Real") & " - Conectado")
                 Await EnviarAsync(New JObject From {{"balance", 1}, {"subscribe", 1}})
+                OlvidarSuscripcionesVelas()
                 EscribirLog(String.Format("WebSocket trading conectado ({0}).", If(_esDemo, "Demo", "Real")))
                 Return ""
             Catch ex As OperationCanceledException
@@ -391,13 +398,58 @@ Namespace WpfDerivClientVB.Servidor
         Public Async Function ConsultarAsync(req As JObject, Optional timeoutMs As Integer = 20000) As Task(Of JObject)
             If req Is Nothing Then Return New JObject From {{"ok", False}, {"error", "Peticion vacia."}}
             Dim tipo = req.Properties().Select(Function(prop) prop.Name).FirstOrDefault(Function(n) ConsultasPermitidas.Contains(n))
-            If tipo Is Nothing OrElse req.Properties().Any(Function(prop) prop.Name = "buy" OrElse prop.Name = "sell" OrElse prop.Name = "proposal") Then
+            If tipo Is Nothing OrElse req.Properties().Any(Function(prop) prop.Name = "buy" OrElse prop.Name = "sell" OrElse prop.Name = "proposal" OrElse prop.Name = "subscribe") Then
                 Return New JObject From {{"ok", False}, {"error", "Solo se permiten consultas de lectura: " & String.Join(", ", ConsultasPermitidas)}}
             End If
             If Not EstaConectado Then Return New JObject From {{"ok", False}, {"error", "Trading no conectado."}}
             Dim p = NuevoPendiente(TipoPendiente.Consulta)
             Return Await EnviarYEsperarAsync(p, CType(req.DeepClone(), JObject), timeoutMs)
         End Function
+
+        ' Suscripciones de velas en vivo: id de suscripcion de Deriv -> callback con el "ohlc"
+        Private ReadOnly _suscripcionesVelas As New ConcurrentDictionary(Of String, Action(Of JObject))()
+
+        ''' <summary>
+        ''' Suscribe velas en vivo (ticks_history + subscribe) por la conexion autenticada.
+        ''' Devuelve la respuesta de Deriv ({ok, candles, subscription:{id}}) o {ok:false, error}.
+        ''' Cada tick llega a onOhlc (hilo del WebSocket: no tocar la UI directamente).
+        ''' Al reconectar se pierden: ver SuscripcionesVelasPerdidas.
+        ''' </summary>
+        Public Async Function SuscribirVelasAsync(symbol As String, granularidad As Integer, cantidad As Integer,
+                                                  onOhlc As Action(Of JObject)) As Task(Of JObject)
+            If Not EstaConectado Then Return New JObject From {{"ok", False}, {"error", "Sin conexion a Deriv: conecta la cuenta primero."}}
+            Dim p = NuevoPendiente(TipoPendiente.Consulta)
+            Dim r = Await EnviarYEsperarAsync(p, New JObject From {
+                {"ticks_history", symbol}, {"style", "candles"}, {"granularity", granularidad},
+                {"count", cantidad}, {"end", "latest"}, {"adjust_start_time", 1}, {"subscribe", 1}
+            }, 20000)
+            Dim subId = r?("subscription")?("id")?.ToString()
+            If r IsNot Nothing AndAlso r("ok") IsNot Nothing AndAlso CBool(r("ok")) AndAlso Not String.IsNullOrEmpty(subId) Then
+                _suscripcionesVelas(subId) = onOhlc
+            End If
+            Return r
+        End Function
+
+        ''' <summary>Cancela una suscripcion de velas (forget en Deriv).</summary>
+        Public Async Function CancelarSuscripcionVelasAsync(subId As String) As Task
+            If String.IsNullOrEmpty(subId) Then Return
+            Dim quitado As Action(Of JObject) = Nothing
+            If Not _suscripcionesVelas.TryRemove(subId, quitado) Then Return
+            If Not EstaConectado Then Return
+            Try
+                Await EnviarAsync(New JObject From {{"forget", subId}})
+            Catch ex As Exception
+                EscribirLog("No se pudo cancelar la suscripcion de velas: " & ex.Message)
+            End Try
+        End Function
+
+        Private Sub OlvidarSuscripcionesVelas()
+            _suscripcionesVelas.Clear()
+            Try
+                RaiseEvent SuscripcionesVelasPerdidas()
+            Catch
+            End Try
+        End Sub
 
         Private Class Pendiente
             Public Property ReqId As Integer
@@ -793,6 +845,20 @@ Namespace WpfDerivClientVB.Servidor
             If consulta IsNot Nothing AndAlso consulta.Tipo = TipoPendiente.Consulta Then
                 obj("ok") = True
                 Resolver(consulta, obj)
+                Return
+            End If
+
+            ' Tick de una suscripcion de velas en vivo
+            If msgType = "ohlc" Then
+                Dim subId = obj("subscription")?("id")?.ToString()
+                Dim handler As Action(Of JObject) = Nothing
+                If subId IsNot Nothing AndAlso _suscripcionesVelas.TryGetValue(subId, handler) Then
+                    Try
+                        handler(CType(obj("ohlc"), JObject))
+                    Catch ex As Exception
+                        AppLogger.Warn("[Trading] Error en suscriptor de velas: " & ex.Message)
+                    End Try
+                End If
                 Return
             End If
 

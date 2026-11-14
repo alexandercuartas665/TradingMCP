@@ -335,6 +335,12 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Diagnostico: suscribe velas en vivo unos segundos y cuenta los ticks recibidos
+                If path = "/api/heavy/trading/probar-velas" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await ProbarVelasApi(body))
+                    Return
+                End If
+
                 ' Validacion fuera de muestra de una estrategia (no guarda nada)
                 If path = "/api/heavy/validar" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await ValidarEstrategiaApi(body))
@@ -1174,6 +1180,37 @@ Namespace WpfDerivClientVB.Backtesting
             Return New JObject From {
                 {"ok", True}, {"medido_utc", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")},
                 {"monto", monto}, {"cuenta", If(svc.EsDemo, "demo", "real")}, {"mercados", filas}
+            }
+        End Function
+
+        ''' <summary>
+        ''' Diagnostico del streaming: suscribe (symbol, granularidad) durante unos segundos por la
+        ''' conexion autenticada, cuenta los ticks "ohlc" y cancela la suscripcion.
+        ''' body: {symbol, granularidad=60, segundos=10}
+        ''' </summary>
+        Private Async Function ProbarVelasApi(body As JObject) As Task(Of JObject)
+            Dim symbol = If(body?("symbol")?.ToString(), "R_100")
+            Dim gran = If(body?("granularidad") IsNot Nothing, CInt(body("granularidad")), 60)
+            Dim segundos = Math.Min(60, Math.Max(1, If(body?("segundos") IsNot Nothing, CInt(body("segundos")), 10)))
+            Dim svc = DerivTradingService.Instance
+            Dim ticks As Integer = 0
+            Dim ultimo As JObject = Nothing
+            Dim r = Await svc.SuscribirVelasAsync(symbol, gran, 5,
+                Sub(ohlc)
+                    Threading.Interlocked.Increment(ticks)
+                    ultimo = ohlc
+                End Sub)
+            If r Is Nothing OrElse r("ok") Is Nothing OrElse Not CBool(r("ok")) Then
+                Return ErrJson(If(r?("error")?.ToString(), "sin respuesta"))
+            End If
+            Dim subId = r("subscription")?("id")?.ToString()
+            Await Task.Delay(segundos * 1000)
+            Await svc.CancelarSuscripcionVelasAsync(subId)
+            Dim velas = TryCast(r("candles"), JArray)
+            Return New JObject From {
+                {"ok", True}, {"symbol", symbol}, {"granularidad", gran}, {"segundos", segundos},
+                {"subscription_id", If(subId, "")}, {"velas_iniciales", If(velas Is Nothing, 0, velas.Count)},
+                {"ticks_recibidos", ticks}, {"ultimo_ohlc", If(ultimo, CType(JValue.CreateNull(), JToken))}
             }
         End Function
 

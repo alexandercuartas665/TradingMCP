@@ -1,11 +1,10 @@
 ' ============================================================
 ' MainWindow.Streaming.vb
 ' Contenido: Tab "Gráfico" (configuración de colores) +
-'            Tab "Streaming" (conexión WebSocket pública,
-'            bucle de escucha, procesamiento de velas).
+'            Tab "Streaming" (velas en vivo por la conexion
+'            autenticada de DerivTradingService).
 ' NO toca Trading Live ni descarga histórica.
 ' ============================================================
-Imports System.Net.WebSockets
 Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
@@ -72,76 +71,107 @@ Namespace WpfDerivClientVB
         End Sub
 
         ' ===================================================
-        '  TAB STREAMING - Conexion WebSocket
+        '  TAB STREAMING - Velas en vivo por la conexion autenticada
+        '  (la API publica antigua de Deriv ya no existe). Requiere
+        '  la cuenta conectada; al reconectar se re-suscribe sola.
         ' ===================================================
+        Private _streamSubId As String = Nothing
+        Private _streamActivo As Boolean = False
+        Private _streamEventoCableado As Boolean = False
+
         Private Async Sub btnConnect_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            Dim symbol As String = txtSymbol.Text.Trim()
+            Dim tfItem As System.Windows.Controls.ComboBoxItem = CType(cmbTimeframe.SelectedItem, System.Windows.Controls.ComboBoxItem)
+            Dim timeframeStr As String = tfItem.Content.ToString()
+            Await IniciarStreamingAsync(symbol, timeframeStr, mostrarErrores:=True)
+        End Sub
+
+        ''' <summary>Suscribe el grafico a (symbol, timeframe). Devuelve True si quedo en vivo.</summary>
+        Private Async Function IniciarStreamingAsync(symbol As String, timeframe As String, mostrarErrores As Boolean) As Task(Of Boolean)
+            If Not TIMEFRAME_MAP.ContainsKey(timeframe) Then Return False
+            CablearEventoStreaming()
+            Await DetenerStreamingAsync()
+
             btnConnect.IsEnabled = False
             btnDisconnect.IsEnabled = True
             txtSymbol.IsEnabled = False
             cmbTimeframe.IsEnabled = False
-
-            Dim symbol As String = txtSymbol.Text.Trim()
-            Dim tfItem As System.Windows.Controls.ComboBoxItem = CType(cmbTimeframe.SelectedItem, System.Windows.Controls.ComboBoxItem)
-            Dim timeframeStr As String = tfItem.Content.ToString()
-            Dim granularity As Integer = TIMEFRAME_MAP(timeframeStr)
-
             _currentSymbol = symbol
-            _currentTimeframe = timeframeStr
+            _currentTimeframe = timeframe
             _candles.Clear()
             _currentOpenEpoch = 0
-            txtStatus.Text = String.Format("Conectando a {0} ({1})...", symbol, timeframeStr)
+            _streamActivo = True
 
-            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
-            _cancellationTokenSource = New CancellationTokenSource()
-
-            Try
-                Await ConectarStreamingWsAsync(symbol, granularity)
-#Disable Warning BC42358
-                Task.Run(Function() As Task
-                             Return ListenLoop()
-                         End Function)
-#Enable Warning BC42358
-            Catch ex As Exception
-                System.Windows.MessageBox.Show("Error de conexion: " & ex.Message)
+            Dim svc = Servidor.DerivTradingService.Instance
+            If Not svc.EstaConectado Then
+                _streamActivo = False
                 ResetUI()
-            End Try
-        End Sub
-
-        ''' <summary>Descarta el WebSocket viejo y crea uno nuevo con keepalive y suscripción de velas.</summary>
-        Private Async Function ConectarStreamingWsAsync(symbol As String, granularity As Integer) As Task
-            ' Cerrar y descartar el WebSocket anterior limpiamente
-            If _webSocket IsNot Nothing Then
-                Try
-                    If _webSocket.State = WebSocketState.Open Then
-                        Await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Reconectando", CancellationToken.None)
-                    End If
-                Catch
-                End Try
-                Try
-                    _webSocket.Dispose()
-                Catch
-                End Try
-                _webSocket = Nothing
+                txtStatus.Text = "Sin conexion a Deriv: conecta la cuenta en la pestana Trading."
+                If mostrarErrores Then
+                    System.Windows.MessageBox.Show("Conecta primero la cuenta (Demo o Real) en la pestana Trading: las velas llegan por esa conexion.",
+                                                   "Streaming", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information)
+                End If
+                Return False
             End If
 
-            _webSocket = New ClientWebSocket()
-            _webSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(15)
-            Await _webSocket.ConnectAsync(New Uri(_apiUri), _cancellationTokenSource.Token)
-
-            Dispatcher.Invoke(Sub() txtStatus.Text = "Conectado. Solicitando historial...")
-            Dim reqBytes = Encoding.UTF8.GetBytes(BuildRequestJson(symbol, granularity))
-            Await _webSocket.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, _cancellationTokenSource.Token)
+            txtStatus.Text = String.Format("Conectando a {0} ({1})...", symbol, timeframe)
+            Dim r = Await svc.SuscribirVelasAsync(symbol, TIMEFRAME_MAP(timeframe), 50,
+                Sub(ohlc) Dispatcher.BeginInvoke(Sub() HandleLiveTick(ohlc), System.Windows.Threading.DispatcherPriority.Background))
+            If r Is Nothing OrElse r("ok") Is Nothing OrElse Not CBool(r("ok")) Then
+                Dim err = If(r?("error")?.ToString(), "sin respuesta")
+                _streamActivo = False
+                ResetUI()
+                txtStatus.Text = "Error de streaming: " & err
+                If mostrarErrores Then
+                    System.Windows.MessageBox.Show("Error API: " & err, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning)
+                End If
+                Return False
+            End If
+            _streamSubId = r("subscription")?("id")?.ToString()
+            Dim velas = TryCast(r("candles"), JArray)
+            If velas IsNot Nothing Then HandleHistoricalCandles(velas)
+            Return True
         End Function
 
-        Private Async Sub btnDisconnect_Click(sender As Object, e As System.Windows.RoutedEventArgs)
-            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
-            If _webSocket IsNot Nothing AndAlso _webSocket.State = WebSocketState.Open Then
-                Try
-                    Await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "OK", CancellationToken.None)
-                Catch
-                End Try
+        ''' <summary>Cancela la suscripcion actual del grafico (si hay).</summary>
+        Private Async Function DetenerStreamingAsync() As Task
+            Dim id = _streamSubId
+            _streamSubId = Nothing
+            If id IsNot Nothing Then Await Servidor.DerivTradingService.Instance.CancelarSuscripcionVelasAsync(id)
+        End Function
+
+        ''' <summary>Al reconectar el WebSocket de trading las suscripciones se pierden: re-suscribir.</summary>
+        Private Sub CablearEventoStreaming()
+            If _streamEventoCableado Then Return
+            _streamEventoCableado = True
+            AddHandler Servidor.DerivTradingService.Instance.SuscripcionesVelasPerdidas, AddressOf OnSuscripcionesVelasPerdidas
+        End Sub
+
+        Private Sub DescablearEventoStreaming()
+            If Not _streamEventoCableado Then Return
+            _streamEventoCableado = False
+            RemoveHandler Servidor.DerivTradingService.Instance.SuscripcionesVelasPerdidas, AddressOf OnSuscripcionesVelasPerdidas
+        End Sub
+
+        Private Sub OnSuscripcionesVelasPerdidas()
+            Dispatcher.BeginInvoke(New Action(AddressOf ReintentarStreamingTrasPerdida))
+        End Sub
+
+        Private Async Sub ReintentarStreamingTrasPerdida()
+            If Not _streamActivo Then Return
+            _streamSubId = Nothing
+            If Servidor.DerivTradingService.Instance.EstaConectado Then
+                txtStatus.Text = "Reconectado: recuperando velas..."
+                Await IniciarStreamingAsync(_currentSymbol, _currentTimeframe, mostrarErrores:=False)
+            Else
+                txtStatus.Text = "Conexion a Deriv perdida: esperando reconexion..."
             End If
-            Dispatcher.Invoke(AddressOf ResetUI)
+        End Sub
+
+        Private Async Sub btnDisconnect_Click(sender As Object, e As System.Windows.RoutedEventArgs)
+            _streamActivo = False
+            Await DetenerStreamingAsync()
+            ResetUI()
         End Sub
 
         Private Sub ResetUI()
@@ -153,29 +183,14 @@ Namespace WpfDerivClientVB
         End Sub
 
         ''' <summary>
-        ''' Asegura que el streaming superior este conectado al symbol/timeframe indicados.
-        ''' Si ya esta sincronizado y abierto, no hace nada. Si no, desconecta el streaming
-        ''' actual, ajusta los controles y vuelve a conectar.
-        ''' Usado por el modo Live de Estrategias Dinamicas para que las velas que llegan
-        ''' al LiveTestMotor coincidan con la estrategia en ejecucion.
+        ''' Asegura que el streaming superior este en el symbol/timeframe indicados.
+        ''' Si ya esta sincronizado, no hace nada. Usado por el modo Live de Estrategias
+        ''' Dinamicas para que el grafico muestre la estrategia en ejecucion.
         ''' </summary>
         Public Async Function SincronizarStreamingAsync(symbol As String, timeframe As String) As Task(Of Boolean)
             If String.IsNullOrWhiteSpace(symbol) OrElse String.IsNullOrWhiteSpace(timeframe) Then Return False
             If Not TIMEFRAME_MAP.ContainsKey(timeframe) Then Return False
-
-            Dim yaSync As Boolean = (_webSocket IsNot Nothing AndAlso _webSocket.State = WebSocketState.Open _
-                                     AndAlso _currentSymbol = symbol AndAlso _currentTimeframe = timeframe)
-            If yaSync Then Return True
-
-            ' Desconectar streaming actual si esta abierto
-            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
-            If _webSocket IsNot Nothing AndAlso _webSocket.State = WebSocketState.Open Then
-                Try
-                    Await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Sync", CancellationToken.None)
-                Catch
-                End Try
-            End If
-            ResetUI()
+            If _streamActivo AndAlso _streamSubId IsNot Nothing AndAlso _currentSymbol = symbol AndAlso _currentTimeframe = timeframe Then Return True
 
             ' Ajustar controles superiores
             txtSymbol.Text = symbol
@@ -186,143 +201,7 @@ Namespace WpfDerivClientVB
                     Exit For
                 End If
             Next
-
-            ' Conectar al nuevo symbol/timeframe
-            btnConnect.IsEnabled = False
-            btnDisconnect.IsEnabled = True
-            txtSymbol.IsEnabled = False
-            cmbTimeframe.IsEnabled = False
-
-            _currentSymbol = symbol
-            _currentTimeframe = timeframe
-            _candles.Clear()
-            _currentOpenEpoch = 0
-            txtStatus.Text = String.Format("Conectando a {0} ({1})...", symbol, timeframe)
-
-            _cancellationTokenSource = New CancellationTokenSource()
-            Try
-                Await ConectarStreamingWsAsync(symbol, TIMEFRAME_MAP(timeframe))
-#Disable Warning BC42358
-                Task.Run(Function() As Task
-                             Return ListenLoop()
-                         End Function)
-#Enable Warning BC42358
-                Return True
-            Catch ex As Exception
-                txtStatus.Text = "Error sincronizando streaming: " & ex.Message
-                ResetUI()
-                Return False
-            End Try
-        End Function
-
-        Private Shared Function BuildRequestJson(symbol As String, granularity As Integer) As String
-            Dim json As New JObject()
-            json.Add("ticks_history", New JValue(symbol))
-            json.Add("adjust_start_time", New JValue(1))
-            json.Add("count", New JValue(50))
-            json.Add("style", New JValue("candles"))
-            json.Add("end", New JValue("latest"))
-            json.Add("granularity", New JValue(granularity))
-            json.Add("subscribe", New JValue(1))
-            Return json.ToString()
-        End Function
-
-        ' ===================================================
-        '  BUCLE DE ESCUCHA STREAMING CON RECONEXION
-        ' ===================================================
-        Private Async Function ListenLoop() As Task
-            Dim buffer(16383) As Byte
-            Dim intentos As Integer = 0
-
-            Do While Not _cancellationTokenSource.IsCancellationRequested
-
-                ' ── Recepción de mensajes ──
-                Dim errorCritico As Boolean = False
-                Try
-                    Do While _webSocket.State = WebSocketState.Open AndAlso Not _cancellationTokenSource.IsCancellationRequested
-                        Dim sb As New StringBuilder()
-                        Dim result As WebSocketReceiveResult
-                        Do
-                            result = Await _webSocket.ReceiveAsync(New ArraySegment(Of Byte)(buffer), _cancellationTokenSource.Token)
-                            sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count))
-                        Loop While Not result.EndOfMessage
-
-                        If result.MessageType = WebSocketMessageType.Close Then Exit Do
-
-                        intentos = 0
-                        Dim data As JObject = JObject.Parse(sb.ToString())
-
-                        If data.ContainsKey("error") Then
-                            Dim errMsg As String = data("error")("message").ToString()
-                            Dim errCode As String = If(data("error")("code") IsNot Nothing, data("error")("code").ToString(), "")
-                            ' Errores críticos: no tiene sentido reconectar (símbolo inválido, mercado cerrado)
-                            If errCode = "InvalidSymbol" OrElse errCode = "MarketIsClosed" Then
-                                Dispatcher.Invoke(Sub()
-                                                      System.Windows.MessageBox.Show("Error API: " & errMsg, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning)
-                                                      ResetUI()
-                                                  End Sub)
-                                errorCritico = True
-                                Exit Do
-                            End If
-                        End If
-
-                        If data.ContainsKey("candles") Then
-                            ' Historicas: BeginInvoke para no bloquear el receive
-                            Dispatcher.BeginInvoke(Sub() HandleHistoricalCandles(CType(data("candles"), JArray)),
-                                                   System.Windows.Threading.DispatcherPriority.Background)
-                        ElseIf data.ContainsKey("ohlc") Then
-                            ' Tick en vivo (cada ~1s): Background priority para que NUNCA bloquee
-                            ' Input (mouse/window drag) ni Render. Si UI esta saturada, los ticks
-                            ' simplemente esperan a que UI este idle. La app se mantiene responsive.
-                            Dim ohlcCopy = CType(data("ohlc"), JObject)
-                            Dispatcher.BeginInvoke(Sub() HandleLiveTick(ohlcCopy),
-                                                   System.Windows.Threading.DispatcherPriority.Background)
-                        End If
-                    Loop
-                Catch ex As OperationCanceledException
-                    Exit Do   ' usuario presionó Detener — salir limpio
-                Catch ex As Exception
-                    ' Red caída o servidor cerró sin handshake — reconectar
-                    If Not _cancellationTokenSource.IsCancellationRequested Then
-                        Dispatcher.Invoke(Sub()
-                                              txtStatus.Text = String.Format("⚠ Streaming caído — reconectando...")
-                                          End Sub)
-                    End If
-                End Try
-
-                ' Error crítico o cancelación del usuario = no reconectar
-                If errorCritico OrElse _cancellationTokenSource.IsCancellationRequested Then Exit Do
-
-                ' ── Reconexión automática ──
-                intentos += 1
-                Dim esperaSegs As Integer = If(intentos <= 3, 3, 15)
-
-                Dispatcher.Invoke(Sub()
-                                      txtStatus.Text = String.Format("⚠ Reconectando streaming en {0}s... (#{1})", esperaSegs, intentos)
-                                  End Sub)
-
-                Await Task.Delay(esperaSegs * 1000, _cancellationTokenSource.Token)
-                If _cancellationTokenSource.IsCancellationRequested Then Exit Do
-
-                Dim errReconexion As String = Nothing
-                Try
-                    Dim gran As Integer = If(TIMEFRAME_MAP.ContainsKey(_currentTimeframe), TIMEFRAME_MAP(_currentTimeframe), 60)
-                    Await ConectarStreamingWsAsync(_currentSymbol, gran)
-                    intentos = 0
-                    Dispatcher.Invoke(Sub()
-                                          txtStatus.Text = String.Format("♻ Reconectado: {0} ({1})", _currentSymbol, _currentTimeframe)
-                                      End Sub)
-                Catch ex As Exception
-                    errReconexion = ex.Message
-                End Try
-
-                If errReconexion IsNot Nothing Then
-                    Dispatcher.Invoke(Sub()
-                                          txtStatus.Text = String.Format("❌ Fallo reconexión #{0}: {1}", intentos, errReconexion)
-                                      End Sub)
-                    Await Task.Delay(5000, _cancellationTokenSource.Token)
-                End If
-            Loop
+            Return Await IniciarStreamingAsync(symbol, timeframe, mostrarErrores:=False)
         End Function
 
         ' ===================================================

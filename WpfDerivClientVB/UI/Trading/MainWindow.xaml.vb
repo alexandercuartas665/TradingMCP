@@ -25,12 +25,9 @@ Namespace WpfDerivClientVB
         Inherits System.Windows.Window
 
         ' ===== Constantes y config =====
-        Private _apiUri As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
         Private Const PLATFORM As String = "Deriv"
 
         ' ===== Streaming (Tab Streaming) =====
-        Private _webSocket As ClientWebSocket
-        Private _cancellationTokenSource As CancellationTokenSource
         Private _candles As ObservableCollection(Of CandleModel)
         Private _currentOpenEpoch As Long = 0
         Private _currentSymbol As String = ""
@@ -164,7 +161,14 @@ Namespace WpfDerivClientVB
         '  LIFECYCLE DE LA VENTANA
         ' ===================================================
         Private Sub Window_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles Me.Closing
-            If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
+            ' Dejar de recibir velas del grafico (la conexion de trading sigue viva)
+            _streamActivo = False
+            DescablearEventoStreaming()
+            Dim subGrafico = _streamSubId
+            _streamSubId = Nothing
+            If subGrafico IsNot Nothing Then
+                Dim cancelacion = Servidor.DerivTradingService.Instance.CancelarSuscripcionVelasAsync(subGrafico)
+            End If
             If _descargaService IsNot Nothing Then _descargaService.Detener()
             ' La conexion de trading NO se cierra: vive en DerivTradingService y puede seguir
             ' operando para el Servidor Live / API sin esta ventana. Solo dejamos de escuchar.
