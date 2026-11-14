@@ -391,13 +391,16 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
         Public Sub ProcesarCandleCerrada(candle As CandleModel)
             If Not _activo OrElse _config Is Nothing OrElse _estrategia Is Nothing Then Return
 
-            ' Contador de velas analizadas (visible en el panel y via /api/dinamicas/live/estado)
-            System.Threading.Interlocked.Increment(_velasAnalizadas)
-
             ' Lock para serializar concurrencia: si dos candles llegan al mismo motor
             ' desde Task.Run paralelos, los serializamos para no corromper _buffer.
             SyncLock _processingLock
                 Try
+                    ' 0. Ignorar velas repetidas o anteriores a la ultima (precarga + streaming)
+                    If _buffer.Count > 0 AndAlso candle.Epoch <= _buffer(_buffer.Count - 1).Epoch Then Return
+
+                    ' Contador de velas analizadas (visible en el panel y via /api/dinamicas/live/estado)
+                    System.Threading.Interlocked.Increment(_velasAnalizadas)
+
                     ' 1. Agregar al buffer, mantener solo VentanaIndicadores velas
                     _buffer.Add(candle)
                     If _buffer.Count > _config.VentanaIndicadores Then
@@ -414,7 +417,13 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                     If _pausado OrElse Not puedeOperar Then
                         ' bloqueado — no abrir nuevas
                     ElseIf _buffer.Count >= _config.VentanaIndicadores Then
-                        EvaluarYOperar(candle)
+                        Dim motivoNoOpera = MotivoNoOperarForward(candle)
+                        If motivoNoOpera = "" Then
+                            EvaluarYOperar(candle)
+                        Else
+                            AppLogger.Info(String.Format("[LiveTestMotor] Sesion {0}: vela {1} sin evaluar ({2}).",
+                                                         _sesionId, candle.Epoch, motivoNoOpera))
+                        End If
                     End If
                 Catch ex As Exception
                     AppLogger.Warn("[LiveTestMotor.ProcesarCandleCerrada] Error: " & ex.Message)
@@ -513,6 +522,47 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                          End Try
                      End Function)
         End Sub
+
+        ''' <summary>
+        ''' Precarga velas cerradas en el buffer SIN evaluar ni operar, para que la sesion
+        ''' pueda operar desde la primera vela nueva (sin esperar VentanaIndicadores velas).
+        ''' Devuelve cuantas velas quedaron en el buffer.
+        ''' </summary>
+        Public Function PrecargarBuffer(velas As IEnumerable(Of CandleModel)) As Integer
+            If _config Is Nothing OrElse velas Is Nothing Then Return _buffer.Count
+            SyncLock _processingLock
+                For Each v In velas.OrderBy(Function(c) c.Epoch)
+                    If _buffer.Count > 0 AndAlso v.Epoch <= _buffer(_buffer.Count - 1).Epoch Then Continue For
+                    _buffer.Add(v)
+                Next
+                Do While _buffer.Count > _config.VentanaIndicadores
+                    _buffer.RemoveAt(0)
+                Loop
+                Return _buffer.Count
+            End SyncLock
+        End Function
+
+        ''' <summary>
+        ''' En modo forward: "" si se puede evaluar la vela; si no, el motivo.
+        ''' Una posicion a la vez (como el backtest validado) y solo velas recien cerradas.
+        ''' </summary>
+        Friend Function MotivoNoOperarForward(candle As CandleModel,
+                                              Optional ahoraEpoch As Long = 0) As String
+            If _config Is Nothing OrElse Not _config.ModoForward Then Return ""
+            If ahoraEpoch = 0 Then ahoraEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            Dim seg = BacktestMotor.SegundosTimeframe(_config.Timeframe)
+            SyncLock _pendientesLock
+                ' Una operacion cuyo vencimiento paso hace mas de 15 min y sigue sin resultado
+                ' (cierre perdido) no bloquea la sesion: la reconciliacion la cerrara.
+                Dim vencimientoMax = Function(p As OperacionPendiente) p.EpochEntrada + CLng(seg) * (_config.DuracionVelas + 1) + 900
+                If _pendientes.Any(Function(p) seg = 0 OrElse ahoraEpoch < vencimientoMax(p)) Then Return "posicion abierta"
+            End SyncLock
+            If seg > 0 AndAlso ahoraEpoch - (candle.Epoch + seg) > MAX_SEGUNDOS_TRAS_CIERRE Then Return "vela atrasada"
+            Return ""
+        End Function
+
+        ''' <summary>Una vela cerrada hace mas de esto ya no se opera (la entrada seria otra).</summary>
+        Friend Const MAX_SEGUNDOS_TRAS_CIERRE As Integer = 180
 
         ' ── Evaluar estrategia y abrir trade ────────────────────────────
         Private Sub EvaluarYOperar(candleActual As CandleModel)

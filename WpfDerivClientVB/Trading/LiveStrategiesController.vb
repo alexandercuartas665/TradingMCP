@@ -162,7 +162,8 @@ Namespace WpfDerivClientVB.Servidor
                 .VentanaIndicadores = ventanaIndicadores,
                 .HorasOperacion = horasOperacion,
                 .LimiteGanancia = limiteGanancia,
-                .LimitePerdida = limitePerdida
+                .LimitePerdida = limitePerdida,
+                .ModoForward = True
             }
 
             ' 4) Instanciar motor + cablear callbacks
@@ -179,6 +180,9 @@ Namespace WpfDerivClientVB.Servidor
             _motors(sesionId) = motor
             Log(String.Format("[LiveCtrl] Motor {0} iniciado: {1} {2}/{3}",
                               sesionId, estrategiaNombre, symbol, timeframe))
+
+            ' 6b) Precargar las ultimas velas para operar desde la primera vela nueva
+            Await PrecargarBufferAsync(motor, symbol, timeframe, ventanaIndicadores)
 
             ' 7) Suscribir al streaming (si no lo estaba ya)
             If Not _subscriber.EstaSuscrito(symbol, timeframe) Then
@@ -329,13 +333,15 @@ Namespace WpfDerivClientVB.Servidor
                         .PayoutPct = ses.PayoutPct,
                         .MinConfianza = ses.MinConfianza,
                         .MontoOperacion = 1D,
-                        .VentanaIndicadores = 100
+                        .VentanaIndicadores = 100,
+                        .ModoForward = True
                     }
                     Dim motor As New LiveTestMotor()
                     motor.ExecuteTrade = Function(body As JObject) ApiExecuteTrade(body)
                     motor.InyectarSesionExistente(ses.Id, cfg, defEst)
 
                     _motors(ses.Id) = motor
+                    Await PrecargarBufferAsync(motor, ses.Symbol, ses.Timeframe, cfg.VentanaIndicadores)
 
                     If Not _subscriber.EstaSuscrito(ses.Symbol, ses.Timeframe) Then
                         Dim granularity = TimeframeAGranularidad(ses.Timeframe)
@@ -376,6 +382,36 @@ Namespace WpfDerivClientVB.Servidor
 #End Region
 
 #Region "Helpers"
+
+        ''' <summary>
+        ''' Llena el buffer del motor con las ultimas velas cerradas (consulta de solo lectura
+        ''' por la conexion autenticada). Sin conexion, el buffer se llena con las velas que cierren.
+        ''' </summary>
+        Private Async Function PrecargarBufferAsync(motor As LiveTestMotor, symbol As String, timeframe As String,
+                                                    ventana As Integer) As Task
+            Try
+                Dim svc = DerivTradingService.Instance
+                If Not svc.EstaConectado Then
+                    Log(String.Format("[LiveCtrl] Sin conexion a Deriv: {0} {1} empezara a operar tras {2} velas.", symbol, timeframe, ventana))
+                    Return
+                End If
+                Dim gran = TimeframeAGranularidad(timeframe)
+                Dim r = Await svc.ConsultarAsync(New JObject From {
+                    {"ticks_history", symbol}, {"style", "candles"}, {"granularity", gran},
+                    {"end", "latest"}, {"count", ventana + 2}, {"adjust_start_time", 1}
+                }, 20000)
+                If r Is Nothing OrElse r("ok") Is Nothing OrElse Not CBool(r("ok")) Then
+                    Log(String.Format("[LiveCtrl] No se pudo precargar {0} {1}: {2}", symbol, timeframe, r?("error")))
+                    Return
+                End If
+                Dim velas = BackgroundStreamingSubscriber.VelasCerradasNuevas(
+                    TryCast(r("candles"), JArray), gran, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), 0)
+                Dim n = motor.PrecargarBuffer(velas)
+                Log(String.Format("[LiveCtrl] Buffer precargado: {0}/{1} velas de {2} {3}.", n, ventana, symbol, timeframe))
+            Catch ex As Exception
+                Log("[LiveCtrl] Error precargando velas: " & ex.Message)
+            End Try
+        End Function
 
         Private Function ApiExecuteTrade(body As JObject) As Task(Of JObject)
             Dim svc = TradingServiceLocator.Current

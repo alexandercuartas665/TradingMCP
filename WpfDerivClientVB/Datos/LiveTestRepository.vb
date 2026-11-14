@@ -39,6 +39,12 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
         Public Property LimiteGanancia       As Decimal = 0D
         ''' <summary>Limite de perdida acumulada (0 = sin limite, valor positivo). Auto-pausa al alcanzarlo.</summary>
         Public Property LimitePerdida        As Decimal = 0D
+        ''' <summary>
+        ''' True = no abre una operacion mientras haya otra abierta (igual que el backtest
+        ''' validado con UnaPosicionALaVez) y solo opera velas recien cerradas (no velas
+        ''' atrasadas tras una reconexion). Lo activa LiveStrategiesController.
+        ''' </summary>
+        Public Property ModoForward          As Boolean = False
     End Class
 
     ''' <summary>
@@ -121,6 +127,15 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                         "ALTER TABLE public.backtest_operaciones " &
                         "ADD COLUMN IF NOT EXISTS contract_id VARCHAR(100);"
 
+                    ' estado era VARCHAR(10): no cabian "NoEjecutada" ni "BloqueadaRiesgo" y esas
+                    ' operaciones se quedaban en "Pendiente". Ampliar solo si hace falta.
+                    Dim sqlEstado20 =
+                        "DO $$ BEGIN " &
+                        "IF (SELECT character_maximum_length FROM information_schema.columns " &
+                        "    WHERE table_schema = 'public' AND table_name = 'backtest_operaciones' AND column_name = 'estado') < 20 THEN " &
+                        "  ALTER TABLE public.backtest_operaciones ALTER COLUMN estado TYPE VARCHAR(20); " &
+                        "END IF; END $$;"
+
                     ' Flag de "activa" para detectar sesiones live que crashearon sin cerrarse.
                     Dim sqlActiva =
                         "ALTER TABLE public.backtest_sesiones " &
@@ -132,7 +147,7 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                     Dim sqlIdx4 = "CREATE INDEX IF NOT EXISTS idx_bt_ses_tipo   ON public.backtest_sesiones(tipo_sesion);"
                     Dim sqlIdx5 = "CREATE INDEX IF NOT EXISTS idx_bt_ses_activa ON public.backtest_sesiones(activa) WHERE activa = true;"
 
-                    For Each ddl In {sqlSesiones, sqlOperaciones, sqlTipoSesion, sqlContractId, sqlActiva,
+                    For Each ddl In {sqlSesiones, sqlOperaciones, sqlTipoSesion, sqlContractId, sqlActiva, sqlEstado20,
                                      sqlIdx1, sqlIdx2, sqlIdx3, sqlIdx4, sqlIdx5}
                         Using cmd As New NpgsqlCommand(ddl, conn)
                             Await cmd.ExecuteNonQueryAsync()

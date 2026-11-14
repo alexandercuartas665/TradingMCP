@@ -148,52 +148,13 @@ Namespace WpfDerivClientVB
             txtAnalisisResult.Foreground = New SolidColorBrush(Colors.Yellow)
 
             Try
-                Dim wsUri As New Uri("wss://ws.derivws.com/websockets/v3?app_id=1089")
-                Dim analysisWs As New ClientWebSocket()
-                Dim analysisCts As New CancellationTokenSource()
-
-                Await analysisWs.ConnectAsync(wsUri, analysisCts.Token)
-
-                Dim reqObj As New JObject()
-                reqObj.Add("ticks_history", symbol)
-                reqObj.Add("count", periodMinutes)
-                reqObj.Add("end", "latest")
-                reqObj.Add("granularity", 60)
-                reqObj.Add("style", "candles")
-                reqObj.Add("req_id", 99)
-
-                Dim reqBytes As Byte() = Encoding.UTF8.GetBytes(reqObj.ToString())
-                Await analysisWs.SendAsync(New ArraySegment(Of Byte)(reqBytes), WebSocketMessageType.Text, True, analysisCts.Token)
-
-                ' Recibir respuesta con timeout de 8 segundos
-                Dim receiveTask As Task(Of String) = Task.Run(Async Function()
-                                                                  Dim buf(65535) As Byte
-                                                                  Dim sbReceive As New System.Text.StringBuilder()
-                                                                  Dim wsr As WebSocketReceiveResult
-                                                                  Do
-                                                                      wsr = Await analysisWs.ReceiveAsync(New ArraySegment(Of Byte)(buf), analysisCts.Token)
-                                                                      sbReceive.Append(Encoding.UTF8.GetString(buf, 0, wsr.Count))
-                                                                  Loop While Not wsr.EndOfMessage
-                                                                  Return sbReceive.ToString()
-                                                              End Function)
-
-                Dim timeoutTask As Task = Task.Delay(8000)
-                Dim winner As Task = Await Task.WhenAny(receiveTask, timeoutTask)
-
-                analysisCts.Cancel()
-                Try
-                    analysisWs.Dispose()
-                Catch
-                End Try
-
-                If winner IsNot receiveTask Then
-                    txtAnalisisResult.Text = "❌ Timeout al obtener datos del mercado."
+                ' Por la conexion autenticada (la API publica antigua ya no existe)
+                Dim responseObj As JObject = Await DerivDatos.PedirVelasAsync(symbol, periodMinutes, 60, 8000)
+                If responseObj("ok") Is Nothing OrElse Not CBool(responseObj("ok")) Then
+                    txtAnalisisResult.Text = "Error: " & If(responseObj("error")?.ToString(), "sin respuesta de Deriv.")
                     txtAnalisisResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
                     Return
                 End If
-
-                Dim responseJson As String = receiveTask.Result
-                Dim responseObj As JObject = JObject.Parse(responseJson)
 
                 If responseObj("candles") Is Nothing Then
                     Dim errMsg As String = responseObj("error")?("message")?.ToString()

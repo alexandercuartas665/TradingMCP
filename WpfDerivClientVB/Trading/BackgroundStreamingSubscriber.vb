@@ -1,45 +1,74 @@
 ' ============================================================
 ' BackgroundStreamingSubscriber.vb
 '
-' Mantiene N WebSockets independientes a Deriv, uno por cada
-' (symbol, timeframe) requerido por las estrategias live activas.
-' Permite que varias estrategias operen simultaneamente sobre
-' activos distintos sin que el chart visible cambie.
+' Entrega las velas cerradas de cada (symbol, timeframe) que usan
+' las estrategias live, sin cambiar el grafico visible.
 '
-' Uso desde MainWindow:
+' La API publica antigua de Deriv (ws.derivws.com) ya no responde,
+' asi que en lugar de un WebSocket propio por activo se consultan
+' las ultimas velas por la conexion autenticada de
+' DerivTradingService (consulta de solo lectura en lista blanca):
+' unos segundos despues de cada cierre se piden las ultimas velas
+' y se emiten las cerradas que aun no se habian emitido. Si la
+' conexion cae, el servicio reconecta y el sondeo sigue solo.
+'
+' Uso:
 '   _multiSub = New BackgroundStreamingSubscriber()
-'   _multiSub.OnCandleCerrada = Sub(c, sym, tf) RaiseEvent OnCandleCerrada(c, sym, tf)
-'   Await _multiSub.SubscribeAsync("R_100", "1h", 3600)
-'   ' ... velas llegaran via callback ...
-'   Await _multiSub.UnsubscribeAsync("R_100", "1h")
+'   _multiSub.OnCandleCerrada = Sub(c, sym, tf) ...
+'   Await _multiSub.SubscribeAsync("frxUSDJPY", "1h", 3600)
+'   Await _multiSub.UnsubscribeAsync("frxUSDJPY", "1h")
 ' ============================================================
-Imports System.Net.WebSockets
-Imports System.Text
+Imports System.Collections.Generic
+Imports System.Linq
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports Newtonsoft.Json.Linq
+Imports WpfDerivClientVB.WpfDerivClientVB.Servidor
 
 Namespace WpfDerivClientVB
 
 Public Class BackgroundStreamingSubscriber
 
-    Private Const API_URI As String = "wss://ws.derivws.com/websockets/v3?app_id=1089"
+    ''' <summary>Segundos de margen tras el cierre de la vela antes de consultarla.</summary>
+    Private Const SEGUNDOS_TRAS_CIERRE As Integer = 3
+    ''' <summary>Espera tras un error o sin conexion.</summary>
+    Private Const SEGUNDOS_REINTENTO As Integer = 15
+    ''' <summary>Espera cuando no hay vela abierta (mercado cerrado o datos atrasados).</summary>
+    Private Const SEGUNDOS_SIN_VELA_ABIERTA As Integer = 60
 
-    ''' <summary>Subscripciones activas, indexadas por "symbol/timeframe".</summary>
-    Private ReadOnly _subs As New Dictionary(Of String, BackgroundSub)()
+    Private Class Suscripcion
+        Public Symbol As String
+        Public Timeframe As String
+        Public Granularidad As Integer
+        Public Inicializada As Boolean
+        Public UltimaEmitida As Long          ' epoch de apertura de la ultima vela cerrada emitida
+        Public ProximaConsulta As Long        ' epoch UTC en que toca consultar
+        Public FallosSeguidos As Integer
+    End Class
+
+    Private ReadOnly _subs As New Dictionary(Of String, Suscripcion)()
     Private ReadOnly _lock As New Object()
+    Private _cts As CancellationTokenSource
+    Private _bucle As Task
 
-    ''' <summary>Callback invocado cada vez que cierra una vela en cualquier subscription.</summary>
+    ''' <summary>Callback invocado cada vez que cierra una vela en cualquier suscripcion.</summary>
     Public Property OnCandleCerrada As Action(Of CandleModel, String, String)
 
     ''' <summary>Callback opcional para log de eventos del subscriber.</summary>
     Public Property LogAction As Action(Of String)
 
+    ''' <summary>Consulta a Deriv. Por defecto la conexion autenticada; reemplazable en pruebas.</summary>
+    Friend Property Consultar As Func(Of JObject, Task(Of JObject)) =
+        Function(req) DerivTradingService.Instance.ConsultarAsync(req, 15000)
+
+    ''' <summary>Reloj (epoch UTC). Reemplazable en pruebas.</summary>
+    Friend Property AhoraEpoch As Func(Of Long) = Function() DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+
     Private Shared Function MakeKey(symbol As String, timeframe As String) As String
         Return (symbol & "/" & timeframe).ToLowerInvariant()
     End Function
 
-    ''' <summary>Lista de subscripciones activas en formato "symbol/tf".</summary>
+    ''' <summary>Lista de suscripciones activas en formato "symbol/tf".</summary>
     Public ReadOnly Property Activas As List(Of String)
         Get
             SyncLock _lock
@@ -48,7 +77,7 @@ Public Class BackgroundStreamingSubscriber
         End Get
     End Property
 
-    ''' <summary>True si ya hay una subscription para (symbol, timeframe).</summary>
+    ''' <summary>True si ya hay una suscripcion para (symbol, timeframe).</summary>
     Public Function EstaSuscrito(symbol As String, timeframe As String) As Boolean
         SyncLock _lock
             Return _subs.ContainsKey(MakeKey(symbol, timeframe))
@@ -56,60 +85,162 @@ Public Class BackgroundStreamingSubscriber
     End Function
 
     ''' <summary>
-    ''' Abre un WebSocket nuevo para (symbol, timeframe). Si ya existe, no hace nada.
-    ''' Devuelve True si la subscription quedo activa.
+    ''' Registra (symbol, timeframe). La primera consulta solo fija la ultima vela cerrada
+    ''' (no emite historico); desde ahi se emite cada cierre nuevo.
     ''' </summary>
-    Public Async Function SubscribeAsync(symbol As String, timeframe As String, granularity As Integer) As Task(Of Boolean)
-        If String.IsNullOrWhiteSpace(symbol) OrElse String.IsNullOrWhiteSpace(timeframe) Then Return False
-        Dim key = MakeKey(symbol, timeframe)
-        SyncLock _lock
-            If _subs.ContainsKey(key) Then Return True
-        End SyncLock
-
-        Dim nuevoSub As New BackgroundSub(symbol, timeframe, granularity)
-        nuevoSub.OnCandleCerrada = Sub(c, sym, tf) OnCandleCerrada?.Invoke(c, sym, tf)
-        nuevoSub.LogAction = Sub(msg) LogAction?.Invoke(msg)
-
-        Dim ok As Boolean = Await nuevoSub.StartAsync()
-        If ok Then
-            SyncLock _lock
-                _subs(key) = nuevoSub
-            End SyncLock
-            Log(String.Format("Background WS abierto: {0}/{1}", symbol, timeframe))
-        Else
-            Log(String.Format("Background WS fallo al abrir: {0}/{1}", symbol, timeframe))
+    Public Function SubscribeAsync(symbol As String, timeframe As String, granularity As Integer) As Task(Of Boolean)
+        If String.IsNullOrWhiteSpace(symbol) OrElse String.IsNullOrWhiteSpace(timeframe) OrElse granularity <= 0 Then
+            Return Task.FromResult(False)
         End If
-        Return ok
-    End Function
-
-    ''' <summary>Cierra el WebSocket asociado a (symbol, timeframe), si existe.</summary>
-    Public Async Function UnsubscribeAsync(symbol As String, timeframe As String) As Task
         Dim key = MakeKey(symbol, timeframe)
-        Dim subExistente As BackgroundSub = Nothing
         SyncLock _lock
-            If _subs.TryGetValue(key, subExistente) Then
-                _subs.Remove(key)
+            If Not _subs.ContainsKey(key) Then
+                _subs(key) = New Suscripcion With {
+                    .Symbol = symbol, .Timeframe = timeframe, .Granularidad = granularity, .ProximaConsulta = 0
+                }
+                Log(String.Format("Suscrito: {0}/{1} (consulta por la conexion autenticada)", symbol, timeframe))
+            End If
+            If _bucle Is Nothing OrElse _bucle.IsCompleted Then
+                _cts = New CancellationTokenSource()
+                Dim ct = _cts.Token
+                _bucle = Task.Run(Function() BucleAsync(ct))
             End If
         End SyncLock
-        If subExistente IsNot Nothing Then
-            Await subExistente.StopAsync()
-            Log(String.Format("Background WS cerrado: {0}/{1}", symbol, timeframe))
+        If Not DerivTradingService.Instance.EstaConectado Then
+            Log("AVISO: trading no conectado; las velas llegaran cuando se conecte (POST /api/heavy/trading/conectar).")
         End If
+        Return Task.FromResult(True)
     End Function
 
-    ''' <summary>Cierra TODOS los WebSockets background.</summary>
-    Public Async Function UnsubscribeAllAsync() As Task
-        Dim aCerrar As List(Of BackgroundSub)
+    ''' <summary>Deja de entregar velas de (symbol, timeframe).</summary>
+    Public Function UnsubscribeAsync(symbol As String, timeframe As String) As Task
         SyncLock _lock
-            aCerrar = _subs.Values.ToList()
-            _subs.Clear()
+            If _subs.Remove(MakeKey(symbol, timeframe)) Then
+                Log(String.Format("Desuscrito: {0}/{1}", symbol, timeframe))
+            End If
         End SyncLock
-        For Each s In aCerrar
+        Return Task.CompletedTask
+    End Function
+
+    ''' <summary>Quita todas las suscripciones y detiene el sondeo.</summary>
+    Public Function UnsubscribeAllAsync() As Task
+        SyncLock _lock
+            _subs.Clear()
+            If _cts IsNot Nothing Then
+                Try
+                    _cts.Cancel()
+                Catch
+                End Try
+            End If
+        End SyncLock
+        Return Task.CompletedTask
+    End Function
+
+    Private Async Function BucleAsync(ct As CancellationToken) As Task
+        Do While Not ct.IsCancellationRequested
+            Dim aConsultar As List(Of Suscripcion)
+            Dim ahora = AhoraEpoch.Invoke()
+            SyncLock _lock
+                aConsultar = _subs.Values.Where(Function(s) s.ProximaConsulta <= ahora).ToList()
+            End SyncLock
+            For Each s In aConsultar
+                If ct.IsCancellationRequested Then Exit For
+                Dim fallo As String = Nothing
+                Try
+                    Await ConsultarSuscripcionAsync(s)
+                Catch ex As Exception
+                    fallo = ex.Message
+                End Try
+                If fallo IsNot Nothing Then
+                    s.FallosSeguidos += 1
+                    s.ProximaConsulta = AhoraEpoch.Invoke() + SEGUNDOS_REINTENTO
+                    If s.FallosSeguidos <= 3 OrElse s.FallosSeguidos Mod 40 = 0 Then
+                        Log(String.Format("{0}/{1}: error consultando velas ({2})", s.Symbol, s.Timeframe, fallo))
+                    End If
+                End If
+            Next
             Try
-                Await s.StopAsync()
-            Catch
+                Await Task.Delay(1000, ct)
+            Catch ex As OperationCanceledException
+                Exit Do
             End Try
+        Loop
+    End Function
+
+    ''' <summary>Consulta las ultimas velas de una suscripcion, emite las nuevas cerradas y agenda la siguiente consulta.</summary>
+    Private Async Function ConsultarSuscripcionAsync(s As Suscripcion) As Task
+        Dim req As New JObject From {
+            {"ticks_history", s.Symbol}, {"style", "candles"}, {"granularity", s.Granularidad},
+            {"end", "latest"}, {"count", 5}, {"adjust_start_time", 1}
+        }
+        Dim r = Await Consultar.Invoke(req)
+        Dim ahora = AhoraEpoch.Invoke()
+        If r Is Nothing OrElse r("ok") Is Nothing OrElse Not CBool(r("ok")) Then
+            s.FallosSeguidos += 1
+            s.ProximaConsulta = ahora + SEGUNDOS_REINTENTO
+            If s.FallosSeguidos <= 3 OrElse s.FallosSeguidos Mod 40 = 0 Then
+                Log(String.Format("{0}/{1}: sin velas ({2})", s.Symbol, s.Timeframe, If(r?("error")?.ToString(), "sin respuesta")))
+            End If
+            Return
+        End If
+        s.FallosSeguidos = 0
+        Dim velas = TryCast(r("candles"), JArray)
+
+        If Not s.Inicializada Then
+            Dim cerradas = VelasCerradasNuevas(velas, s.Granularidad, ahora, 0)
+            s.UltimaEmitida = If(cerradas.Count > 0, cerradas.Last().Epoch, 0)
+            s.Inicializada = True
+        Else
+            For Each v In VelasCerradasNuevas(velas, s.Granularidad, ahora, s.UltimaEmitida)
+                s.UltimaEmitida = v.Epoch
+                Try
+                    OnCandleCerrada?.Invoke(v, s.Symbol, s.Timeframe)
+                Catch ex As Exception
+                    Log(String.Format("{0}/{1}: callback fallo: {2}", s.Symbol, s.Timeframe, ex.Message))
+                End Try
+            Next
+        End If
+
+        s.ProximaConsulta = ProximaConsulta(velas, s.Granularidad, ahora)
+    End Function
+
+    ''' <summary>
+    ''' Velas cerradas (apertura + granularidad &lt;= ahora) con apertura posterior a
+    ''' ultimaEmitida, en orden cronologico.
+    ''' </summary>
+    Friend Shared Function VelasCerradasNuevas(velas As JArray, granularidad As Integer, ahoraEpoch As Long,
+                                               ultimaEmitida As Long) As List(Of CandleModel)
+        Dim res As New List(Of CandleModel)()
+        If velas Is Nothing Then Return res
+        For Each t In velas
+            Dim v = TryCast(t, JObject)
+            If v Is Nothing OrElse v("epoch") Is Nothing Then Continue For
+            Dim ep = CLng(v("epoch"))
+            If ep + granularidad > ahoraEpoch OrElse ep <= ultimaEmitida Then Continue For
+            res.Add(New CandleModel With {
+                .Epoch = ep, .OpenPrice = CDec(v("open")), .High = CDec(v("high")),
+                .Low = CDec(v("low")), .ClosePrice = CDec(v("close")), .Status = "[Cerrada]"
+            })
         Next
+        Return res.OrderBy(Function(c) c.Epoch).ToList()
+    End Function
+
+    ''' <summary>
+    ''' Si hay una vela abierta, consultar justo despues de su cierre; si no (mercado
+    ''' cerrado o datos atrasados), volver a mirar en un minuto.
+    ''' </summary>
+    Friend Shared Function ProximaConsulta(velas As JArray, granularidad As Integer, ahoraEpoch As Long) As Long
+        Dim abierta As Long = -1
+        If velas IsNot Nothing Then
+            For Each t In velas
+                Dim v = TryCast(t, JObject)
+                If v Is Nothing OrElse v("epoch") Is Nothing Then Continue For
+                Dim ep = CLng(v("epoch"))
+                If ep + granularidad > ahoraEpoch Then abierta = Math.Max(abierta, ep)
+            Next
+        End If
+        If abierta < 0 Then Return ahoraEpoch + SEGUNDOS_SIN_VELA_ABIERTA
+        Return abierta + granularidad + SEGUNDOS_TRAS_CIERRE
     End Function
 
     Private Sub Log(msg As String)
@@ -118,201 +249,6 @@ Public Class BackgroundStreamingSubscriber
         Catch
         End Try
     End Sub
-
-    ' =================================================================
-    '  Inner class: una subscription (un WebSocket dedicado)
-    ' =================================================================
-    Private Class BackgroundSub
-        Private ReadOnly _symbol As String
-        Private ReadOnly _timeframe As String
-        Private ReadOnly _granularity As Integer
-
-        Private _ws As ClientWebSocket
-        Private _cts As CancellationTokenSource
-        Private _currentOpenEpoch As Long = 0
-        Private _lastClosedSnapshot As CandleModel = Nothing
-
-        Public Property OnCandleCerrada As Action(Of CandleModel, String, String)
-        Public Property LogAction As Action(Of String)
-
-        Public Sub New(symbol As String, timeframe As String, granularity As Integer)
-            _symbol = symbol
-            _timeframe = timeframe
-            _granularity = granularity
-        End Sub
-
-        Public Async Function StartAsync() As Task(Of Boolean)
-            Try
-                _cts = New CancellationTokenSource()
-                _ws = New ClientWebSocket()
-                _ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(15)
-                Await _ws.ConnectAsync(New Uri(API_URI), _cts.Token)
-                Dim req = BuildRequest(_symbol, _granularity)
-                Dim bytes = Encoding.UTF8.GetBytes(req)
-                Await _ws.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _cts.Token)
-                ' Iniciar bucle de escucha en background
-#Disable Warning BC42358
-                Task.Run(Function() ListenLoop())
-#Enable Warning BC42358
-                Return True
-            Catch ex As Exception
-                LogAction?.Invoke(String.Format("[Sub {0}/{1}] Error conectando: {2}",
-                                                _symbol, _timeframe, ex.Message))
-                Return False
-            End Try
-        End Function
-
-        Public Async Function StopAsync() As Task
-            If _cts IsNot Nothing Then
-                Try
-                    _cts.Cancel()
-                Catch
-                End Try
-            End If
-            If _ws IsNot Nothing Then
-                Try
-                    If _ws.State = WebSocketState.Open Then
-                        Await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Stop", CancellationToken.None)
-                    End If
-                Catch
-                End Try
-                Try
-                    _ws.Dispose()
-                Catch
-                End Try
-                _ws = Nothing
-            End If
-        End Function
-
-        Private Shared Function BuildRequest(symbol As String, granularity As Integer) As String
-            Dim json As New JObject()
-            json.Add("ticks_history", New JValue(symbol))
-            json.Add("adjust_start_time", New JValue(1))
-            json.Add("count", New JValue(2))   ' minimo: solo necesitamos arrancar el ciclo
-            json.Add("style", New JValue("candles"))
-            json.Add("end", New JValue("latest"))
-            json.Add("granularity", New JValue(granularity))
-            json.Add("subscribe", New JValue(1))
-            Return json.ToString()
-        End Function
-
-        Private Async Function ListenLoop() As Task
-            Dim buffer(16383) As Byte
-            Dim intentos As Integer = 0
-            Do While Not _cts.IsCancellationRequested
-                Try
-                    Do While _ws IsNot Nothing AndAlso _ws.State = WebSocketState.Open _
-                             AndAlso Not _cts.IsCancellationRequested
-                        Dim sb As New StringBuilder()
-                        Dim result As WebSocketReceiveResult
-                        Do
-                            result = Await _ws.ReceiveAsync(New ArraySegment(Of Byte)(buffer), _cts.Token)
-                            sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count))
-                        Loop While Not result.EndOfMessage
-
-                        If result.MessageType = WebSocketMessageType.Close Then Exit Do
-
-                        ProcesarMensaje(sb.ToString())
-                    Loop
-                Catch ex As OperationCanceledException
-                    Exit Do
-                Catch ex As Exception
-                    LogAction?.Invoke(String.Format("[Sub {0}/{1}] Error recibiendo: {2}",
-                                                    _symbol, _timeframe, ex.Message))
-                End Try
-                If _cts.IsCancellationRequested Then Exit Do
-
-                ' Reconexion simple
-                intentos += 1
-                Dim espera As Integer = If(intentos <= 3, 3, 15)
-                Try
-                    Await Task.Delay(espera * 1000, _cts.Token)
-                Catch
-                    Exit Do
-                End Try
-                If _cts.IsCancellationRequested Then Exit Do
-                Try
-                    If _ws IsNot Nothing Then _ws.Dispose()
-                    _ws = New ClientWebSocket()
-                    _ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(15)
-                    Await _ws.ConnectAsync(New Uri(API_URI), _cts.Token)
-                    Dim req = BuildRequest(_symbol, _granularity)
-                    Dim bytes = Encoding.UTF8.GetBytes(req)
-                    Await _ws.SendAsync(New ArraySegment(Of Byte)(bytes), WebSocketMessageType.Text, True, _cts.Token)
-                    intentos = 0
-                    LogAction?.Invoke(String.Format("[Sub {0}/{1}] Reconectado.", _symbol, _timeframe))
-                Catch ex As Exception
-                    LogAction?.Invoke(String.Format("[Sub {0}/{1}] Reconexion fallo: {2}",
-                                                    _symbol, _timeframe, ex.Message))
-                End Try
-            Loop
-        End Function
-
-        Private Sub ProcesarMensaje(json As String)
-            Try
-                Dim root = JObject.Parse(json)
-                Dim msgType = root("msg_type")?.ToString()
-                Select Case msgType
-                    Case "candles"
-                        ' Respuesta inicial: array de velas historicas. Tomamos la mas reciente
-                        ' como referencia de la vela "abierta" en curso.
-                        Dim arr = TryCast(root("candles"), JArray)
-                        If arr IsNot Nothing AndAlso arr.Count > 0 Then
-                            Dim last = TryCast(arr(arr.Count - 1), JObject)
-                            If last IsNot Nothing Then
-                                _currentOpenEpoch = CLng(last("epoch"))
-                                _lastClosedSnapshot = New CandleModel With {
-                                    .Epoch = CLng(last("epoch")),
-                                    .OpenPrice = CDec(last("open")),
-                                    .High = CDec(last("high")),
-                                    .Low = CDec(last("low")),
-                                    .ClosePrice = CDec(last("close"))
-                                }
-                            End If
-                        End If
-
-                    Case "ohlc"
-                        Dim ohlc = TryCast(root("ohlc"), JObject)
-                        If ohlc Is Nothing Then Return
-                        Dim tickEpoch As Long = CLng(ohlc("open_time"))
-                        Dim isNewCandle As Boolean = (_currentOpenEpoch <> 0 AndAlso tickEpoch <> _currentOpenEpoch)
-
-                        If isNewCandle Then
-                            ' La vela que estaba "abierta" se cerro. Disparar callback con su snapshot.
-                            If _lastClosedSnapshot IsNot Nothing Then
-                                Dim snap = _lastClosedSnapshot
-                                snap.Status = "[Cerrada]"
-                                Try
-                                    OnCandleCerrada?.Invoke(snap, _symbol, _timeframe)
-                                Catch ex As Exception
-                                    LogAction?.Invoke(String.Format("[Sub {0}/{1}] Callback fallo: {2}",
-                                                                    _symbol, _timeframe, ex.Message))
-                                End Try
-                            End If
-                            ' Empezar a trackear la nueva vela
-                            _currentOpenEpoch = tickEpoch
-                            _lastClosedSnapshot = New CandleModel With {
-                                .Epoch = tickEpoch,
-                                .OpenPrice = CDec(ohlc("open")),
-                                .High = CDec(ohlc("high")),
-                                .Low = CDec(ohlc("low")),
-                                .ClosePrice = CDec(ohlc("close"))
-                            }
-                        Else
-                            ' Tick dentro de la vela actual: actualizar HLC del snapshot en curso
-                            If _lastClosedSnapshot IsNot Nothing Then
-                                _lastClosedSnapshot.High = CDec(ohlc("high"))
-                                _lastClosedSnapshot.Low = CDec(ohlc("low"))
-                                _lastClosedSnapshot.ClosePrice = CDec(ohlc("close"))
-                            End If
-                        End If
-                End Select
-            Catch ex As Exception
-                LogAction?.Invoke(String.Format("[Sub {0}/{1}] Parse fallo: {2}",
-                                                _symbol, _timeframe, ex.Message))
-            End Try
-        End Sub
-    End Class
 
 End Class
 
