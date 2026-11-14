@@ -236,6 +236,36 @@ Namespace WpfDerivClientVB.Servidor
             Return ""
         End Function
 
+        ''' <summary>
+        ''' Envuelve y firma los parametros de una instruccion SALIENTE con SignalRSecret.
+        ''' - Instrucciones de solo lectura, sin secreto configurado o ya firmadas: se devuelven tal cual.
+        ''' Lo usa SignalRClientService.EnviarInstruccionAsync para que las ordenes que la
+        ''' propia app envia (p.ej. "Enviar a Servidor Live") pasen la verificacion.
+        ''' </summary>
+        Public Function FirmarSaliente(instruccion As String, parametrosJson As String) As String
+            Dim instr = If(instruccion, "").Trim().ToLowerInvariant()
+            If SoloLectura.Contains(instr) Then Return parametrosJson
+            Dim secreto = ConfigManager.LoadDbConfig().SignalRSecret
+            If String.IsNullOrWhiteSpace(secreto) Then Return parametrosJson
+            Dim actual = ParsePayload(parametrosJson)
+            If actual("firma") IsNot Nothing AndAlso actual("payload") IsNot Nothing Then Return parametrosJson
+
+            Dim payload = If(String.IsNullOrWhiteSpace(parametrosJson), "{}", parametrosJson)
+            Dim ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(Globalization.CultureInfo.InvariantCulture)
+            Dim nonceBytes(11) As Byte
+            Using rng As New System.Security.Cryptography.RNGCryptoServiceProvider()
+                rng.GetBytes(nonceBytes)
+            End Using
+            Dim nonce = String.Concat(nonceBytes.Select(Function(b) b.ToString("x2")))
+            Dim sobre As New JObject From {
+                {"payload", payload},
+                {"ts", Long.Parse(ts, Globalization.CultureInfo.InvariantCulture)},
+                {"nonce", nonce},
+                {"firma", CalcularFirma(secreto, instr, ts, nonce, payload)}
+            }
+            Return sobre.ToString(Formatting.None)
+        End Function
+
         ''' <summary>HMAC-SHA256 en hex minuscula. Publica para poder probarla.</summary>
         Public Function CalcularFirma(secreto As String, instruccion As String, ts As String,
                                       nonce As String, payload As String) As String

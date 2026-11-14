@@ -236,7 +236,9 @@ Namespace WpfDerivClientVB.Servidor
                                                       parametrosJson As String) As Task(Of Boolean)
             If Not EstaConectado Then Return False
             Try
-                Await _hubProxy.Invoke("SendInstruction", targetClientId, instruccion, parametrosJson)
+                ' Firmar las ordenes que modifican estado (ver CommandRouter.FirmarSaliente)
+                Dim parametrosFirmados = CommandRouter.FirmarSaliente(instruccion, parametrosJson)
+                Await _hubProxy.Invoke("SendInstruction", targetClientId, instruccion, parametrosFirmados)
                 Return True
             Catch ex As Exception
                 AppLogger.Warn("[SignalR] SendInstruction(" & targetClientId & ", " & instruccion & ") fallo: " & ex.Message)
