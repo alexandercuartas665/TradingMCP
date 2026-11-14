@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalle de Operaciones</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  /* ===== HeavyOperacionesWindow.xaml ===== */
+  .how { background:#07090d; height:100%; display:grid; grid-template-rows:auto auto auto auto 1fr auto; min-width:1100px; font-family:"Segoe UI",sans-serif; font-size:12px; color:#e7ecf5; }
+  .mono { font-family:Consolas,"Cascadia Mono",monospace; }
+  .MicroLbl { color:#6c7790; font-size:9px; font-weight:700; }
+  .BtnGhost { background:#121723; color:#e7ecf5; border:1px solid #1f2638; padding:6px 12px; font-weight:600; font-size:11px; cursor:pointer; font-family:"Segoe UI",sans-serif; line-height:13px; white-space:nowrap; }
+  .BtnGhost:hover { border-color:#2d3651; }
+  .hd { background:#0c1018; border-bottom:1px solid #1f2638; display:flex; justify-content:space-between; align-items:flex-start; }
+  .hd .l { margin:12px 20px; }
+  .hd .t { display:flex; align-items:center; }
+  .hd .t .ico { font-size:20px; margin-right:10px; }
+  .hd .t .tt { color:#5ee0d0; font-size:16px; font-weight:700; }
+  .hd .sub { color:#aab3c5; font-size:11px; font-family:Consolas,monospace; margin:2px 0 0 30px; }
+  .hd .BtnGhost { margin:12px 20px; }
+  .info { background:#10141d; border-bottom:1px solid #1f2638; padding:12px 20px; display:grid; grid-template-columns:repeat(4,1fr); }
+  .info > div { margin-right:12px; } .info > div:last-child { margin-right:0; }
+  .info .v { color:#e7ecf5; font-size:12px; font-family:Consolas,monospace; margin:2px 0 4px; }
+  .kp { background:#0c1018; border-bottom:1px solid #1f2638; display:grid; grid-template-columns:repeat(6,1fr); }
+  .kp > div { padding:10px 16px; }
+  .kp .v { font-size:18px; font-weight:700; color:#e7ecf5; line-height:24px; }
+  .fl { background:#0c1018; border-bottom:1px solid #1f2638; padding:8px 16px; display:flex; align-items:center; }
+  .dgwrap { overflow:auto; min-height:0; background:#07090d; border:1px solid #1f2638; }
+  table.dg { border-collapse:collapse; table-layout:fixed; width:100%; min-width:1180px; font-size:12px; color:#e7ecf5; }
+  table.dg th { background:#2a3142; color:#fff; border-right:1px solid #3a4258; border-bottom:1px solid #3a4258; padding:6px 8px; font-weight:600; font-size:11px; text-align:left; white-space:nowrap; position:sticky; top:0; }
+  table.dg td { padding:0 2px; height:24px; border-bottom:1px solid #1f2638; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  table.dg tbody tr:nth-child(odd) td { background:#0c1018; }
+  table.dg tbody tr:nth-child(even) td { background:#10141d; }
+  table.dg tbody tr.sel td { background:#0078d7; color:#fff; }
+  .tb { margin:0 6px; }
+  .g { color:#3fd17a; } .r { color:#ff5c7a; }
+  .sb { background:#0c1018; border-top:1px solid #1f2638; }
+  .sb div { color:#aab3c5; font-size:10px; font-family:Consolas,monospace; margin:6px 20px; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Detalle de Operaciones</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+  <div class="how">
+
+    <!-- Header titulo -->
+    <div class="hd">
+      <div class="l">
+        <div class="t"><span class="ico">🧪</span><span class="tt">Sesion #1482 · BollingerMomentum_v2</span></div>
+        <div class="sub">Activo R_75 · Timeframe 5m</div>
+      </div>
+      <button class="BtnGhost" onclick="window.close()">✕ Cerrar ventana</button>
+    </div>
+
+    <!-- Info estrategia / config / periodo / ejecucion -->
+    <div class="info">
+      <div>
+        <div class="MicroLbl">ESTRATEGIA</div>
+        <div style="color:#5ee0d0;font-size:13px;font-weight:700;margin:2px 0 4px">BollingerMomentum_v2 (v2)</div>
+        <div class="MicroLbl">ACTIVO / TF</div>
+        <div class="v" style="margin-bottom:0">R_75  /  5m</div>
+      </div>
+      <div>
+        <div class="MicroLbl">CONFIANZA MINIMA</div><div class="v">65 %</div>
+        <div class="MicroLbl">PAYOUT %</div><div class="v">85.00 %</div>
+        <div class="MicroLbl">DURACION VELAS</div><div class="v" style="margin-bottom:0">5 velas</div>
+      </div>
+      <div>
+        <div class="MicroLbl">PERIODO PROBADO · DESDE</div><div class="v">2026-10-01 00:00</div>
+        <div class="MicroLbl">HASTA</div><div class="v">2026-11-11 23:59</div>
+        <div class="MicroLbl">DURACION DEL RANGO</div><div class="v" style="color:#ffb454;font-weight:700;margin-bottom:0">42.0 días</div>
+      </div>
+      <div>
+        <div class="MicroLbl">ID SESION</div><div class="v" style="color:#5ee0d0;font-weight:700">#1482</div>
+        <div class="MicroLbl">EJECUTADA EL</div><div class="v">2026-11-12 14:03:48</div>
+        <div class="MicroLbl">NOTAS</div><div class="v" style="color:#aab3c5;font-size:11px;white-space:normal;margin-bottom:0">(sin notas)</div>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="kp">
+      <div><div class="MicroLbl">TOTAL OPS</div><div class="v">412</div></div>
+      <div><div class="MicroLbl">GANADAS</div><div class="v" style="color:#3fd17a">267</div></div>
+      <div><div class="MicroLbl">PERDIDAS</div><div class="v" style="color:#ff5c7a">145</div></div>
+      <div><div class="MicroLbl">WIN%</div><div class="v">64.81%</div></div>
+      <div><div class="MicroLbl">PNL TOTAL</div><div class="v" style="color:#3fd17a">+184.20</div></div>
+      <div><div class="MicroLbl">DRAWDOWN</div><div class="v" style="color:#ffb454">6.42%</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="fl">
+      <button class="BtnGhost" data-f="all" style="margin-right:4px">Todas</button>
+      <button class="BtnGhost" data-f="win" style="margin-right:4px">Solo ganadas</button>
+      <button class="BtnGhost" data-f="loss" style="margin-right:16px">Solo perdidas</button>
+      <span class="mono" id="fInfo" style="color:#6c7790;font-size:10px;margin-right:16px">Mostrando 412 de 412</span>
+      <button class="BtnGhost">📥 Exportar CSV</button>
+    </div>
+
+    <!-- DataGrid -->
+    <div class="dgwrap">
+      <table class="dg">
+        <colgroup>
+          <col style="width:50px"><col style="width:140px"><col style="width:140px"><col style="width:60px"><col style="width:100px"><col style="width:100px">
+          <col style="width:80px"><col style="width:80px"><col style="width:90px"><col style="width:100px"><col style="width:65px"><col>
+        </colgroup>
+        <thead><tr><th>#</th><th>Apertura</th><th>Cierre</th><th>Tipo</th><th>Entrada</th><th>Salida</th><th>Monto</th><th>Estado</th><th>PnL</th><th>Balance</th><th>Conf%</th><th>Motivo</th></tr></thead>
+        <tbody id="tb">
+          <tr><td>1</td><td>01/10/26 00:35:00</td><td>01/10/26 01:00:00</td><td>CALL</td><td>98214.36000</td><td>98261.04200</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$100.85</td><td>72%</td><td>BB inferior tocada + momentum alcista (RSI 31 → 38)</td></tr>
+          <tr><td>2</td><td>01/10/26 03:10:00</td><td>01/10/26 03:35:00</td><td>PUT</td><td>98301.77500</td><td>98247.90100</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$101.70</td><td>68%</td><td>BB superior rechazada + momentum bajista</td></tr>
+          <tr><td>3</td><td>01/10/26 06:45:00</td><td>01/10/26 07:10:00</td><td>CALL</td><td>98190.44200</td><td>98155.10800</td><td>$1.00</td><td><span class="tb r" style="font-weight:600">Perdido</span></td><td><span class="tb r" style="font-weight:700">-1.00</span></td><td>$100.70</td><td>66%</td><td>Cierre sobre banda media + ancho BB expandiendo</td></tr>
+          <tr><td>4</td><td>01/10/26 09:20:00</td><td>01/10/26 09:45:00</td><td>CALL</td><td>98122.58300</td><td>98199.31700</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$101.55</td><td>74%</td><td>BB inferior tocada + momentum alcista (RSI 29 → 35)</td></tr>
+          <tr><td>5</td><td>01/10/26 13:55:00</td><td>01/10/26 14:20:00</td><td>PUT</td><td>98410.06600</td><td>98342.71400</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$102.40</td><td>70%</td><td>BB superior rechazada + momentum bajista</td></tr>
+          <tr><td>6</td><td>01/10/26 17:30:00</td><td>01/10/26 17:55:00</td><td>PUT</td><td>98377.21900</td><td>98429.88500</td><td>$1.00</td><td><span class="tb r" style="font-weight:600">Perdido</span></td><td><span class="tb r" style="font-weight:700">-1.00</span></td><td>$101.40</td><td>65%</td><td>Cierre bajo banda media + ancho BB expandiendo</td></tr>
+          <tr><td>7</td><td>02/10/26 00:05:00</td><td>02/10/26 00:30:00</td><td>CALL</td><td>98265.93000</td><td>98318.47600</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$102.25</td><td>71%</td><td>BB inferior tocada + momentum alcista (RSI 33 → 41)</td></tr>
+          <tr><td>8</td><td>02/10/26 04:40:00</td><td>02/10/26 05:05:00</td><td>CALL</td><td>98340.12700</td><td>98402.55800</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$103.10</td><td>69%</td><td>Cierre sobre banda media + ancho BB expandiendo</td></tr>
+          <tr><td>9</td><td>02/10/26 08:15:00</td><td>02/10/26 08:40:00</td><td>PUT</td><td>98488.60400</td><td>98512.33900</td><td>$1.00</td><td><span class="tb r" style="font-weight:600">Perdido</span></td><td><span class="tb r" style="font-weight:700">-1.00</span></td><td>$102.10</td><td>67%</td><td>BB superior rechazada + momentum bajista</td></tr>
+          <tr><td>10</td><td>02/10/26 11:50:00</td><td>02/10/26 12:15:00</td><td>PUT</td><td>98455.27100</td><td>98390.81900</td><td>$1.00</td><td><span class="tb g" style="font-weight:600">Ganado</span></td><td><span class="tb g" style="font-weight:700">+0.85</span></td><td>$102.95</td><td>73%</td><td>BB superior rechazada + momentum bajista</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Status bar -->
+    <div class="sb"><div>412 operaciones cargadas. 267 ganadas, 145 perdidas.</div></div>
+  </div>
+  </div>
+</div>
+<script>
+// filtros Todas / Solo ganadas / Solo perdidas (sobre las filas de ejemplo)
+var rows=[].slice.call(document.querySelectorAll("#tb tr"));
+[].forEach.call(document.querySelectorAll(".fl [data-f]"), function(b){
+  b.addEventListener("click", function(){
+    var f=b.getAttribute("data-f"), n=0;
+    rows.forEach(function(r){ var e=r.children[7].textContent, show=f==="all"||(f==="win"&&e==="Ganado")||(f==="loss"&&e==="Perdido"); r.style.display=show?"":"none"; });
+    var tot={all:412,win:267,loss:145}[f];
+    document.getElementById("fInfo").textContent="Mostrando "+tot+" de 412";
+  });
+});
+rows.forEach(function(r){ r.addEventListener("click", function(){ rows.forEach(function(x){x.classList.remove("sel");}); r.classList.add("sel"); }); });
+</script>
+<div class="maqueta-flag">MAQUETA</div>
+</body>
+</html>

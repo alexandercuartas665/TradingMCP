@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obsidian Admin — Trading Systems</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  body { overflow: hidden; }
+  .layout { display: grid; grid-template-columns: 220px 1fr; height: calc(100% - 32px); min-height: 0; }
+
+  /* ---------- Sidebar (AdminSidebar.xaml) ---------- */
+  .sidebar { background: var(--SidebarBg); display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+  .logo-row { display: flex; align-items: center; margin: 24px 20px; }
+  .logo-box { width: 30px; height: 30px; border-radius: 6px; background: var(--PrimaryFixed); color: #001F27;
+              display: grid; place-items: center; font-size: 14px; margin-right: 10px; }
+  .logo-t1 { font-size: 15px; font-weight: 700; color: var(--Primary); }
+  .logo-t2 { font-size: 9px; font-weight: 600; color: #3B4A4D; }
+  .cta { margin: 0 14px 20px; }
+  .cta .PrimaryBtn { width: 100%; }
+  .nav { margin: 0 8px; display: flex; flex-direction: column; }
+  .nav button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+                border-radius: 6px; color: var(--NavFg); font-size: 13px; cursor: pointer; position: relative; font-family: var(--ff); }
+  .nav button:hover { background: #1A2A2A; color: #BAC9CC; }
+  .nav button.active { background: #0D2A30; color: var(--PrimaryFixed); font-weight: 600; }
+  .nav button.active::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px; background: var(--PrimaryFixed); }
+  .nav .ic { width: 18px; text-align: center; font-size: 13px; }
+  .side-foot { margin: auto 14px 20px; }
+  .side-foot .logout { display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-radius: 6px; color: #5A6A6D; font-size: 12px; cursor: pointer; }
+  .side-foot .logout:hover { background: #1A2A2A; }
+  .side-foot hr { border: 0; border-top: 1px solid #1C1B1B; margin: 6px 4px; }
+  .user { display: flex; align-items: center; margin: 8px 0 0 4px; }
+  .avatar { width: 32px; height: 32px; border-radius: 16px; background: var(--SurfaceHigh); color: var(--PrimaryFixed);
+            font-size: 11px; font-weight: 700; display: grid; place-items: center; margin-right: 10px; }
+
+  /* ---------- Main ---------- */
+  .main { display: grid; grid-template-rows: 54px 1fr; min-width: 0; min-height: 0; }
+  .topbar { background: #0A0A0A; display: flex; align-items: center; padding: 0 24px; }
+  .topbar .crumb { display: flex; align-items: center; }
+  .topbar .t1 { font-size: 16px; font-weight: 900; }
+  .topbar .sep { font-size: 14px; color: #3B4A4D; margin: 0 8px; }
+  .topbar .t2 { font-size: 13px; font-weight: 700; color: var(--PrimaryFixed); }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; }
+  .topbar .clock { font-family: var(--mono); font-size: 11px; color: #3B4A4D; margin-right: 20px; }
+  .topbar .dot8 { width: 8px; height: 8px; border-radius: 50%; background: var(--PrimaryFixed); margin-right: 6px; }
+  .content { overflow-y: auto; background: var(--BgBase); min-height: 0; }
+
+  /* Dashboard */
+  .dash { padding: 24px 28px 40px; }
+  .dash-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; }
+  .h36 { font-size: 36px; font-weight: 900; line-height: 1.1; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .bar3 { height: 3px; border-radius: 2px; margin-top: 12px; background: linear-gradient(90deg, #4CD6FB 0 75%, #1C1B1B 75%); }
+  .conn-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .conn-row span:first-child { color: var(--OnSurfaceVariant); font-size: 11px; }
+  .conn-ok { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: var(--PrimaryFixed); }
+  .sec { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .sec-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .h17 { font-size: 17px; font-weight: 700; }
+  .agents { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .agent-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .agent-ic { width: 32px; height: 32px; border-radius: 8px; background: #0D2A30; display: grid; place-items: center; font-size: 14px; }
+  .agent-name { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .agent-desc { font-size: 10px; color: #5A6A6D; margin-bottom: 10px; }
+  .agent-log { background: #070F0F; border-radius: 4px; padding: 4px 6px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .agent-log .d5 { width: 5px; height: 5px; border-radius: 50%; background: var(--PrimaryFixed); flex: none; }
+  .logbox { background: var(--SurfaceLowest); border-radius: 10px; height: 210px; display: flex; flex-direction: column; overflow: hidden; }
+  .logbox-h { padding: 10px 14px; background: #0D0D0D; display: flex; justify-content: space-between; align-items: center; }
+  .logbox-h span { font-size: 9px; font-weight: 700; color: #3B494C; }
+  .logbox-b { flex: 1; overflow-y: auto; padding: 8px 12px; }
+  .logbox-b div { margin-bottom: 6px; }
+  .logbox-f { padding: 6px 10px; background: #080808; display: flex; gap: 6px; }
+  .logbox-f input { flex: 1; background: #0E0E0E; border: 0; color: var(--OnSurfaceVariant); font-family: var(--mono); font-size: 10px; padding: 4px 6px; outline: none; }
+  .sentiment { position: relative; overflow: hidden; background: #1C1B1B; border-radius: 12px; padding: 22px 28px; display: grid;
+               grid-template-columns: 1fr auto auto; align-items: center; gap: 40px; margin-bottom: 8px; }
+  .sentiment::after { content: ""; position: absolute; width: 200px; height: 200px; right: -80px; top: -80px; border-radius: 50%;
+                      background: radial-gradient(#4CD6FB, transparent 70%); opacity: .04; }
+  .senti-kpis { display: flex; gap: 24px; text-align: center; }
+  .statusbar { display: flex; justify-content: space-between; padding-top: 10px; margin-top: 8px; font-family: var(--mono); font-size: 9px; color: #3B4A4D; }
+
+  /* Clientes */
+  .clients { display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin: 30px; }
+  .panel { background: var(--SurfaceLow); border-radius: 12px; }
+  .cl-list { padding: 15px; display: flex; flex-direction: column; min-height: 540px; }
+  .h18p { color: var(--Primary); font-size: 18px; font-weight: 700; margin-bottom: 15px; }
+  .cl-item { padding: 10px 12px; border-radius: 8px; margin: 2px 0; cursor: pointer; }
+  .cl-item:hover { background: rgba(255,255,255,.05); }
+  .cl-item.sel { background: rgba(0,212,170,.10); color: var(--Primary); }
+  .cl-list .PrimaryBtn { margin-top: auto; }
+  .cl-det { padding: 25px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+  .sep-line { border-top: 1px solid rgba(255,255,255,.10); margin: 10px 0 25px; }
+  .acct { background: rgba(255,255,255,.067); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+  .acct-t { font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+  .acct-g { display: grid; grid-template-columns: 120px 150px 1fr 120px; gap: 10px; align-items: end; }
+  .btn-token { background: #313244; color: #CDD6F4; height: 30px; border: 0; border-radius: 6px; font-weight: 700; font-size: 12px; margin-bottom: 4px; cursor: pointer; }
+  .phone { width: 280px; margin-top: 8px; }
+
+  /* Configuracion */
+  .settings { padding: 24px 40px 40px; }
+  .glass { background: #0A0A0A; border: 1px solid #1C1B1B; border-radius: 16px; padding: 30px; width: 600px; max-width: 100%; margin-bottom: 24px; }
+  .glass-h { display: flex; align-items: center; margin-bottom: 24px; }
+  .glass-ic { width: 40px; height: 40px; border-radius: 12px; background: #0D2A30; display: grid; place-items: center; font-size: 20px; margin-right: 16px; }
+  .glass-h .t { font-size: 18px; font-weight: 700; }
+  .glass-h .s { font-size: 12px; color: #888; }
+  .row-21 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 16px; }
+  .row-11 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .mb16 { margin-bottom: 16px; }
+  .pw { position: relative; }
+  .pw span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #5A6A6D; font-size: 14px; cursor: pointer; }
+  .sbtn { background: transparent; color: var(--PrimaryFixed); border: 1px solid var(--PrimaryFixed); border-radius: 8px; font-weight: 600; font-size: 13px; padding: 12px 24px; width: 227px; cursor: pointer; font-family: var(--ff); }
+  .sbtn:hover { background: #0A242B; }
+  .pbtn { background: var(--PrimaryFixed); color: #002026; border: 0; border-radius: 8px; font-weight: 700; font-size: 13px; padding: 12px 24px; cursor: pointer; font-family: var(--ff); }
+  .pbtn:hover { background: #6EE2FF; }
+  .actions { display: flex; justify-content: flex-end; gap: 16px; }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 4px; }
+  .chk input { accent-color: var(--PrimaryFixed); }
+
+  /* MessageBox WPF */
+  .mb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: grid; place-items: center; z-index: 50; }
+  .mb { width: 340px; background: #f0f0f0; color: #000; font-family: "Segoe UI", sans-serif; font-size: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); border: 1px solid #888; }
+  .mb-t { background: #fff; padding: 8px 10px; display: flex; justify-content: space-between; }
+  .mb-b { background: #fff; padding: 18px 16px 24px; display: flex; gap: 12px; align-items: center; }
+  .mb-i { width: 32px; height: 32px; border-radius: 50%; background: #1a73e8; color: #fff; display: grid; place-items: center; font-weight: 700; font-family: Georgia, serif; font-style: italic; font-size: 18px; flex: none; }
+  .mb-f { padding: 10px; text-align: right; }
+  .mb-f button { min-width: 74px; padding: 3px 10px; border: 1px solid #0078d4; background: #e1e1e1; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="titlebar"><span class="ttl">Obsidian Admin — Trading Systems</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-row">
+      <div class="logo-box">⬡</div>
+      <div><div class="logo-t1">Obsidian Admin</div><div class="logo-t2">TRADING SYSTEMS</div></div>
+    </div>
+    <div class="cta"><button class="PrimaryBtn">+ Nueva Estrategia</button></div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active"><span class="ic">⬛</span>Dashboard</button>
+      <button data-view="clients"><span class="ic">👥</span>Clientes</button>
+      <button data-msg="Cuentas"><span class="ic">💼</span>Cuentas</button>
+      <button data-msg="Plataformas"><span class="ic">🔗</span>Plataformas</button>
+      <button data-msg="Monitoreo"><span class="ic">📊</span>Monitoreo</button>
+      <button data-view="settings"><span class="ic">⚙</span>Configuración</button>
+      <button data-open="backtest.html"><span class="ic">🧪</span>Backtest</button>
+      <button data-open="servidor.html"><span class="ic">📡</span>ServidorLive</button>
+      <button data-open="pruebas.html"><span class="ic">⚙</span>Pruebas</button>
+      <button data-open="candles.html"><span class="ic">📉</span>Candle Viewer</button>
+    </nav>
+    <div class="side-foot">
+      <div class="logout">🚪 Cerrar Sesión</div>
+      <hr>
+      <div class="user">
+        <div class="avatar">AS</div>
+        <div><div style="font-size:12px;font-weight:600">Alex Sterling</div><div style="font-size:10px;color:#3B4A4D">Lead System Admin</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb"><span class="t1">Obsidian Lens</span><span class="sep"> / </span><span class="t2">Network Status</span></div>
+      <div class="right"><span class="clock" id="clock">--:--:-- UTC</span><span class="dot8"></span></div>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div class="dash tabpanel" data-panel="dashboard">
+        <div class="dash-head">
+          <div><div class="Label" style="margin-bottom:4px">PORTFOLIO ANALYSIS</div><div class="h36">System Overview</div></div>
+          <div style="text-align:right"><div class="Label">LAST UPDATED</div><div id="lastUpd" style="font-family:var(--mono);font-size:12px;color:var(--OnSurfaceVariant)">--:--:-- UTC</div></div>
+        </div>
+
+        <div class="metrics">
+          <div class="MetricCard" style="border-bottom:3px solid rgba(76,214,251,.3)">
+            <div class="Label" style="margin-bottom:6px">TOTAL EQUITY</div>
+            <div style="display:flex;align-items:flex-end"><span class="Value">$1,429,203</span><span style="font-size:11px;font-weight:700;color:var(--PrimaryFixed);margin:0 0 3px 8px"> +2.4%</span></div>
+            <div class="bar3"></div>
+          </div>
+          <div class="MetricCard">
+            <div class="Label" style="margin-bottom:6px">DAILY P&amp;L</div>
+            <div class="Value Cyan">+$12,403.82</div>
+            <div class="Label" style="margin-top:12px">14 trades cerrados hoy</div>
+          </div>
+          <div class="MetricCard">
+            <div class="Label" style="margin-bottom:6px">AGENTES ACTIVOS</div>
+            <div class="Value">12</div>
+            <div class="Label" style="margin-top:12px">Todos los sistemas operativos</div>
+          </div>
+          <div class="MetricCard">
+            <div class="Label" style="margin-bottom:10px">CONEXIONES</div>
+            <div class="conn-row"><span>Postgres Cluster</span><span class="conn-ok"><i class="dot"></i>Healthy</span></div>
+            <div class="conn-row"><span>Deriv API</span><span class="conn-ok"><i class="dot"></i>12 ms</span></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div>
+            <div class="sec-title"><span class="h17">Active Agent Status</span><span style="font-size:11px;color:var(--PrimaryFixed);cursor:pointer">Ver todos los clusters</span></div>
+            <div class="agents">
+              <div class="AgentCard">
+                <div class="agent-top"><div class="agent-ic">📈</div><span class="TagBadge">POLLING</span></div>
+                <div class="agent-name">MarketDataAgent</div>
+                <div class="agent-desc">Aggregating L2 order book data BTC/USD</div>
+                <div class="agent-log"><i class="d5"></i><span class="LogEntry">[14:22:01] Received snapshot</span></div>
+                <div class="agent-log"><i class="d5"></i><span class="LogEntry">[14:22:03] Websocket synced</span></div>
+              </div>
+              <div class="AgentCard">
+                <div class="agent-top"><div class="agent-ic">🧠</div><span class="TagBadge">COMPUTING</span></div>
+                <div class="agent-name">DecisionAgent</div>
+                <div class="agent-desc">Analizando RSI y MACD 5m timeframe</div>
+                <div class="agent-log"><i class="d5"></i><span class="LogEntry">[14:21:55] Pattern detected</span></div>
+                <div class="agent-log"><i class="d5" style="background:#5A6A6D"></i><span class="LogEntry">[14:22:05] Awaiting confirmation</span></div>
+              </div>
+              <div class="AgentCard">
+                <div class="agent-top"><div class="agent-ic">🛡</div><span class="TagBadge">ACTIVE</span></div>
+                <div class="agent-name">RiskAgent</div>
+                <div class="agent-desc">Monitoreando exposición y drawdowns</div>
+                <div class="agent-log"><i class="d5"></i><span class="LogEntry">[14:19:00] Exposure: 1.2%</span></div>
+                <div class="agent-log"><i class="d5"></i><span class="LogEntry">[14:22:08] Limits verified</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="h17" style="margin-bottom:14px">System Logs</div>
+            <div class="logbox">
+              <div class="logbox-h"><span>LIVE STREAM</span><i style="width:8px;height:8px;border-radius:50%;background:var(--Error)"></i></div>
+              <div class="logbox-b LogEntry">
+                <div><span class="Cyan">14:22:15</span><span style="color:#5A6A6D"> [INFO] Order execution successful: BUY 0.5 BTC</span></div>
+                <div><span class="Cyan">14:22:12</span><span style="color:#5A6A6D"> [DEBUG] Heartbeat Frankfurt node_04</span></div>
+                <div><span style="color:var(--Error)">14:22:10</span><span style="color:#5A6A6D"> [WARN] High latency Deriv API (145ms)</span></div>
+                <div><span class="Cyan">14:22:08</span><span style="color:#5A6A6D"> [INFO] RiskAgent cleared margin requirements</span></div>
+                <div><span class="Cyan">14:21:58</span><span style="color:#5A6A6D"> [INFO] Strategy Obsidian_V4 initialized</span></div>
+                <div><span class="Cyan">14:21:42</span><span style="color:#5A6A6D"> [INFO] Batch update: 12,049 records OK</span></div>
+              </div>
+              <div class="logbox-f"><input id="logFilter" value="Filtrar logs..."><button class="GhostBtn" style="padding:4px 8px;font-size:9px">EXPORT</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sentiment">
+          <div>
+            <div style="font-size:20px;font-weight:700;margin-bottom:8px">Market Sentiment Analysis</div>
+            <div style="font-size:12px;color:var(--OnSurfaceVariant);max-width:500px">Inferencia IA combinada (social, noticias, on-chain) indica divergencia <b class="Cyan">Strong Bullish</b> en la próxima ventana de 4h.</div>
+          </div>
+          <div class="senti-kpis">
+            <div><div class="Label" style="margin-bottom:4px">VOL INDEX</div><div style="font-size:22px;font-weight:700">24.5</div></div>
+            <div><div class="Label" style="margin-bottom:4px">BUY/SELL</div><div style="font-size:22px;font-weight:700">1.42</div></div>
+            <div><div class="Label" style="margin-bottom:4px">CONFIDENCE</div><div style="font-size:22px;font-weight:700" class="Cyan">88%</div></div>
+          </div>
+          <button class="GhostBtn" style="position:relative;z-index:1">Open Analytics Engine</button>
+        </div>
+
+        <div class="statusbar">
+          <div><span style="margin-right:20px">NODE: FRA-1</span><span>VERSION: 1.0.0-ALPHA</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><i class="dot"></i><b style="color:var(--OnSurfaceVariant)">SECURE LINK ESTABLISHED</b></div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="tabpanel" data-panel="clients" hidden>
+        <div class="clients">
+          <div class="panel cl-list">
+            <div class="h18p">CLIENTES</div>
+            <div class="cl-item sel">Cliente Principal</div>
+            <div class="cl-item">Cuenta Demo 01</div>
+            <div class="cl-item">Cuenta Demo 02</div>
+            <div class="cl-item">Inversor Piloto</div>
+            <button class="PrimaryBtn">+ Nuevo Cliente</button>
+          </div>
+          <div class="panel cl-det">
+            <div class="h18p" style="margin-bottom:20px">DETALLES DEL CLIENTE</div>
+            <div class="two">
+              <div><span class="FieldLabel">NOMBRE COMPLETO</span><input class="Input" id="cName" value="Cliente Principal"></div>
+              <div><span class="FieldLabel">EMAIL</span><input class="Input" id="cEmail" value="cliente@ejemplo.com"></div>
+            </div>
+            <div class="sep-line"></div>
+            <div style="color:var(--Primary);font-size:16px;font-weight:600;margin-bottom:15px">PLATAFORMA DERIV</div>
+
+            <div class="acct">
+              <div class="acct-t" style="color:#FFD200">CUENTA REAL</div>
+              <div class="acct-g">
+                <div><span class="FieldLabel">ACCOUNT ID</span><input class="Input" id="rAcc" value="CR0000000"></div>
+                <div><span class="FieldLabel">APP ID (OAuth)</span><input class="Input" id="rApp" value="1089"></div>
+                <div><span class="FieldLabel">API TOKEN</span><input class="Input" id="rTok" value="••••••••••••••••"></div>
+                <div><button class="btn-token">Probar Token</button></div>
+              </div>
+              <div class="phone"><span class="FieldLabel">TELÉFONO</span><input class="Input" id="rPh" value="+57 300 000 0000"></div>
+            </div>
+
+            <div class="acct">
+              <div class="acct-t" style="color:#00D4AA">CUENTA VIRTUAL (DEMO)</div>
+              <div class="acct-g">
+                <div><span class="FieldLabel">ACCOUNT ID</span><input class="Input" id="vAcc" value="VRTC0000000"></div>
+                <div><span class="FieldLabel">APP ID (OAuth)</span><input class="Input" id="vApp" value="1089"></div>
+                <div><span class="FieldLabel">API TOKEN</span><input class="Input" id="vTok" value="••••••••••••••••"></div>
+                <div><button class="btn-token">Probar Token</button></div>
+              </div>
+              <div class="phone"><span class="FieldLabel">TELÉFONO</span><input class="Input" id="vPh" value="+57 300 000 0000"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:30px"><button class="PrimaryBtn" style="width:180px">Guardar Cliente</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURACION -->
+      <div class="settings tabpanel" data-panel="settings" hidden>
+        <div style="margin-bottom:32px">
+          <div style="color:var(--PrimaryFixed);font-size:12px;font-weight:700;margin-bottom:4px">SYSTEM CONFIGURATION</div>
+          <div class="h36">Configuración Global</div>
+          <div style="font-size:14px;color:var(--OnSurfaceVariant);margin-top:8px">Administra los hiperparámetros del sistema y credenciales de base de datos local.</div>
+        </div>
+
+        <div class="glass">
+          <div class="glass-h"><div class="glass-ic">🛢</div><div><div class="t">PostgreSQL Credentials</div><div class="s">Conexión remota o local al clúster de base de datos</div></div></div>
+          <div class="row-21">
+            <div><span class="FieldLabel">HOST</span><input class="Input" id="sHost" value="localhost"></div>
+            <div><span class="FieldLabel">PORT</span><input class="Input" id="sPort" value="8083"></div>
+          </div>
+          <div class="mb16"><span class="FieldLabel">DATABASE NAME</span><input class="Input" id="sDb" value="traiding_db"></div>
+          <div class="row-11">
+            <div><span class="FieldLabel">USERNAME</span><input class="Input" id="sUser" value="traiding_user"></div>
+            <div><span class="FieldLabel">PASSWORD</span><div class="pw"><input class="Input" id="sPass" type="password" value="xxxxxxxxxxxx"><span>👁</span></div></div>
+          </div>
+          <div class="actions"><button class="sbtn">Test Connection</button><button class="pbtn">Save Configuration</button></div>
+        </div>
+
+        <div class="glass">
+          <div class="glass-h"><div class="glass-ic">🔗</div><div><div class="t">API externa</div><div class="s">Credenciales para integraciones externas (notificaciones, servicios)</div></div></div>
+          <div class="mb16"><span class="FieldLabel">ENDPOINT</span><input class="Input" id="sEndp" value="https://api.miservicio.com"></div>
+          <div class="mb16"><span class="FieldLabel">API KEY</span><div class="pw"><input class="Input" id="sKey" type="password" value="xxxxxxxxxxxxxxxx"><span>👁</span></div></div>
+        </div>
+
+        <div class="glass">
+          <div class="glass-h"><div class="glass-ic">📡</div><div><div class="t">Servidor SignalR (Control remoto)</div><div class="s">Cliente que recibe estrategias para poner al aire</div></div></div>
+          <div class="mb16"><span class="FieldLabel">URL DEL SERVIDOR</span><input class="Input" id="sSrUrl" value="https://test1.bitcode.com.co/"></div>
+          <div class="mb16"><span class="FieldLabel">CLIENT ID</span><input class="Input" id="sSrId" value="BITCODEV1"></div>
+          <div class="mb16"><span class="FieldLabel">HUB NAME</span><input class="Input" id="sSrHub" value="DronesHub"></div>
+          <label class="chk"><input type="checkbox" id="sAuto" checked> Conectar automaticamente al abrir Servidor Live</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-overlay" id="mbox" hidden>
+  <div class="mb">
+    <div class="mb-t"><span>Aviso</span><span style="cursor:pointer" data-close>&#10005;</span></div>
+    <div class="mb-b"><div class="mb-i">i</div><div id="mbText">Vista no implementada.</div></div>
+    <div class="mb-f"><button data-close>Aceptar</button></div>
+  </div>
+</div>
+
+<div class="maqueta-flag">MAQUETA</div>
+
+<script>
+  var nav = document.getElementById('nav');
+  nav.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.view) {
+      nav.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== b.dataset.view; });
+    } else if (b.dataset.msg) {
+      document.getElementById('mbText').textContent = 'Vista de ' + b.dataset.msg + ' no implementada.';
+      document.getElementById('mbox').hidden = false;
+    } else if (b.dataset.open) {
+      window.open(b.dataset.open, '_blank');
+    }
+  });
+  document.querySelectorAll('[data-close]').forEach(function (x) { x.onclick = function () { document.getElementById('mbox').hidden = true; }; });
+  document.querySelectorAll('.cl-item').forEach(function (it) {
+    it.onclick = function () {
+      document.querySelectorAll('.cl-item').forEach(function (x) { x.classList.remove('sel'); });
+      it.classList.add('sel'); document.getElementById('cName').value = it.textContent;
+    };
+  });
+  function tick() {
+    var d = new Date(), s = d.toISOString().substr(11, 8) + ' UTC';
+    document.getElementById('clock').textContent = s;
+    document.getElementById('lastUpd').textContent = s;
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

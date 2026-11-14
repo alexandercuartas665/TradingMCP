@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visor de Velas</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  :root { --bull:#00d4aa; --bear:#ff4757; --txt:#e0e6ed; --c3b:#3B4A4D; --c5a:#5A6A6D; --line:#1C1B1B; }
+  body { background:#0A0A0A; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; }
+  .cv { display:flex; flex-direction:column; height:100%; min-width:900px; min-height:580px; background:#0A0A0A; }
+
+  /* ===== Header (CandleHeaderControl) ===== */
+  .hdr { height:54px; flex:none; background:#0A0A0A; border-bottom:1px solid #1C1B1B;
+         display:grid; grid-template-columns:auto 20px auto 1fr auto 20px auto auto; padding:0 20px; align-items:center; }
+  .asset { display:flex; align-items:center; }
+  .asset-ic { width:28px; height:28px; border-radius:6px; background:#0D2A30; display:grid; place-items:center; font-size:13px; margin-right:10px; }
+  .asset-nm { font-size:16px; font-weight:900; color:#e0e6ed; line-height:1.2; }
+  .asset-tp { font-size:8px; font-weight:700; color:#3B4A4D; line-height:1.2; }
+  .vsep { width:1px; justify-self:center; align-self:stretch; background:#1C1B1B; margin:12px 0; }
+  .px { display:flex; align-items:center; }
+  .px-val { font-size:22px; font-weight:900; color:#4CD6FB; }
+  .px-chg { margin-left:10px; padding:3px 7px; border-radius:4px; background:rgba(0,212,170,.098); color:#00d4aa; font-size:11px; font-weight:700; }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:#00d4aa; margin:0 4px 0 12px; animation:pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { from { transform:scale(1); } to { transform:scale(1.5); } }
+  .live-tx { font-size:8px; font-weight:700; color:#00d4aa; }
+  .tf { display:flex; align-items:center; }
+  .tf-lbl { font-size:8px; font-weight:700; color:#3B4A4D; margin-right:12px; }
+  .TfBtn { background:#1C1B1B; color:#5A6A6D; border:1px solid #2a2e39; padding:4px 10px; font-size:11px; font-weight:700;
+           border-radius:4px; margin:0 2px; cursor:pointer; font-family:Consolas, monospace; line-height:1.15; }
+  .TfBtn:hover { background:#2a2e39; color:#e0e6ed; }
+  .TfBtn.active { background:#0D2A30; color:#4CD6FB; border-color:#4CD6FB; }
+  .clock { text-align:right; margin-right:16px; }
+  .clock-lbl { font-size:8px; font-weight:700; color:#3B4A4D; }
+  .clock-val { font-size:12px; font-weight:700; color:#5A6A6D; }
+  .icobtn { width:32px; height:32px; background:transparent; border:0; cursor:pointer; display:grid; place-items:center;
+            font-size:18px; color:#5A6A6D; padding:0; }
+
+  /* ===== Middle row ===== */
+  .mid { flex:1; min-height:0; display:flex; }
+
+  /* ===== Chart (CandleChartControl) ===== */
+  .chart { flex:1; min-width:0; position:relative; background:#131722; overflow:hidden; }
+  .chart svg { position:absolute; inset:0; display:block; }
+  .legend { position:absolute; top:10px; right:10px; background:#0A0A0A; border-radius:4px; padding:4px 8px;
+            display:flex; align-items:center; font-size:9px; color:#5A6A6D; pointer-events:none; }
+  .legend i { display:inline-block; width:20px; height:2px; margin-right:4px; }
+  .tip { position:absolute; left:12px; top:10px; background:#0D2A30; border:1px solid #4CD6FB; border-radius:6px; padding:8px 12px;
+         opacity:0; pointer-events:none; }
+  .tip-time { font-size:9px; color:#5A6A6D; margin-bottom:4px; }
+  .tip-grid { display:grid; grid-template-columns:40px 80px; font-size:10px; line-height:1.35; }
+  .tip-grid .k { color:#5A6A6D; font-family:"Segoe UI", sans-serif; }
+  .tip-grid .v { font-weight:700; font-family:Consolas, monospace; }
+
+  /* ===== Agent (CandleAgentControl) ===== */
+  .agent { width:300px; flex:none; background:#0A0A0A; border-left:1px solid #1C1B1B; display:flex; flex-direction:column; overflow:hidden; }
+  .ag-head { padding:16px 18px; background:linear-gradient(135deg, #0D0D0D 0%, #0D2A30 100%); }
+  .ag-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .ag-title { display:flex; align-items:center; }
+  .ag-title .em { font-size:14px; margin-right:8px; }
+  .ag-t1 { font-size:10px; font-weight:900; color:#e0e6ed; }
+  .ag-t2 { font-size:8px; color:#3B4A4D; }
+  .ag-st { display:flex; align-items:center; font-size:8px; font-weight:700; color:#00d4aa; }
+  .ag-st i { width:7px; height:7px; border-radius:50%; background:#00d4aa; margin-right:5px; }
+  .dec { border-radius:10px; padding:14px 16px; border:2px solid #5A6A6D; background:rgba(90,106,109,.098); text-align:center; }
+  .dec-in { display:inline-block; min-width:60%; }
+  .dec-lbl { font-size:8px; font-weight:700; color:#5A6A6D; margin-bottom:6px; }
+  .dec-val { font-size:28px; font-weight:900; margin-bottom:6px; line-height:1.15; }
+  .dec-conf { font-size:10px; color:#5A6A6D; margin-bottom:8px; }
+  .dec-conf b { color:#4CD6FB; }
+  .confbar { height:5px; border-radius:3px; background:#1C1B1B; overflow:hidden; }
+  .confbar div { height:5px; border-radius:3px; }
+  .ag-sec { padding:14px 18px; border-top:1px solid #1C1B1B; }
+  .ag-sec.log { padding-bottom:0; }
+  .SectionLabel { font-size:9px; font-weight:700; color:#3B4A4D; margin-bottom:10px; }
+  .sec-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .sec-row .SectionLabel { margin:0; }
+  .live-sm { display:flex; align-items:center; font-size:8px; font-weight:700; color:#00d4aa; }
+  .live-sm i { width:5px; height:5px; border-radius:50%; background:#00d4aa; margin-right:4px; }
+  .IndicatorRow { background:#1C1B1B; border-radius:6px; padding:8px 12px; margin-bottom:4px; display:flex; justify-content:space-between; font-size:11px; }
+  .IndicatorRow .k { color:#5A6A6D; }
+  .IndicatorRow .v { font-weight:700; color:#e0e6ed; }
+  .logwrap { max-height:140px; overflow:hidden; }
+  .LogRow { background:#0D0D0D; border-radius:4px; padding:6px 8px; margin-bottom:4px; border-left:3px solid #5A6A6D;
+            font-size:9px; color:#5A6A6D; white-space:pre-wrap; }
+
+  /* ===== Transactions (CandleTransactionsControl) ===== */
+  .tx { height:120px; flex:none; background:#0A0A0A; border-top:1px solid #1C1B1B; display:flex; }
+  .tx-side { background:#0D0D0D; padding:0 16px; display:flex; flex-direction:column; justify-content:center; }
+  .tx-side.l { border-right:1px solid #1C1B1B; }
+  .tx-side.r { border-left:1px solid #1C1B1B; }
+  .tx-t1 { font-size:9px; font-weight:900; color:#3B4A4D; }
+  .tx-t2 { font-size:10px; font-weight:700; color:#5A6A6D; margin-top:4px; }
+  .tx-badges { display:flex; margin-top:6px; }
+  .tx-badges span { border-radius:4px; padding:3px 6px; font-size:9px; font-weight:700; }
+  .tx-list { flex:1; min-width:0; overflow-y:auto; scrollbar-width:none; padding:6px 4px; }
+  .tx-list::-webkit-scrollbar { display:none; }
+  .txrow { background:#1C1B1B; border-radius:4px; padding:5px 10px; margin:0 2px 3px; display:grid;
+           grid-template-columns:1fr 40px 70px 70px; align-items:center; font-size:9px; white-space:nowrap; }
+  .txrow .sym { font-size:10px; font-weight:700; color:#e0e6ed; }
+  .txrow .dir { font-weight:700; }
+  .txrow .amt { color:#5A6A6D; text-align:right; }
+  .txrow .pnl { font-weight:700; text-align:right; }
+  .sum-lbl { font-size:8px; font-weight:700; color:#3B4A4D; margin-bottom:8px; }
+  .sum-grid { display:grid; grid-template-columns:60px 70px; font-size:9px; line-height:1.35; }
+  .sum-grid .k { color:#5A6A6D; }
+  .sum-grid .v { font-weight:700; text-align:right; }
+
+  /* ===== TradingSettingsModal (overlay) ===== */
+  .ovl { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .ovl.open { display:flex; }
+  .tsm { width:440px; max-width:100%; height:500px; max-height:100%; display:flex; flex-direction:column; background:#0E0E1A;
+         box-shadow:0 12px 40px rgba(0,0,0,.6); border:1px solid #2b2b2b; font-family:"Segoe UI", sans-serif; }
+  .tsm .titlebar { height:26px; padding-left:8px; }
+  .tsm .titlebar .ctl { width:32px; height:26px; cursor:pointer; }
+  .tsm-h { background:#12122A; border-bottom:1px solid #313244; padding:16px 20px; }
+  .tsm-h1 { font-size:16px; font-weight:700; color:#89B4FA; white-space:pre; }
+  .tsm-h2 { font-size:11px; color:#6C7086; margin-top:4px; }
+  .tsm-f { flex:1; overflow-y:auto; padding:16px 20px 8px; }
+  .tsm-lbl { display:block; color:#A6ADC8; font-size:11px; font-weight:600; padding:0 0 3px; }
+  .cmb { height:30px; background:#313244; border:1px solid #45475A; border-radius:3px; display:flex; color:#CDD6F4; font-size:12px; cursor:pointer; }
+  .cmb:hover { border-color:#89B4FA; }
+  .cmb .cv2 { flex:1; padding:0 8px; display:flex; align-items:center; white-space:nowrap; overflow:hidden; }
+  .cmb .ar { width:22px; background:#45475A; border-radius:0 2px 2px 0; display:grid; place-items:center; }
+  .cmb .ar svg { display:block; }
+  .tsm-sep { height:1px; background:#313244; margin:12px 0; }
+  .mb14 { margin-bottom:14px; }
+  .cred { background:#1E1E2E; border:1px solid #45475A; border-radius:4px; padding:6px 10px; margin-bottom:14px; font-size:11px; color:#A6ADC8; }
+  .tsm-ft { background:#12122A; border-top:1px solid #313244; padding:12px 20px; display:flex; justify-content:flex-end; }
+  .mbtn { font-family:"Segoe UI", sans-serif; font-size:12px; font-weight:600; border:0; border-radius:5px; padding:6px 12px; cursor:pointer; }
+  .mbtn:hover { opacity:.8; }
+  .mbtn.sec { background:#313244; color:#CDD6F4; width:100px; margin-right:8px; }
+  .mbtn.pri { background:#89B4FA; color:#11111B; width:120px; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Pro Trading AI — Visor de Velas</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+    <div class="cv">
+
+      <!-- ROW 0: HEADER -->
+      <div class="hdr">
+        <div class="asset">
+          <div class="asset-ic">📈</div>
+          <div>
+            <div class="asset-nm">R_75</div>
+            <div class="asset-tp mono">VOLATILITY INDEX • DERIV</div>
+          </div>
+        </div>
+        <div class="vsep"></div>
+        <div class="px">
+          <span class="px-val mono" id="txtPrice">$1,250.00</span>
+          <span class="px-chg mono" id="txtChange">+2.45%</span>
+          <span class="live-dot"></span>
+          <span class="live-tx mono">LIVE</span>
+        </div>
+        <div></div>
+        <div class="tf">
+          <span class="tf-lbl mono">TIMEFRAME</span>
+          <button class="TfBtn">1m</button>
+          <button class="TfBtn">5m</button>
+          <button class="TfBtn active">15m</button>
+          <button class="TfBtn">1h</button>
+          <button class="TfBtn">4h</button>
+          <button class="TfBtn">1d</button>
+        </div>
+        <div class="vsep"></div>
+        <div class="clock mono">
+          <div class="clock-lbl">UTC TIME</div>
+          <div class="clock-val" id="txtClock">--:--:--</div>
+        </div>
+        <div style="display:flex;align-items:center">
+          <button class="icobtn" id="btnSettings" title="Configuración de Base de Datos">⚙</button>
+          <a class="icobtn" href="dbconfig.html" target="_blank" title="Configuración de Base de Datos (ventana)" style="font-size:15px">🗄</a>
+        </div>
+      </div>
+
+      <!-- ROW 1: CHART + AGENT -->
+      <div class="mid">
+        <div class="chart" id="chart">
+          <svg id="chartSvg"></svg>
+          <div class="tip" id="tip">
+            <div class="tip-time mono" id="tipTime">--:--</div>
+            <div class="tip-grid">
+              <span class="k">Open</span><span class="v" id="tipO" style="color:#e0e6ed">—</span>
+              <span class="k">High</span><span class="v" id="tipH" style="color:#00d4aa">—</span>
+              <span class="k">Low</span><span class="v" id="tipL" style="color:#ff4757">—</span>
+              <span class="k">Close</span><span class="v" id="tipC" style="color:#4CD6FB">—</span>
+              <span class="k">Vol</span><span class="v" id="tipV" style="color:#e0e6ed;font-weight:400">—</span>
+            </div>
+          </div>
+          <div class="legend mono"><i style="background:#2962FF"></i>SMA 20<i style="background:#FF6D00;margin-left:10px"></i>SMA 50</div>
+        </div>
+
+        <div class="agent">
+          <div class="ag-head">
+            <div class="ag-top">
+              <div class="ag-title">
+                <span class="em">🤖</span>
+                <div><div class="ag-t1 mono">AGENTE IA PRO</div><div class="ag-t2 mono">MARKET ANALYSIS ENGINE</div></div>
+              </div>
+              <div class="ag-st mono"><i></i>ANALIZANDO</div>
+            </div>
+            <div class="dec" id="bdrDecision">
+              <div class="dec-in">
+                <div class="dec-lbl mono">DECISIÓN DEL AGENTE</div>
+                <div class="dec-val" id="txtDecision" style="color:#5A6A6D">NEUTRO</div>
+                <div class="dec-conf">Confianza: <b id="runConfidence">—%</b></div>
+                <div class="confbar"><div id="confBar" style="width:0;background:#5A6A6D"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ag-sec">
+            <div class="sec-row">
+              <div class="SectionLabel mono">INDICADORES TÉCNICOS</div>
+              <div class="live-sm mono"><i></i>LIVE</div>
+            </div>
+            <div class="IndicatorRow"><span class="k">RSI (14)</span><span class="v mono" id="txtRsi">—</span></div>
+            <div class="IndicatorRow"><span class="k">MACD</span><span class="v mono" id="txtMacd">—</span></div>
+            <div class="IndicatorRow"><span class="k">SMA 20/50</span><span class="v mono" id="txtSma">—</span></div>
+            <div class="IndicatorRow"><span class="k">Volumen</span><span class="v mono" id="txtVol">—</span></div>
+          </div>
+
+          <div class="ag-sec log">
+            <div class="SectionLabel mono">HISTORIAL DE SEÑALES</div>
+            <div class="logwrap" id="pnlLog"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: TRANSACTIONS -->
+      <div class="tx">
+        <div class="tx-side l mono">
+          <div class="tx-t1">TRANSACCIONES</div>
+          <div class="tx-t2">6 ops hoy</div>
+          <div class="tx-badges">
+            <span style="background:#0D2A30;color:#4CD6FB;margin-right:6px">P&amp;L: +37.12</span>
+            <span style="background:#1C1B1B;color:#00d4aa">WR: 67%</span>
+          </div>
+        </div>
+        <div class="tx-list mono">
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#00d4aa">▲ BUY</span><span class="amt">$10.00</span><span class="pnl" style="color:#00d4aa">+9.52</span></div>
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#ff4757">▼ SELL</span><span class="amt">$10.00</span><span class="pnl" style="color:#ff4757">-10.00</span></div>
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#00d4aa">▲ BUY</span><span class="amt">$25.00</span><span class="pnl" style="color:#00d4aa">+23.80</span></div>
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#00d4aa">▲ BUY</span><span class="amt">$10.00</span><span class="pnl" style="color:#00d4aa">+9.52</span></div>
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#ff4757">▼ SELL</span><span class="amt">$15.00</span><span class="pnl" style="color:#00d4aa">+14.28</span></div>
+          <div class="txrow"><span class="sym">R_75</span><span class="dir" style="color:#ff4757">▼ SELL</span><span class="amt">$10.00</span><span class="pnl" style="color:#ff4757">-10.00</span></div>
+        </div>
+        <div class="tx-side r mono">
+          <div class="sum-lbl">RESUMEN</div>
+          <div class="sum-grid">
+            <span class="k">GANADAS</span><span class="v" style="color:#00d4aa">4</span>
+            <span class="k">PERDIDAS</span><span class="v" style="color:#ff4757">2</span>
+            <span class="k">TOTAL</span><span class="v" style="color:#e0e6ed">6</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TradingSettingsModal (abierto por el boton de engranaje del header) -->
+<div class="ovl" id="ovl">
+  <div class="tsm" role="dialog" aria-label="Configuración de Sesión">
+    <div class="titlebar"><span class="ttl">Configuración de Sesión</span><span class="ctl x" data-close>&#10005;</span></div>
+    <div class="tsm-h">
+      <div class="tsm-h1">⚙  Configuración de Sesión</div>
+      <div class="tsm-h2">Selecciona la plataforma, cliente, cuenta y activo con que operará este visor.</div>
+    </div>
+    <div class="tsm-f">
+      <label class="tsm-lbl">PLATAFORMA</label>
+      <div class="cmb mb14"><span class="cv2">Deriv</span><span class="ar"><svg width="8" height="4"><path d="M0 0L4 4L8 0Z" fill="#CDD6F4"/></svg></span></div>
+      <div class="tsm-sep"></div>
+      <label class="tsm-lbl">CLIENTE</label>
+      <div class="cmb mb14"><span class="cv2">Cliente principal</span><span class="ar"><svg width="8" height="4"><path d="M0 0L4 4L8 0Z" fill="#CDD6F4"/></svg></span></div>
+      <label class="tsm-lbl">TIPO DE CUENTA</label>
+      <div class="cmb mb14"><span class="cv2" style="white-space:pre">Demo  (Virtual)</span><span class="ar"><svg width="8" height="4"><path d="M0 0L4 4L8 0Z" fill="#CDD6F4"/></svg></span></div>
+      <div class="cred">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Token: ••••••••••••••••</div>
+        <div style="margin-top:2px">Account: VRTC0000000</div>
+      </div>
+      <div class="tsm-sep"></div>
+      <label class="tsm-lbl">ACTIVO (SÍMBOLO)</label>
+      <div class="cmb" style="margin-bottom:4px"><span class="cv2">Volatility 75 Index (R_75)</span><span class="ar"><svg width="8" height="4"><path d="M0 0L4 4L8 0Z" fill="#CDD6F4"/></svg></span></div>
+    </div>
+    <div class="tsm-ft">
+      <button class="mbtn sec" data-close>Cancelar</button>
+      <button class="mbtn pri" data-close style="white-space:pre">✔  Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---- Seeded RNG (mulberry32) ----
+  var seed = 75;
+  function rnd() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+
+  var G = 900, N = 80, BASE = 1250;
+  var candles = [];
+  var price = BASE;
+  var t0 = Math.floor(Date.now() / (G * 1000)) * G * 1000 - N * G * 1000;
+  for (var i = 0; i < N; i++) {
+    var vol = 0.0024 * price;
+    var trend = Math.sin(i / 10) * vol * 1.1;
+    var o = price + (rnd() - 0.5) * vol * 0.3;
+    var c = o + (rnd() - 0.5) * vol * 2 + trend * 0.35;
+    c += (BASE - c) * 0.025;
+    var h = Math.max(o, c) + rnd() * vol * 0.6;
+    var l = Math.min(o, c) - rnd() * vol * 0.6;
+    var v = Math.round(rnd() * 900000 + 100000);
+    candles.push({ t: new Date(t0 + i * G * 1000), o: +o.toFixed(2), h: +h.toFixed(2), l: +l.toFixed(2), c: +c.toFixed(2), v: v });
+    price = c;
+  }
+  var maxVol = Math.max.apply(null, candles.map(function (k) { return k.v; }));
+
+  function fmt(n) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtVol(v) { return v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "K" : v.toFixed(0); }
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+  // ---- Header price ----
+  var last = candles[N - 1];
+  document.getElementById("txtPrice").textContent = "$" + fmt(last.c);
+
+  // ---- SMA ----
+  function sma(p) { var r = []; for (var i = 0; i < N; i++) { if (i < p - 1) { r.push(0); continue; }
+    var s = 0; for (var j = 0; j < p; j++) s += candles[i - j].c; r.push(s / p); } return r; }
+  var s20 = sma(20), s50 = sma(50);
+
+  // ---- Chart render (same layout constants as CandleChartControl) ----
+  var PL = 12, PR = 60, PT = 16, PB = 50, CW = 8, GAP = 2, VOLH = 36, STEP = CW + GAP;
+  var chartEl = document.getElementById("chart"), svg = document.getElementById("chartSvg");
+  var pMin, pMax, pRange, W, H, chartH, startX;
+  (function () { var lo = Infinity, hi = -Infinity; candles.forEach(function (k) { lo = Math.min(lo, k.l); hi = Math.max(hi, k.h); });
+    var p = (hi - lo) * 0.08; pMin = lo - p; pMax = hi + p; pRange = pMax - pMin; })();
+  function y(p) { return PT + chartH - (p - pMin) / pRange * chartH; }
+
+  function render() {
+    W = chartEl.clientWidth; H = chartEl.clientHeight;
+    svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    if (W < 50 || H < 50) { svg.innerHTML = ""; return; }
+    chartH = H - PT - PB;
+    startX = Math.max(PL, PL + (W - PL - PR) - N * STEP);
+    var s = [];
+    for (var i = 0; i <= 6; i++) {
+      var yy = PT + chartH * i / 6, pr = pMax - pRange * i / 6;
+      s.push('<line x1="' + PL + '" y1="' + yy + '" x2="' + (W - PR) + '" y2="' + yy + '" stroke="#1C1B1B" stroke-width="1" stroke-dasharray="4 6"/>');
+      s.push('<text x="' + (W - PR + 4) + '" y="' + (yy + 3) + '" font-family="Consolas, monospace" font-size="9" fill="#3B4A4D">$' + fmt(pr) + '</text>');
+    }
+    s.push('<line x1="' + PL + '" y1="' + (H - PB) + '" x2="' + (W - PR) + '" y2="' + (H - PB) + '" stroke="#1C1B1B" stroke-width="1"/>');
+    [[s20, "#2962FF"], [s50, "#FF6D00"]].forEach(function (d) {
+      var pts = []; d[0].forEach(function (val, i) { if (val) pts.push((startX + i * STEP + CW / 2).toFixed(1) + "," + y(val).toFixed(1)); });
+      s.push('<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + d[1] + '" stroke-width="1.5" stroke-linejoin="round"/>');
+    });
+    candles.forEach(function (k, i) {
+      var x = startX + i * STEP, bull = k.c >= k.o, col = bull ? "#00d4aa" : "#ff4757";
+      s.push('<line x1="' + (x + CW / 2) + '" y1="' + y(k.h).toFixed(1) + '" x2="' + (x + CW / 2) + '" y2="' + y(k.l).toFixed(1) + '" stroke="#5A6A6D" stroke-width="1"/>');
+      var top = Math.min(y(k.o), y(k.c)), bh = Math.max(Math.abs(y(k.c) - y(k.o)), 1);
+      s.push('<rect x="' + x + '" y="' + top.toFixed(1) + '" width="' + CW + '" height="' + bh.toFixed(1) + '" fill="' + col + '"/>');
+      var vh = VOLH * k.v / maxVol;
+      s.push('<rect x="' + x + '" y="' + (H - PB + 4 - vh).toFixed(1) + '" width="' + CW + '" height="' + Math.max(vh, 1).toFixed(1) + '" fill="' + col + '" fill-opacity="0.275"/>');
+    });
+    s.push('<g id="xh"></g>');
+    svg.innerHTML = s.join("");
+  }
+  render();
+  window.addEventListener("resize", render);
+
+  // ---- Crosshair + OHLC tooltip ----
+  var tip = document.getElementById("tip");
+  chartEl.addEventListener("mousemove", function (e) {
+    var r = chartEl.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    var idx = Math.floor((mx - startX) / STEP);
+    if (idx >= 0 && idx < N) {
+      var k = candles[idx];
+      document.getElementById("tipTime").textContent = pad2(k.t.getMonth() + 1) + "/" + pad2(k.t.getDate()) + " " + pad2(k.t.getHours()) + ":" + pad2(k.t.getMinutes());
+      document.getElementById("tipO").textContent = "$" + fmt(k.o);
+      document.getElementById("tipH").textContent = "$" + fmt(k.h);
+      document.getElementById("tipL").textContent = "$" + fmt(k.l);
+      document.getElementById("tipC").textContent = "$" + fmt(k.c);
+      document.getElementById("tipV").textContent = fmtVol(k.v);
+      tip.style.opacity = 1;
+    }
+    var g = svg.querySelector("#xh"); if (!g) return;
+    var st = 'stroke="rgba(76,214,251,0.47)" stroke-width="1" stroke-dasharray="4 4"';
+    var h = '<line x1="' + mx + '" y1="' + PT + '" x2="' + mx + '" y2="' + (H - PB) + '" ' + st + '/>' +
+            '<line x1="' + PL + '" y1="' + my + '" x2="' + (W - PR) + '" y2="' + my + '" ' + st + '/>';
+    if (my >= PT && my <= H - PB) {
+      var p = pMin + (1 - (my - PT) / chartH) * pRange, lbl = "$" + fmt(p);
+      h += '<rect x="' + (W - PR + 2) + '" y="' + (my - 10) + '" rx="3" width="' + (lbl.length * 5 + 10) + '" height="16" fill="#4CD6FB"/>' +
+           '<text x="' + (W - PR + 7) + '" y="' + (my + 1.5) + '" font-family="Consolas, monospace" font-size="9" font-weight="700" fill="#000F14">' + lbl + '</text>';
+    }
+    g.innerHTML = h;
+  });
+  chartEl.addEventListener("mouseleave", function () { tip.style.opacity = 0; var g = svg.querySelector("#xh"); if (g) g.innerHTML = ""; });
+
+  // ---- Agent analysis (same logic as CandleViewerWindow.ActualizarAgente) ----
+  var gains = 0, losses = 0;
+  for (var a = N - 14; a < N; a++) { var ch = candles[a].c - candles[a].o; if (ch > 0) gains += ch; else losses -= ch; }
+  var rs = gains / (losses === 0 ? 1 : losses), rsi = 100 - 100 / (1 + rs);
+  var m20 = s20[N - 1], m50 = s50[N - 1], macd = m20 - m50;
+  var score = (m20 > m50 ? 20 : -20) + (rsi < 30 ? 25 : rsi > 70 ? -25 : 0);
+  var decision = score > 25 ? "COMPRAR" : score < -25 ? "VENDER" : "NEUTRO";
+  var conf = Math.min(Math.abs(score) + 55, 95);
+  var BULL = "#00d4aa", BEAR = "#ff4757", NEU = "#5A6A6D";
+  var fg = decision === "COMPRAR" ? BULL : decision === "VENDER" ? BEAR : NEU;
+  var bg = decision === "COMPRAR" ? "rgba(0,212,170,.157)" : decision === "VENDER" ? "rgba(255,71,87,.157)" : "rgba(90,106,109,.098)";
+  var dec = document.getElementById("bdrDecision");
+  dec.style.borderColor = fg; dec.style.background = bg;
+  var td = document.getElementById("txtDecision"); td.textContent = decision; td.style.color = fg;
+  document.getElementById("runConfidence").textContent = conf + "%";
+  var cb = document.getElementById("confBar"); cb.style.width = conf + "%"; cb.style.background = fg;
+  var er = document.getElementById("txtRsi"); er.textContent = rsi.toFixed(2); er.style.color = rsi > 70 ? BEAR : rsi < 30 ? BULL : "#e0e6ed";
+  var em = document.getElementById("txtMacd"); em.textContent = (macd >= 0 ? "+" : "") + macd.toFixed(4); em.style.color = macd >= 0 ? BULL : BEAR;
+  var es = document.getElementById("txtSma"); es.textContent = m20 > m50 ? "Alcista ▲" : "Bajista ▼"; es.style.color = m20 > m50 ? BULL : BEAR;
+  document.getElementById("txtVol").textContent = fmtVol(last.v);
+
+  // ---- Signal log (newest first) ----
+  var now = new Date(), hm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+  var logs = [["HOLD", "Esperando confirmación de tendencia"], ["INFO", "Cargando datos históricos..."], ["INFO", "Sistema inicializado"]];
+  document.getElementById("pnlLog").innerHTML = logs.map(function (l) {
+    var c = l[0] === "COMPRAR" || l[0] === "BUY" ? BULL : l[0] === "VENDER" || l[0] === "SELL" ? BEAR : NEU;
+    return '<div class="LogRow mono" style="border-left-color:' + c + '">' + hm + "  " + l[1] + "</div>";
+  }).join("");
+
+  // ---- UTC clock ----
+  function tick() { var d = new Date(); document.getElementById("txtClock").textContent = pad2(d.getUTCHours()) + ":" + pad2(d.getUTCMinutes()) + ":" + pad2(d.getUTCSeconds()); }
+  tick(); setInterval(tick, 1000);
+
+  // ---- Timeframe buttons (visual only) ----
+  Array.prototype.forEach.call(document.querySelectorAll(".TfBtn"), function (b) {
+    b.addEventListener("click", function () { document.querySelector(".TfBtn.active").classList.remove("active"); b.classList.add("active"); });
+  });
+
+  // ---- Settings modal ----
+  var ovl = document.getElementById("ovl");
+  document.getElementById("btnSettings").addEventListener("click", function () { ovl.classList.add("open"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function (b) { b.addEventListener("click", function () { ovl.classList.remove("open"); }); });
+  ovl.addEventListener("click", function (e) { if (e.target === ovl) ovl.classList.remove("open"); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") ovl.classList.remove("open"); });
+})();
+</script>
+<div class="maqueta-flag">MAQUETA</div>
+</body>
+</html>

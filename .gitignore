@@ -101,3 +101,8 @@ ProfilePictures.db
 
 # Secretos locales
 .env
+
+# Dependencias y logs que no van en git
+node_modules/
+build*.log
+build_errors*.txt

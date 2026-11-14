@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servidor Live - Cliente SignalR</title>
+<link rel="stylesheet" href="obsidian.css">
+<style>
+  /* ===== ServidorLiveWindow (Window Background #07090d, 1400x820) ===== */
+  .sl { display: grid; grid-template-rows: 60px 1fr 28px; height: 100%; min-height: 0; background: #07090d;
+        font-family: "Segoe UI", system-ui, sans-serif; color: #e7ecf5; min-width: 1100px; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; }
+
+  /* Header */
+  .sl-hdr { background: #0c1018; border-bottom: 1px solid #1f2638; display: flex; align-items: center; justify-content: space-between; }
+  .sl-hdr .brand { display: flex; align-items: center; margin: 0 20px; }
+  .sl-hdr .brand .ico { font-size: 22px; margin-right: 10px; }
+  .sl-hdr .brand .t1 { color: #5ee0d0; font-size: 14px; font-weight: 700; }
+  .sl-hdr .brand .t2 { color: #6c7790; font-size: 10px; }
+  .pills { display: flex; align-items: center; margin: 0 20px; }
+  .pill { background: #121723; border: 1px solid #1f2638; border-radius: 3px; padding: 4px 10px; margin-right: 8px;
+          font-family: Consolas, monospace; font-size: 10px; color: #aab3c5; }
+  .pill:last-child { margin-right: 0; }
+
+  /* Body columns 280 / * / 380 */
+  .sl-body { display: grid; grid-template-columns: 280px 1fr 380px; min-height: 0; }
+
+  /* Left */
+  .sl-left { background: #0c1018; border-right: 1px solid #1f2638; overflow-y: auto; }
+  .sl-left .stack { margin: 14px; display: flex; flex-direction: column; }
+  .LabelHdr { color: #aab3c5; font-size: 11px; font-weight: 700; margin: 0 0 6px 0; }
+  .MicroLbl { color: #6c7790; font-size: 9px; font-weight: 700; }
+  .InputDark { background: #121723; color: #e7ecf5; border: 1px solid #1f2638; padding: 4px 6px; font-family: Consolas, monospace;
+               font-size: 11px; height: 28px; width: 100%; outline: none; border-radius: 0; }
+  .BtnPrimary, .BtnGhost { width: 100%; padding: 6px 10px; font-weight: 600; font-size: 11px; cursor: pointer; border: 1px solid;
+                           font-family: "Segoe UI", system-ui, sans-serif; border-radius: 0; text-align: center; }
+  .BtnPrimary { background: #0d2a30; color: #5ee0d0; border-color: #5ee0d0; }
+  .BtnGhost { background: #121723; color: #aab3c5; border-color: #1f2638; }
+  .BtnGhost:hover { background: #172030; }
+  .chk { display: flex; align-items: center; gap: 6px; color: #aab3c5; font-size: 11px; margin: 4px 0 12px 0; }
+  .chk input { margin: 0; accent-color: #5ee0d0; }
+  .sep { height: 1px; background: #1f2638; }
+
+  /* Center: log */
+  .sl-center { background: #07090d; display: grid; grid-template-rows: auto 1fr; min-height: 0; min-width: 0; }
+  .log-hdr { background: #0c1018; border-bottom: 1px solid #1f2638; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .log-hdr .LabelHdr { margin: 0; }
+  .log-hdr .sub { color: #6c7790; font-size: 9px; }
+  .hubtag { background: #121723; border: 1px solid #1f2638; border-radius: 3px; padding: 2px 6px; color: #aab3c5; font-size: 9px; }
+  .log { overflow-y: auto; }
+  .logrow { display: grid; grid-template-columns: 80px 100px 1fr; margin: 3px 14px; font-family: Consolas, monospace; font-size: 10px; }
+  .logrow .h { color: #6c7790; }
+  .logrow .tp { font-weight: 700; }
+  .logrow .m { color: #e7ecf5; white-space: pre-wrap; word-break: break-word; }
+  .t-ok { color: #3fd17a; } .t-err { color: #ff5c7a; } .t-rx { color: #5ee0d0; } .t-tx { color: #ffb454; }
+  .t-conn { color: #5cb6ff; } .t-motor { color: #c3a9ff; } .t-info { color: #aab3c5; }
+
+  /* Right: EstrategiasLivePanelControl (Background #11111B) */
+  .elp { background: #11111b; min-width: 280px; display: grid; grid-template-rows: auto auto 1fr; min-height: 0;
+         font-family: "Segoe UI", system-ui, sans-serif; }
+  .saldo { background: #1e1e2e; border-radius: 6px; padding: 10px 12px; margin: 8px 8px 4px 8px; }
+  .saldo .l1 { display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
+  .saldo .l1 .ico { font-size: 13px; color: #89b4fa; margin-right: 6px; }
+  .saldo .l1 .tt { color: #a6adc8; font-size: 11px; font-weight: 700; }
+  .ell { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .saldo .big { color: #cdd6f4; font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .saldo .l3 { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 6px; }
+  .k9 { color: #6c7086; font-size: 9px; font-weight: 700; }
+  .v12 { color: #a6e3a1; font-size: 12px; font-weight: 700; }
+  .lst-hdr { display: flex; justify-content: space-between; align-items: center; margin: 8px 14px 4px 14px; }
+  .lst-hdr .tt { color: #89b4fa; font-size: 11px; font-weight: 700; }
+  .cnt { background: #313244; border-radius: 8px; padding: 1px 6px; min-width: 22px; text-align: center; color: #cdd6f4; font-size: 10px; font-weight: 700; }
+  .cards { overflow-y: auto; padding: 0 8px 8px 8px; }
+  .card { background: #1e1e2e; border: 1px solid #313244; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+  .card .r1 { display: flex; align-items: center; }
+  .card .r1 .ell { margin-right: 8px; }
+  .card .nm { color: #cdd6f4; font-size: 13px; font-weight: 700; }
+  .card .r2 { display: flex; align-items: center; margin-top: 4px; font-size: 10px; }
+  .symtf { background: #313244; border-radius: 3px; padding: 1px 5px; margin-right: 8px; color: #a6adc8; }
+  .card .r3 { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 8px; }
+  .stat { background: #252535; border-radius: 4px; padding: 6px 0; text-align: center; }
+  .stat .a { font-size: 9px; font-weight: 700; } .stat .b { font-size: 14px; font-weight: 700; } .stat .c { font-size: 9px; }
+  .card .r4 { display: grid; grid-template-columns: 1fr auto; margin-top: 8px; align-items: end; }
+  .pnl { font-size: 14px; font-weight: 700; }
+  .ibtn { width: 30px; height: 26px; margin-right: 4px; border: 1px solid; font-size: 11px; font-weight: 700; cursor: pointer; color: #cdd6f4;
+          padding: 0; border-radius: 0; font-family: "Segoe UI Symbol", "Segoe UI Emoji", system-ui, sans-serif; }
+  .ibtn:last-child { margin-right: 0; }
+  details.exp { margin-top: 8px; color: #a6adc8; font-size: 10px; }
+  details.exp summary { cursor: pointer; font-weight: 700; color: #a6adc8; font-size: 10px; list-style: none; display: flex; align-items: center; gap: 6px; }
+  details.exp summary::-webkit-details-marker { display: none; }
+  details.exp summary .chev { width: 15px; height: 15px; border: 1px solid #a6adc8; border-radius: 50%; display: inline-grid; place-items: center; font-size: 7px; line-height: 1; }
+  .advbox { background: #181825; border: 1px solid #313244; border-radius: 4px; padding: 6px 8px; margin-top: 4px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .g3 > div:nth-child(1) { margin: 0 4px 4px 0; } .g3 > div:nth-child(2) { margin: 0 2px 4px 2px; } .g3 > div:nth-child(3) { margin: 0 0 4px 4px; }
+  .k8 { font-size: 8px; font-weight: 700; color: #6c7086; }
+  .tb { width: 100%; background: #1e1e2e; color: #cdd6f4; border: 1px solid #45475a; font-size: 11px; padding: 1px 3px; outline: none; border-radius: 0;
+        font-family: "Segoe UI", system-ui, sans-serif; }
+  .ro { display: grid; grid-template-columns: 1fr 1fr; margin-top: 6px; font-size: 9px; }
+  .ro span.k { color: #6c7086; } .ro b { color: #a6adc8; margin-right: 8px; }
+  .aplicar { width: 100%; margin-top: 8px; background: #1e2a3a; color: #89b4fa; border: 1px solid #89b4fa; font-size: 10px; font-weight: 700;
+             padding: 3px 6px; cursor: pointer; border-radius: 0; }
+
+  /* Status bar */
+  .sl-status { background: #0c1018; border-top: 1px solid #1f2638; display: flex; align-items: center; justify-content: space-between;
+               font-family: Consolas, monospace; font-size: 10px; }
+  .sl-status .l { color: #aab3c5; margin: 0 20px; }
+  .sl-status .r { color: #6c7790; margin: 0 20px; display: flex; gap: 16px; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span class="ttl">Servidor Live - Cliente SignalR</span><span class="ctl">&#8212;</span><span class="ctl">&#9633;</span><span class="ctl x">&#10005;</span></div>
+  <div class="win-body">
+    <div class="sl">
+
+      <!-- HEADER -->
+      <div class="sl-hdr">
+        <div class="brand">
+          <span class="ico">📡</span>
+          <div>
+            <div class="t1">SERVIDOR LIVE</div>
+            <div class="t2 mono">Cliente SignalR · ejecucion remota de estrategias en demo/real</div>
+          </div>
+        </div>
+        <div class="pills">
+          <span class="pill" style="color:#3fd17a;font-size:11px;font-weight:700">Conectado</span>
+          <span class="pill">URL: https://test1.bitcode.com.co/</span>
+          <span class="pill">Cliente: BITCODEV1</span>
+          <span class="pill" style="color:#3fd17a">Motores: 3</span>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="sl-body">
+
+        <!-- LEFT: Conexion -->
+        <div class="sl-left">
+          <div class="stack">
+            <div class="LabelHdr">CONEXION SIGNALR</div>
+
+            <div class="MicroLbl">URL DEL SERVIDOR</div>
+            <input class="InputDark" style="margin:3px 0 8px" value="https://test1.bitcode.com.co/" title="Ej: https://servidor.com/signalr">
+
+            <div class="MicroLbl">CLIENT ID</div>
+            <input class="InputDark" style="margin:3px 0 8px" value="BITCODEV1">
+
+            <div class="MicroLbl">HUB NAME</div>
+            <input class="InputDark" style="margin:3px 0 8px" value="DronesHub" title="Nombre del hub registrado en el servidor (ej: DronesHub, StrategiesHub)">
+
+            <label class="chk"><input type="checkbox" checked> Auto-conectar al abrir</label>
+
+            <button class="BtnPrimary" style="margin-bottom:4px">▶ Conectar</button>
+            <button class="BtnGhost" style="margin-bottom:12px">■ Desconectar</button>
+
+            <div class="sep" style="margin:4px 0 12px"></div>
+
+            <div class="LabelHdr">OPERACIONES</div>
+            <button class="BtnGhost" style="margin-bottom:4px" title="Carga sesiones live abiertas que quedaron de un crash previo">🔄 Reanudar sesiones BD</button>
+            <button class="BtnGhost" style="margin-bottom:4px">📊 Ver estado motores</button>
+            <button class="BtnGhost">🧹 Limpiar log</button>
+
+            <div class="sep" style="margin:8px 0"></div>
+
+            <div class="LabelHdr">PRUEBAS</div>
+            <button class="BtnGhost" style="margin-bottom:4px" title="Envia un ReportStatus al hub para verificar conexion outbound">🛰 Reportar al servidor</button>
+            <button class="BtnPrimary" title="Inyecta una instruccion como si llegara del servidor (DemoSimple en R_100/1m)">▶ Simular estrategia.iniciar</button>
+            <button class="BtnGhost" style="margin-top:4px" title="Invoca GetConnectedDrones() en el hub del servidor">📋 Listar conectados (server)</button>
+
+            <div class="MicroLbl" style="margin-top:8px">TARGET ID (SendInstruction)</div>
+            <input class="InputDark" style="margin:3px 0 4px" value="DronesHub" title="ID del destino al que se enrutara la instruccion via SendInstruction()">
+            <button class="BtnPrimary" style="margin-top:4px" title="Invoca SendInstruction(target, 'ping', payload) en el hub">🔄 Enviar instruccion (SendInstruction)</button>
+          </div>
+        </div>
+
+        <!-- CENTER: Log -->
+        <div class="sl-center">
+          <div class="log-hdr">
+            <div>
+              <div class="LabelHdr">LOG DE ACTIVIDAD</div>
+              <div class="sub mono">14 lineas</div>
+            </div>
+            <span class="hubtag mono">Hub: DronesHub</span>
+          </div>
+          <div class="log">
+            <div class="logrow"><span class="h">09:41:02</span><span class="tp t-info">INFO</span><span class="m">Ventana lista. Configura URL y Client ID si es la primera vez.</span></div>
+            <div class="logrow"><span class="h">09:41:03</span><span class="tp t-conn">CONN</span><span class="m">Conectando a https://test1.bitcode.com.co/ (clientId=BITCODEV1, hub=DronesHub)...</span></div>
+            <div class="logrow"><span class="h">09:41:04</span><span class="tp t-conn">CONN</span><span class="m">Estado: Conectado</span></div>
+            <div class="logrow"><span class="h">09:41:04</span><span class="tp t-ok">OK</span><span class="m">Registro confirmado: clientId=BITCODEV1 connId=Qk7xR2pLm9vT4aZ1nW8yHg</span></div>
+            <div class="logrow"><span class="h">09:41:06</span><span class="tp t-info">INFO</span><span class="m">Reanudando sesiones live activas en BD...</span></div>
+            <div class="logrow"><span class="h">09:41:07</span><span class="tp t-ok">OK</span><span class="m">2 sesion(es) reanudadas en memoria.</span></div>
+            <div class="logrow"><span class="h">09:42:15</span><span class="tp t-rx">RX</span><span class="m">[BITCODEV1] estrategia.iniciar  payload={"estrategia":"IndicePullbackLong_v1","symbol":"R_50","timeframe":"15m","monto":5}  corrId=a3f9c1d2</span></div>
+            <div class="logrow"><span class="h">09:42:16</span><span class="tp t-motor">MOTOR</span><span class="m">Sesion #1287 actualizada.</span></div>
+            <div class="logrow"><span class="h">09:43:00</span><span class="tp t-tx">TX</span><span class="m">ReportStatus -> servidor: {"clientId":"BITCODEV1","motores":3,"estado":"Conectado"}</span></div>
+            <div class="logrow"><span class="h">09:43:00</span><span class="tp t-ok">OK</span><span class="m">ReportStatus enviado.</span></div>
+            <div class="logrow"><span class="h">09:45:00</span><span class="tp t-motor">MOTOR</span><span class="m">Sesion #1285 actualizada.</span></div>
+            <div class="logrow"><span class="h">09:45:00</span><span class="tp t-motor">MOTOR</span><span class="m">Sesion #1286 actualizada.</span></div>
+            <div class="logrow"><span class="h">09:47:31</span><span class="tp t-info">INFO</span><span class="m">Cliente entro al hub: BITCODEV2</span></div>
+            <div class="logrow"><span class="h">09:48:12</span><span class="tp t-err">ERR</span><span class="m">SendInstruction fallo en el hub.</span></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: EstrategiasLivePanelControl (inyectado en panelEstrategiasLiveContainer) -->
+        <div class="elp">
+          <div class="saldo">
+            <div class="l1">
+              <span class="ico">&#x1F4B0;</span>
+              <span class="tt">SALDO TOTAL</span>
+              <span class="ell" style="background:#a6e3a1"></span>
+            </div>
+            <div class="big">$10,248.60</div>
+            <div class="l3">
+              <div><div class="k9">HOY</div><div class="v12">$48.60</div></div>
+              <div><div class="k9">SEMANA</div><div class="v12">$212.35</div></div>
+              <div><div class="k9">MES</div><div class="v12">$731.90</div></div>
+            </div>
+          </div>
+
+          <div class="lst-hdr">
+            <span class="tt">ESTRATEGIAS ACTIVAS</span>
+            <span class="cnt">3</span>
+          </div>
+
+          <div class="cards">
+            <!-- Card 1 -->
+            <div class="card">
+              <div class="r1"><span class="ell" style="background:#a6e3a1"></span><span class="nm">BollingerMomentum_v2</span></div>
+              <div class="r2">
+                <span class="symtf">R_75 / 15m</span>
+                <span style="color:#6c7086;margin-right:3px">&#x1F552;</span>
+                <span style="color:#6c7086;margin-right:8px">07:15</span>
+                <span style="color:#a6adc8;font-weight:700;margin-right:8px">2h 33m</span>
+                <span style="color:#6c7086;margin-right:3px" title="Velas analizadas">&#x1F4CA;</span>
+                <span style="color:#89b4fa;font-weight:700" title="Velas analizadas desde el inicio">1,240 velas</span>
+              </div>
+              <div class="r3">
+                <div class="stat" style="margin-right:3px"><div class="a" style="color:#6c7086">ABIERTAS</div><div class="b" style="color:#cdd6f4">1</div></div>
+                <div class="stat" style="margin:0 3px"><div class="a" style="color:#a6e3a1">GANADAS</div><div class="b" style="color:#a6e3a1">7</div><div class="c" style="color:#a6e3a1">$30.45</div></div>
+                <div class="stat" style="margin-left:3px"><div class="a" style="color:#f38ba8">PERDIDAS</div><div class="b" style="color:#f38ba8">3</div><div class="c" style="color:#f38ba8">-$15.00</div></div>
+              </div>
+              <div class="r4">
+                <div><div class="k9">BENEFICIO (PnL)</div><div class="pnl" style="color:#a6e3a1">+15.45</div></div>
+                <div>
+                  <button class="ibtn" style="background:#1e2a3a;border-color:#89b4fa" title="Ver detalle">&#x1F4C4;</button><button class="ibtn" style="background:#3a301e;border-color:#f9e2af" title="Pausar">&#10074;&#10074;</button><button class="ibtn" style="background:#3b1e2e;border-color:#f38ba8" title="Detener">&#x25A0;</button>
+                </div>
+              </div>
+              <details class="exp" open>
+                <summary><span class="chev">&#9660;</span>Configuracion avanzada</summary>
+                <div class="advbox">
+                  <div class="g3">
+                    <div><div class="k8">MONTO $</div><input class="tb" value="5"></div>
+                    <div><div class="k8">CONF. MIN %</div><input class="tb" value="65"></div>
+                    <div><div class="k8">DURACION</div><input class="tb" value="1"></div>
+                  </div>
+                  <div class="g3" style="margin-top:4px">
+                    <div><div class="k8" style="color:#f9e2af">HORAS (0=∞)</div><input class="tb" style="border-color:#f9e2af" value="0" title="Auto-pausar despues de N horas. 0 = sin limite"></div>
+                    <div><div class="k8" style="color:#a6e3a1">LIM GANANCIA $</div><input class="tb" style="border-color:#a6e3a1" value="50" title="Auto-pausar al alcanzar +$X. 0 = sin limite"></div>
+                    <div><div class="k8" style="color:#f38ba8">LIM PERDIDA $</div><input class="tb" style="border-color:#f38ba8" value="25" title="Auto-pausar al alcanzar -$X. 0 = sin limite"></div>
+                  </div>
+                  <div class="ro">
+                    <div><span class="k">Payout: </span><b>87%</b><span class="k">Ventana: </span><b>200 velas</b></div>
+                    <div><span class="k">Tiempo: </span><b style="color:#f9e2af">2.5h</b><span class="k">ID:</span> <span style="color:#89b4fa">1285</span></div>
+                  </div>
+                  <button class="aplicar" title="Envia la config nueva al motor en runtime (sin detener la sesion)">✓ Aplicar cambios</button>
+                </div>
+              </details>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card">
+              <div class="r1"><span class="ell" style="background:#f9e2af"></span><span class="nm">EmaRsiCruce_v4</span></div>
+              <div class="r2">
+                <span class="symtf">R_100 / 15m</span>
+                <span style="color:#6c7086;margin-right:3px">&#x1F552;</span>
+                <span style="color:#6c7086;margin-right:8px">08:02</span>
+                <span style="color:#a6adc8;font-weight:700;margin-right:8px">1h 46m</span>
+                <span style="color:#6c7086;margin-right:3px" title="Velas analizadas">&#x1F4CA;</span>
+                <span style="color:#89b4fa;font-weight:700" title="Velas analizadas desde el inicio">812 velas</span>
+              </div>
+              <div class="r3">
+                <div class="stat" style="margin-right:3px"><div class="a" style="color:#6c7086">ABIERTAS</div><div class="b" style="color:#cdd6f4">0</div></div>
+                <div class="stat" style="margin:0 3px"><div class="a" style="color:#a6e3a1">GANADAS</div><div class="b" style="color:#a6e3a1">4</div><div class="c" style="color:#a6e3a1">$17.40</div></div>
+                <div class="stat" style="margin-left:3px"><div class="a" style="color:#f38ba8">PERDIDAS</div><div class="b" style="color:#f38ba8">5</div><div class="c" style="color:#f38ba8">-$25.00</div></div>
+              </div>
+              <div class="r4">
+                <div><div class="k9">BENEFICIO (PnL)</div><div class="pnl" style="color:#f38ba8">-7.60</div></div>
+                <div>
+                  <button class="ibtn" style="background:#1e2a3a;border-color:#89b4fa" title="Ver detalle">&#x1F4C4;</button><button class="ibtn" style="background:#1e3a1e;border-color:#a6e3a1" title="Reanudar">&#9658;</button><button class="ibtn" style="background:#3b1e2e;border-color:#f38ba8" title="Detener">&#x25A0;</button>
+                </div>
+              </div>
+              <details class="exp">
+                <summary><span class="chev">&#9660;</span>Configuracion avanzada</summary>
+                <div class="advbox">
+                  <div class="g3">
+                    <div><div class="k8">MONTO $</div><input class="tb" value="5"></div>
+                    <div><div class="k8">CONF. MIN %</div><input class="tb" value="70"></div>
+                    <div><div class="k8">DURACION</div><input class="tb" value="2"></div>
+                  </div>
+                  <div class="g3" style="margin-top:4px">
+                    <div><div class="k8" style="color:#f9e2af">HORAS (0=∞)</div><input class="tb" style="border-color:#f9e2af" value="4"></div>
+                    <div><div class="k8" style="color:#a6e3a1">LIM GANANCIA $</div><input class="tb" style="border-color:#a6e3a1" value="40"></div>
+                    <div><div class="k8" style="color:#f38ba8">LIM PERDIDA $</div><input class="tb" style="border-color:#f38ba8" value="20"></div>
+                  </div>
+                  <div class="ro">
+                    <div><span class="k">Payout: </span><b>85%</b><span class="k">Ventana: </span><b>150 velas</b></div>
+                    <div><span class="k">Tiempo: </span><b style="color:#f9e2af">1.8h / 4h</b><span class="k">ID:</span> <span style="color:#89b4fa">1286</span></div>
+                  </div>
+                  <button class="aplicar">✓ Aplicar cambios</button>
+                </div>
+              </details>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card">
+              <div class="r1"><span class="ell" style="background:#89b4fa"></span><span class="nm">IndicePullbackLong_v1</span></div>
+              <div class="r2">
+                <span class="symtf">R_50 / 15m</span>
+                <span style="color:#6c7086;margin-right:3px">&#x1F552;</span>
+                <span style="color:#6c7086;margin-right:8px">09:42</span>
+                <span style="color:#a6adc8;font-weight:700;margin-right:8px">6m</span>
+                <span style="color:#6c7086;margin-right:3px" title="Velas analizadas">&#x1F4CA;</span>
+                <span style="color:#89b4fa;font-weight:700" title="Velas analizadas desde el inicio">24 velas</span>
+              </div>
+              <div class="r3">
+                <div class="stat" style="margin-right:3px"><div class="a" style="color:#6c7086">ABIERTAS</div><div class="b" style="color:#cdd6f4">0</div></div>
+                <div class="stat" style="margin:0 3px"><div class="a" style="color:#a6e3a1">GANADAS</div><div class="b" style="color:#a6e3a1">0</div><div class="c" style="color:#a6e3a1">$0.00</div></div>
+                <div class="stat" style="margin-left:3px"><div class="a" style="color:#f38ba8">PERDIDAS</div><div class="b" style="color:#f38ba8">0</div><div class="c" style="color:#f38ba8">-$0.00</div></div>
+              </div>
+              <div class="r4">
+                <div><div class="k9">BENEFICIO (PnL)</div><div class="pnl" style="color:#cdd6f4">0.00</div></div>
+                <div>
+                  <button class="ibtn" style="background:#1e2a3a;border-color:#89b4fa" title="Ver detalle">&#x1F4C4;</button><button class="ibtn" style="background:#3a301e;border-color:#f9e2af" title="Pausar">&#10074;&#10074;</button><button class="ibtn" style="background:#3b1e2e;border-color:#f38ba8" title="Detener">&#x25A0;</button>
+                </div>
+              </div>
+              <details class="exp">
+                <summary><span class="chev">&#9660;</span>Configuracion avanzada</summary>
+                <div class="advbox">
+                  <div class="g3">
+                    <div><div class="k8">MONTO $</div><input class="tb" value="5"></div>
+                    <div><div class="k8">CONF. MIN %</div><input class="tb" value="60"></div>
+                    <div><div class="k8">DURACION</div><input class="tb" value="1"></div>
+                  </div>
+                  <div class="g3" style="margin-top:4px">
+                    <div><div class="k8" style="color:#f9e2af">HORAS (0=∞)</div><input class="tb" style="border-color:#f9e2af" value="0"></div>
+                    <div><div class="k8" style="color:#a6e3a1">LIM GANANCIA $</div><input class="tb" style="border-color:#a6e3a1" value="0"></div>
+                    <div><div class="k8" style="color:#f38ba8">LIM PERDIDA $</div><input class="tb" style="border-color:#f38ba8" value="0"></div>
+                  </div>
+                  <div class="ro">
+                    <div><span class="k">Payout: </span><b>86%</b><span class="k">Ventana: </span><b>100 velas</b></div>
+                    <div><span class="k">Tiempo: </span><b style="color:#f9e2af">0.1h</b><span class="k">ID:</span> <span style="color:#89b4fa">1287</span></div>
+                  </div>
+                  <button class="aplicar">✓ Aplicar cambios</button>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS BAR -->
+      <div class="sl-status">
+        <span class="l">Listo</span>
+        <span class="r"><span>v0.1-beta</span><span id="clk">14:48:12 UTC</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var c = document.getElementById('clk');
+    function t() { var d = new Date(); c.textContent = d.toISOString().substr(11, 8) + ' UTC'; }
+    t(); setInterval(t, 1000);
+    document.querySelectorAll('details.exp').forEach(function (d) {
+      var ch = d.querySelector('.chev');
+      function s() { ch.innerHTML = d.open ? '&#9650;' : '&#9660;'; }
+      s(); d.addEventListener('toggle', s);
+    });
+  })();
+</script>
+<div class="maqueta-flag">MAQUETA</div>
+</body>
+</html>

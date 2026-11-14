@@ -1,0 +1,88 @@
+/* Obsidian Lens - tokens copiados de WpfDerivClientVB/App.xaml */
+:root {
+  --BgBase: #131313;
+  --SurfaceLow: #1C1B1B;
+  --SurfaceHigh: #2A2A2A;
+  --SurfaceLowest: #0E0E0E;
+  --SurfaceVariant: #353534;
+  --Primary: #D0F2FF;
+  --PrimaryFixed: #4CD6FB;
+  --PrimaryContainer: #72DEFF;
+  --OnSurface: #E5E2E1;
+  --OnSurfaceVariant: #BAC9CC;
+  --Error: #FFB4AB;
+  --OutlineVariant: #3B494C;
+  --SidebarBg: #0A0A0A;
+  --Muted: #5A6A6D;
+  --Dim: #3B4A4D;
+  --NavFg: #7A8A8D;
+  --TagBg: #0D2A30;
+  --PrimaryGradient: linear-gradient(135deg, #D0F2FF 0%, #72DEFF 100%);
+  --ff: "Segoe UI", "Segoe UI Variable", system-ui, sans-serif;
+  --mono: Consolas, "Cascadia Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--BgBase); color: var(--OnSurface); font-family: var(--ff); font-size: 13px; }
+a { color: inherit; text-decoration: none; }
+
+/* Window chrome (barra de titulo oscura de Windows 11) */
+.win { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.titlebar { height: 32px; flex: none; display: flex; align-items: center; background: #202020; color: #fff;
+            font-size: 12px; padding-left: 12px; user-select: none; }
+.titlebar .ttl { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.titlebar .ctl { width: 46px; height: 32px; display: grid; place-items: center; color: #fff; font-size: 11px; }
+.titlebar .ctl:hover { background: #2d2d2d; }
+.titlebar .ctl.x:hover { background: #c42b1c; }
+.win-body { flex: 1; min-height: 0; overflow: auto; }
+
+/* Tipografia / estilos globales */
+.Label { color: var(--OnSurfaceVariant); font-size: 10px; font-weight: 600; letter-spacing: .02em; }
+.Value { font-size: 22px; font-weight: 700; }
+.Cyan { color: var(--PrimaryFixed); }
+.FieldLabel { color: var(--OnSurfaceVariant); font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block; }
+.LogEntry { font-family: var(--mono); font-size: 10px; color: var(--NavFg); }
+
+/* Botones */
+.PrimaryBtn { background: var(--PrimaryGradient); color: #0A1E27; font-weight: 700; font-size: 12px;
+              padding: 9px 18px; border: 0; border-radius: 6px; cursor: pointer; font-family: var(--ff); }
+.GhostBtn { background: #1A1A1A; color: var(--OnSurface); font-weight: 600; font-size: 12px; padding: 9px 18px;
+            border: 1px solid #2A2A2A; border-radius: 6px; cursor: pointer; font-family: var(--ff); }
+.PrimaryBtn:hover { filter: brightness(1.06); }
+.GhostBtn:hover { background: #222; }
+.DangerBtn { background: #3A1515; color: var(--Error); border: 1px solid #5A2020; font-weight: 600; font-size: 12px;
+             padding: 9px 18px; border-radius: 6px; cursor: pointer; font-family: var(--ff); }
+
+/* Inputs */
+.Input, select.Input { background: #121212; color: var(--OnSurface); font-family: var(--mono); font-size: 13px;
+         padding: 10px 12px; border: 1px solid #242323; border-radius: 8px; width: 100%; outline: none; }
+.Input:focus { border-color: var(--PrimaryFixed); background: #050F11; }
+
+/* Tarjetas */
+.MetricCard { background: var(--SurfaceLow); border-radius: 10px; padding: 18px 20px; }
+.AgentCard { background: var(--SurfaceLow); border-radius: 10px; padding: 16px; }
+.TagBadge { background: var(--TagBg); border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 700; color: var(--PrimaryFixed); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--PrimaryFixed); display: inline-block; flex: none; }
+
+/* Tablas tipo DataGrid oscuro */
+.grid { width: 100%; border-collapse: collapse; font-size: 12px; }
+.grid th { text-align: left; background: #161616; color: var(--OnSurfaceVariant); font-size: 10px; font-weight: 700;
+           padding: 8px 10px; border-bottom: 1px solid #262626; white-space: nowrap; }
+.grid td { padding: 7px 10px; border-bottom: 1px solid #1E1E1E; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.grid tr:hover td { background: #181f20; }
+.up { color: #4CD68A; } .down { color: var(--Error); }
+
+/* Tabs tipo WPF */
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid #262626; background: #0E0E0E; padding: 0 8px; overflow-x: auto; }
+.tab { padding: 9px 16px; color: var(--NavFg); cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap;
+       border-bottom: 2px solid transparent; background: none; border-top: 0; border-left: 0; border-right: 0; font-family: var(--ff); }
+.tab.active { color: var(--PrimaryFixed); border-bottom-color: var(--PrimaryFixed); }
+[hidden] { display: none !important; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 5px; }
+
+.maqueta-flag { position: fixed; right: 10px; bottom: 10px; z-index: 999; font-family: var(--mono); font-size: 10px;
+                color: #E0A449; background: #1d1608; border: 1px solid #5a4316; padding: 4px 8px; border-radius: 4px; }
