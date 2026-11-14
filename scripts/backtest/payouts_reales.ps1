@@ -24,6 +24,21 @@ foreach ($m in $r.mercados) {
     Write-Output ("{0,-10} {1,-3} x{2} ({3,5}) | sin cotizacion: {4}" -f $m.symbol, $m.timeframe, $m.velas, $m.duracion, $err)
   }
 }
+# Comision de los multiplicadores (fraccion del nocional); se usa en multiplicadores_estrategias.ps1 -ComisionForex
+$multMercados = @(@('frxEURUSD',100),@('frxGBPJPY',100),@('frxGBPUSD',100),@('frxUSDCHF',100),@('frxUSDJPY',100),
+                  @('frxXAUUSD',100),@('frxXAGUSD',100),@('R_100',100))
+$mb = @{ mercados = $multMercados; monto = 10 } | ConvertTo-Json -Depth 4 -Compress
+$mr = Invoke-RestMethod -Uri 'http://localhost:8766/api/heavy/multiplicadores/cotizar' -Method POST -Body $mb -ContentType 'application/json' -TimeoutSec 900
+if ($mr.ok) {
+  $r | Add-Member -NotePropertyName multiplicadores -NotePropertyValue $mr.mercados -Force
+  foreach ($m in $mr.mercados) {
+    if ($null -ne $m.multup_comision_pct) {
+      Write-Output ("{0,-10} multiplicador x{1}: comision {2:P4} del nocional (MULTUP) / {3:P4} (MULTDOWN)" -f $m.symbol, $m.multiplicador, $m.multup_comision_pct, $m.multdown_comision_pct)
+    } else {
+      Write-Output ("{0,-10} multiplicador: sin cotizacion: {1}" -f $m.symbol, $m.multup_error)
+    }
+  }
+}
 $ruta = Join-Path $PSScriptRoot '..\..\docs\validacion\payouts_reales.json'
 $historial = @()
 if (Test-Path $ruta) { $historial = @(Get-Content $ruta -Raw | ConvertFrom-Json) }

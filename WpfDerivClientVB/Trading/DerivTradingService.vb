@@ -664,6 +664,28 @@ Namespace WpfDerivClientVB.Servidor
             Return Await EnviarYEsperarAsync(p, ArmarPropuesta(body, contractType, symbol, monto), 10000)
         End Function
 
+        ''' <summary>
+        ''' Cotiza un multiplicador (MULTUP / MULTDOWN) SIN comprar: sirve para medir la comision
+        ''' y el stop out reales. Devuelve {ok, id, ask_price, proposal:{...}} o {ok:false, error}.
+        ''' </summary>
+        Public Async Function CotizarMultiplicadorAsync(contractType As String, symbol As String, monto As Double,
+                                                        multiplicador As Integer,
+                                                        Optional takeProfit As Double = 0, Optional stopLoss As Double = 0) As Task(Of JObject)
+            If Not EstaConectado Then Return New JObject From {{"ok", False}, {"error", "No hay conexion activa."}}
+            Dim req As New JObject From {
+                {"proposal", 1}, {"amount", monto}, {"basis", "stake"}, {"contract_type", contractType},
+                {"currency", "USD"}, {"multiplier", multiplicador}, {"underlying_symbol", symbol}
+            }
+            If takeProfit > 0 OrElse stopLoss > 0 Then
+                Dim limite As New JObject()
+                If takeProfit > 0 Then limite("take_profit") = takeProfit
+                If stopLoss > 0 Then limite("stop_loss") = stopLoss
+                req("limit_order") = limite
+            End If
+            Dim p = NuevoPendiente(TipoPendiente.Cotizacion, CDec(monto))
+            Return Await EnviarYEsperarAsync(p, req, 10000)
+        End Function
+
         ''' <summary>Compra una cotizacion ya obtenida. Devuelve {ok, contract_id, ...}.</summary>
         Public Async Function ComprarCotizacionAsync(proposalId As String, precio As Double) As Task(Of JObject)
             If Not EstaConectado Then Return New JObject From {{"ok", False}, {"error", "No hay conexion activa."}}
@@ -954,7 +976,8 @@ Namespace WpfDerivClientVB.Servidor
                 Case TipoPendiente.Cotizacion
                     Resolver(p, New JObject From {
                         {"ok", True}, {"id", proposalId}, {"ask_price", ask}, {"payout", payout},
-                        {"longcode", If(prop("longcode")?.ToString(), "")}
+                        {"longcode", If(prop("longcode")?.ToString(), "")},
+                        {"proposal", prop.DeepClone()}
                     })
                 Case TipoPendiente.CompraAutomatica
                     ' basis=stake: Deriv debe cobrar exactamente el monto pedido

@@ -1,0 +1,3473 @@
+[
+  {
+    "ok": true,
+    "estrategia": "BollingerMomentum_v2",
+    "min_confianza": 50,
+    "corte_utc": "2026-04-29",
+    "stake": 1,
+    "total_diseno": {
+      "operaciones": 825,
+      "win_rate": 0.4679,
+      "pnl_total": 75.01,
+      "pnl_medio": 0.0909,
+      "ic95_inf": -0.0172,
+      "ic95_sup": 0.199,
+      "ganancia_media": 1.1888,
+      "perdida_media": -0.8744,
+      "profit_factor": 1.195,
+      "caida_maxima": 25.43,
+      "velas_medias": 4.0,
+      "salidas": {
+        "TP": 247,
+        "SL": 9,
+        "StopOut": 353,
+        "Tiempo": 216
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "total_ciego": {
+      "operaciones": 229,
+      "win_rate": 0.5066,
+      "pnl_total": 40.51,
+      "pnl_medio": 0.1769,
+      "ic95_inf": -0.013,
+      "ic95_sup": 0.3668,
+      "ganancia_media": 1.131,
+      "perdida_media": -0.8025,
+      "profit_factor": 1.447,
+      "caida_maxima": 13.7,
+      "velas_medias": 4.5,
+      "salidas": {
+        "TP": 63,
+        "SL": 3,
+        "StopOut": 80,
+        "Tiempo": 83
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "mercados_rentables_en_diseno": 9,
+    "total_ciego_solo_rentables_en_diseno": {
+      "operaciones": 223,
+      "win_rate": 0.5112,
+      "pnl_total": 40.51,
+      "pnl_medio": 0.1816,
+      "ic95_inf": -0.011,
+      "ic95_sup": 0.3742,
+      "ganancia_media": 1.1157,
+      "perdida_media": -0.7953,
+      "profit_factor": 1.467,
+      "caida_maxima": 13.7,
+      "velas_medias": 4.6,
+      "salidas": {
+        "TP": 61,
+        "SL": 3,
+        "StopOut": 76,
+        "Tiempo": 83
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "mercados": [
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 232,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 68,
+        "diseno": {
+          "operaciones": 100,
+          "win_rate": 0.54,
+          "pnl_total": 8.63,
+          "pnl_medio": 0.0863,
+          "ic95_inf": -0.1055,
+          "ic95_sup": 0.2781,
+          "ganancia_media": 0.9712,
+          "perdida_media": -0.9525,
+          "profit_factor": 1.197,
+          "caida_maxima": 7.61,
+          "velas_medias": 6.3,
+          "salidas": {
+            "TP": 52,
+            "SL": 0,
+            "StopOut": 43,
+            "Tiempo": 5
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 21,
+          "win_rate": 0.2857,
+          "pnl_total": -9.0,
+          "pnl_medio": -0.4286,
+          "ic95_inf": -0.8246,
+          "ic95_sup": -0.0326,
+          "ganancia_media": 1.0,
+          "perdida_media": -1.0,
+          "profit_factor": 0.4,
+          "caida_maxima": 13.0,
+          "velas_medias": 7.3,
+          "salidas": {
+            "TP": 6,
+            "SL": 0,
+            "StopOut": 15,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 143,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 2,
+        "diseno": {
+          "operaciones": 84,
+          "win_rate": 0.4762,
+          "pnl_total": 6.81,
+          "pnl_medio": 0.081,
+          "ic95_inf": -0.1544,
+          "ic95_sup": 0.3165,
+          "ganancia_media": 1.0928,
+          "perdida_media": -0.8387,
+          "profit_factor": 1.184,
+          "caida_maxima": 5.95,
+          "velas_medias": 4.3,
+          "salidas": {
+            "TP": 10,
+            "SL": 0,
+            "StopOut": 33,
+            "Tiempo": 41
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 20,
+          "win_rate": 0.55,
+          "pnl_total": 4.22,
+          "pnl_medio": 0.2108,
+          "ic95_inf": -0.2845,
+          "ic95_sup": 0.7061,
+          "ganancia_media": 1.0513,
+          "perdida_media": -0.8166,
+          "profit_factor": 1.574,
+          "caida_maxima": 4.7,
+          "velas_medias": 4.1,
+          "salidas": {
+            "TP": 4,
+            "SL": 0,
+            "StopOut": 6,
+            "Tiempo": 10
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 186,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 12,
+        "diseno": {
+          "operaciones": 99,
+          "win_rate": 0.6465,
+          "pnl_total": 3.89,
+          "pnl_medio": 0.0393,
+          "ic95_inf": -0.0829,
+          "ic95_sup": 0.1615,
+          "ganancia_media": 0.4706,
+          "perdida_media": -0.7494,
+          "profit_factor": 1.148,
+          "caida_maxima": 4.0,
+          "velas_medias": 12.6,
+          "salidas": {
+            "TP": 58,
+            "SL": 0,
+            "StopOut": 18,
+            "Tiempo": 23
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 30,
+          "win_rate": 0.6333,
+          "pnl_total": 2.17,
+          "pnl_medio": 0.0724,
+          "ic95_inf": -0.1199,
+          "ic95_sup": 0.2647,
+          "ganancia_media": 0.4283,
+          "perdida_media": -0.5423,
+          "profit_factor": 1.364,
+          "caida_maxima": 2.0,
+          "velas_medias": 16.4,
+          "salidas": {
+            "TP": 13,
+            "SL": 0,
+            "StopOut": 4,
+            "Tiempo": 13
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 197,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 2,
+        "diseno": {
+          "operaciones": 136,
+          "win_rate": 0.6618,
+          "pnl_total": 4.46,
+          "pnl_medio": 0.0328,
+          "ic95_inf": -0.0784,
+          "ic95_sup": 0.144,
+          "ganancia_media": 0.4853,
+          "perdida_media": -0.8525,
+          "profit_factor": 1.114,
+          "caida_maxima": 7.72,
+          "velas_medias": 2.3,
+          "salidas": {
+            "TP": 85,
+            "SL": 0,
+            "StopOut": 36,
+            "Tiempo": 15
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 39,
+          "win_rate": 0.6923,
+          "pnl_total": 2.68,
+          "pnl_medio": 0.0687,
+          "ic95_inf": -0.1252,
+          "ic95_sup": 0.2626,
+          "ganancia_media": 0.4526,
+          "perdida_media": -0.795,
+          "profit_factor": 1.281,
+          "caida_maxima": 4.59,
+          "velas_medias": 2.5,
+          "salidas": {
+            "TP": 24,
+            "SL": 0,
+            "StopOut": 8,
+            "Tiempo": 7
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 179,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 92,
+          "win_rate": 0.5326,
+          "pnl_total": 11.94,
+          "pnl_medio": 0.1298,
+          "ic95_inf": -0.0535,
+          "ic95_sup": 0.3131,
+          "ganancia_media": 0.758,
+          "perdida_media": -0.586,
+          "profit_factor": 1.474,
+          "caida_maxima": 5.2,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 17,
+            "Tiempo": 73
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 44,
+          "win_rate": 0.5455,
+          "pnl_total": 11.47,
+          "pnl_medio": 0.2607,
+          "ic95_inf": -0.0263,
+          "ic95_sup": 0.5477,
+          "ganancia_media": 0.8622,
+          "perdida_media": -0.461,
+          "profit_factor": 2.244,
+          "caida_maxima": 2.96,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 5,
+            "Tiempo": 37
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 174,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 13,
+        "diseno": {
+          "operaciones": 101,
+          "win_rate": 0.3069,
+          "pnl_total": 7.5,
+          "pnl_medio": 0.0743,
+          "ic95_inf": -0.2479,
+          "ic95_sup": 0.3965,
+          "ganancia_media": 2.4173,
+          "perdida_media": -0.9633,
+          "profit_factor": 1.111,
+          "caida_maxima": 10.94,
+          "velas_medias": 2.4,
+          "salidas": {
+            "TP": 20,
+            "SL": 0,
+            "StopOut": 67,
+            "Tiempo": 14
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 27,
+          "win_rate": 0.2963,
+          "pnl_total": 2.9,
+          "pnl_medio": 0.1074,
+          "ic95_inf": -0.5645,
+          "ic95_sup": 0.7793,
+          "ganancia_media": 2.7374,
+          "perdida_media": -1.0,
+          "profit_factor": 1.153,
+          "caida_maxima": 5.0,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 7,
+            "SL": 0,
+            "StopOut": 19,
+            "Tiempo": 1
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 165,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 1,
+        "diseno": {
+          "operaciones": 117,
+          "win_rate": 0.2308,
+          "pnl_total": 30.59,
+          "pnl_medio": 0.2614,
+          "ic95_inf": -0.269,
+          "ic95_sup": 0.7918,
+          "ganancia_media": 4.4542,
+          "perdida_media": -0.9964,
+          "profit_factor": 1.341,
+          "caida_maxima": 23.11,
+          "velas_medias": 1.3,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 89,
+            "Tiempo": 28
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 26,
+          "win_rate": 0.4231,
+          "pnl_total": 28.46,
+          "pnl_medio": 1.0946,
+          "ic95_inf": -0.1266,
+          "ic95_sup": 2.3159,
+          "ganancia_media": 3.951,
+          "perdida_media": -1.0,
+          "profit_factor": 2.897,
+          "caida_maxima": 5.0,
+          "velas_medias": 1.4,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 15,
+            "Tiempo": 11
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "comision_pct": 0.00055,
+        "senales": 42,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 38,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 35,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 41,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 28,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 48,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 0.5,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 1,
+        "diseno": {
+          "operaciones": 31,
+          "win_rate": 0.5484,
+          "pnl_total": 1.32,
+          "pnl_medio": 0.0424,
+          "ic95_inf": -0.1054,
+          "ic95_sup": 0.1902,
+          "ganancia_media": 0.3824,
+          "perdida_media": -0.3704,
+          "profit_factor": 1.254,
+          "caida_maxima": 1.48,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 11,
+            "SL": 9,
+            "StopOut": 0,
+            "Tiempo": 11
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 12,
+          "win_rate": 0.6667,
+          "pnl_total": 1.61,
+          "pnl_medio": 0.1338,
+          "ic95_inf": -0.1059,
+          "ic95_sup": 0.3736,
+          "ganancia_media": 0.4023,
+          "perdida_media": -0.4032,
+          "profit_factor": 1.996,
+          "caida_maxima": 0.5,
+          "velas_medias": 1.4,
+          "salidas": {
+            "TP": 5,
+            "SL": 3,
+            "StopOut": 0,
+            "Tiempo": 4
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 43,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 4,
+        "diseno": {
+          "operaciones": 32,
+          "win_rate": 0.3438,
+          "pnl_total": -0.63,
+          "pnl_medio": -0.0198,
+          "ic95_inf": -0.492,
+          "ic95_sup": 0.4525,
+          "ganancia_media": 1.7805,
+          "perdida_media": -0.9628,
+          "profit_factor": 0.969,
+          "caida_maxima": 9.82,
+          "velas_medias": 1.3,
+          "salidas": {
+            "TP": 9,
+            "SL": 0,
+            "StopOut": 20,
+            "Tiempo": 3
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 6,
+          "win_rate": 0.3333,
+          "pnl_total": 0.0,
+          "pnl_medio": 0.0,
+          "ic95_inf": -1.2396,
+          "ic95_sup": 1.2396,
+          "ganancia_media": 2.0,
+          "perdida_media": -1.0,
+          "profit_factor": 1.0,
+          "caida_maxima": 2.0,
+          "velas_medias": 1.2,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 4,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 49,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 5,
+        "diseno": {
+          "operaciones": 33,
+          "win_rate": 0.0909,
+          "pnl_total": 0.51,
+          "pnl_medio": 0.0154,
+          "ic95_inf": -1.1415,
+          "ic95_sup": 1.1722,
+          "ganancia_media": 10.1692,
+          "perdida_media": -1.0,
+          "profit_factor": 1.017,
+          "caida_maxima": 19.0,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 30,
+            "Tiempo": 3
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 4,
+          "win_rate": 0.0,
+          "pnl_total": -4.0,
+          "pnl_medio": -1.0,
+          "ic95_inf": -1.0,
+          "ic95_sup": -1.0,
+          "ganancia_media": 0.0,
+          "perdida_media": -1.0,
+          "profit_factor": 0.0,
+          "caida_maxima": 4.0,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 4,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "comision_pct": 0.00055,
+        "senales": 15,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "estrategia": "IndicePullbackLong_v1",
+    "min_confianza": 50,
+    "corte_utc": "2026-04-29",
+    "stake": 1,
+    "total_diseno": {
+      "operaciones": 2051,
+      "win_rate": 0.4681,
+      "pnl_total": 92.04,
+      "pnl_medio": 0.0449,
+      "ic95_inf": -0.0107,
+      "ic95_sup": 0.1005,
+      "ganancia_media": 0.8354,
+      "perdida_media": -0.6507,
+      "profit_factor": 1.13,
+      "caida_maxima": 36.58,
+      "velas_medias": 2.5,
+      "salidas": {
+        "TP": 402,
+        "SL": 234,
+        "StopOut": 492,
+        "Tiempo": 923
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "total_ciego": {
+      "operaciones": 480,
+      "win_rate": 0.5271,
+      "pnl_total": 17.33,
+      "pnl_medio": 0.0361,
+      "ic95_inf": -0.0289,
+      "ic95_sup": 0.1012,
+      "ganancia_media": 0.5605,
+      "perdida_media": -0.5483,
+      "profit_factor": 1.139,
+      "caida_maxima": 11.09,
+      "velas_medias": 3.1,
+      "salidas": {
+        "TP": 58,
+        "SL": 31,
+        "StopOut": 77,
+        "Tiempo": 314
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "mercados_rentables_en_diseno": 12,
+    "total_ciego_solo_rentables_en_diseno": {
+      "operaciones": 420,
+      "win_rate": 0.5119,
+      "pnl_total": 10.57,
+      "pnl_medio": 0.0252,
+      "ic95_inf": -0.0465,
+      "ic95_sup": 0.0969,
+      "ganancia_media": 0.5817,
+      "perdida_media": -0.5586,
+      "profit_factor": 1.092,
+      "caida_maxima": 12.92,
+      "velas_medias": 3.2,
+      "salidas": {
+        "TP": 55,
+        "SL": 30,
+        "StopOut": 72,
+        "Tiempo": 263
+      },
+      "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+    },
+    "mercados": [
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 451,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 10,
+        "diseno": {
+          "operaciones": 258,
+          "win_rate": 0.5349,
+          "pnl_total": 5.83,
+          "pnl_medio": 0.0226,
+          "ic95_inf": -0.0319,
+          "ic95_sup": 0.0771,
+          "ganancia_media": 0.3605,
+          "perdida_media": -0.366,
+          "profit_factor": 1.133,
+          "caida_maxima": 6.71,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 78,
+            "SL": 0,
+            "StopOut": 19,
+            "Tiempo": 161
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 70,
+          "win_rate": 0.4286,
+          "pnl_total": -4.22,
+          "pnl_medio": -0.0603,
+          "ic95_inf": -0.1319,
+          "ic95_sup": 0.0112,
+          "ganancia_media": 0.1935,
+          "perdida_media": -0.2507,
+          "profit_factor": 0.579,
+          "caida_maxima": 5.05,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 5,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 63
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 394,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 1.0,
+          "stop_loss": 0.5,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 18,
+        "diseno": {
+          "operaciones": 200,
+          "win_rate": 0.35,
+          "pnl_total": 5.0,
+          "pnl_medio": 0.025,
+          "ic95_inf": -0.0744,
+          "ic95_sup": 0.1244,
+          "ganancia_media": 1.0,
+          "perdida_media": -0.5,
+          "profit_factor": 1.077,
+          "caida_maxima": 6.5,
+          "velas_medias": 3.1,
+          "salidas": {
+            "TP": 70,
+            "SL": 130,
+            "StopOut": 0,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 26,
+          "win_rate": 0.2308,
+          "pnl_total": -4.87,
+          "pnl_medio": -0.1871,
+          "ic95_inf": -0.4191,
+          "ic95_sup": 0.0449,
+          "ganancia_media": 0.8558,
+          "perdida_media": -0.5,
+          "profit_factor": 0.513,
+          "caida_maxima": 7.37,
+          "velas_medias": 7.3,
+          "salidas": {
+            "TP": 5,
+            "SL": 20,
+            "StopOut": 0,
+            "Tiempo": 1
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 396,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 1.0,
+          "stop_loss": 0.5,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 3,
+        "diseno": {
+          "operaciones": 232,
+          "win_rate": 0.4784,
+          "pnl_total": 6.59,
+          "pnl_medio": 0.0284,
+          "ic95_inf": -0.0346,
+          "ic95_sup": 0.0915,
+          "ganancia_media": 0.4498,
+          "perdida_media": -0.3581,
+          "profit_factor": 1.152,
+          "caida_maxima": 7.79,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 24,
+            "SL": 72,
+            "StopOut": 0,
+            "Tiempo": 136
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 65,
+          "win_rate": 0.6308,
+          "pnl_total": 5.48,
+          "pnl_medio": 0.0843,
+          "ic95_inf": -0.0088,
+          "ic95_sup": 0.1773,
+          "ganancia_media": 0.3067,
+          "perdida_media": -0.2957,
+          "profit_factor": 1.772,
+          "caida_maxima": 1.52,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 2,
+            "SL": 10,
+            "StopOut": 0,
+            "Tiempo": 53
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 373,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 33,
+        "diseno": {
+          "operaciones": 131,
+          "win_rate": 0.5267,
+          "pnl_total": 6.91,
+          "pnl_medio": 0.0528,
+          "ic95_inf": -0.1188,
+          "ic95_sup": 0.2243,
+          "ganancia_media": 0.9987,
+          "perdida_media": -1.0,
+          "profit_factor": 1.112,
+          "caida_maxima": 11.0,
+          "velas_medias": 5.5,
+          "salidas": {
+            "TP": 68,
+            "SL": 0,
+            "StopOut": 62,
+            "Tiempo": 1
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 33,
+          "win_rate": 0.6061,
+          "pnl_total": 6.72,
+          "pnl_medio": 0.2037,
+          "ic95_inf": -0.1267,
+          "ic95_sup": 0.534,
+          "ganancia_media": 0.9634,
+          "perdida_media": -0.9651,
+          "profit_factor": 1.536,
+          "caida_maxima": 3.0,
+          "velas_medias": 7.1,
+          "salidas": {
+            "TP": 19,
+            "SL": 0,
+            "StopOut": 12,
+            "Tiempo": 2
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 440,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 15,
+        "diseno": {
+          "operaciones": 168,
+          "win_rate": 0.4821,
+          "pnl_total": 20.36,
+          "pnl_medio": 0.1212,
+          "ic95_inf": -0.0422,
+          "ic95_sup": 0.2846,
+          "ganancia_media": 1.1031,
+          "perdida_media": -0.793,
+          "profit_factor": 1.295,
+          "caida_maxima": 5.74,
+          "velas_medias": 4.6,
+          "salidas": {
+            "TP": 20,
+            "SL": 0,
+            "StopOut": 61,
+            "Tiempo": 87
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 51,
+          "win_rate": 0.6078,
+          "pnl_total": 6.87,
+          "pnl_medio": 0.1346,
+          "ic95_inf": -0.0815,
+          "ic95_sup": 0.3508,
+          "ganancia_media": 0.6481,
+          "perdida_media": -0.6612,
+          "profit_factor": 1.519,
+          "caida_maxima": 4.89,
+          "velas_medias": 5.1,
+          "salidas": {
+            "TP": 1,
+            "SL": 0,
+            "StopOut": 10,
+            "Tiempo": 40
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 421,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 29,
+        "diseno": {
+          "operaciones": 263,
+          "win_rate": 0.4525,
+          "pnl_total": 15.68,
+          "pnl_medio": 0.0596,
+          "ic95_inf": -0.0891,
+          "ic95_sup": 0.2083,
+          "ganancia_media": 1.1964,
+          "perdida_media": -0.8798,
+          "profit_factor": 1.124,
+          "caida_maxima": 27.58,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 17,
+            "SL": 0,
+            "StopOut": 119,
+            "Tiempo": 127
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 45,
+          "win_rate": 0.4444,
+          "pnl_total": 10.5,
+          "pnl_medio": 0.2334,
+          "ic95_inf": -0.191,
+          "ic95_sup": 0.6577,
+          "ganancia_media": 1.6749,
+          "perdida_media": -0.9198,
+          "profit_factor": 1.457,
+          "caida_maxima": 4.72,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 5,
+            "SL": 0,
+            "StopOut": 21,
+            "Tiempo": 19
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 382,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 30,
+        "diseno": {
+          "operaciones": 225,
+          "win_rate": 0.4933,
+          "pnl_total": -1.51,
+          "pnl_medio": -0.0067,
+          "ic95_inf": -0.1179,
+          "ic95_sup": 0.1045,
+          "ganancia_media": 0.6044,
+          "perdida_media": -0.6017,
+          "profit_factor": 0.978,
+          "caida_maxima": 16.55,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 53,
+            "Tiempo": 172
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 44,
+          "win_rate": 0.5909,
+          "pnl_total": 6.67,
+          "pnl_medio": 0.1516,
+          "ic95_inf": -0.0156,
+          "ic95_sup": 0.3189,
+          "ganancia_media": 0.5315,
+          "perdida_media": -0.3971,
+          "profit_factor": 1.934,
+          "caida_maxima": 1.54,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 3,
+            "Tiempo": 41
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "comision_pct": 0.00055,
+        "senales": 261,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 40,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 132,
+          "win_rate": 0.4621,
+          "pnl_total": 2.96,
+          "pnl_medio": 0.0224,
+          "ic95_inf": -0.0817,
+          "ic95_sup": 0.1266,
+          "ganancia_media": 0.5665,
+          "perdida_media": -0.445,
+          "profit_factor": 1.094,
+          "caida_maxima": 6.7,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 20,
+            "SL": 0,
+            "StopOut": 9,
+            "Tiempo": 103
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 69,
+          "win_rate": 0.4493,
+          "pnl_total": -6.24,
+          "pnl_medio": -0.0905,
+          "ic95_inf": -0.227,
+          "ic95_sup": 0.046,
+          "ganancia_media": 0.4369,
+          "perdida_media": -0.5207,
+          "profit_factor": 0.684,
+          "caida_maxima": 8.08,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 4,
+            "SL": 0,
+            "StopOut": 9,
+            "Tiempo": 56
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 123,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 7,
+        "diseno": {
+          "operaciones": 72,
+          "win_rate": 0.5139,
+          "pnl_total": 3.7,
+          "pnl_medio": 0.0514,
+          "ic95_inf": -0.1706,
+          "ic95_sup": 0.2734,
+          "ganancia_media": 0.7695,
+          "perdida_media": -0.7078,
+          "profit_factor": 1.149,
+          "caida_maxima": 5.38,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 18,
+            "Tiempo": 52
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 12,
+          "win_rate": 0.5833,
+          "pnl_total": -0.33,
+          "pnl_medio": -0.0272,
+          "ic95_inf": -0.3099,
+          "ic95_sup": 0.2554,
+          "ganancia_media": 0.2592,
+          "perdida_media": -0.4283,
+          "profit_factor": 0.847,
+          "caida_maxima": 1.13,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 10
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 132,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 5,
+        "diseno": {
+          "operaciones": 78,
+          "win_rate": 0.4872,
+          "pnl_total": 10.82,
+          "pnl_medio": 0.1387,
+          "ic95_inf": -0.1785,
+          "ic95_sup": 0.456,
+          "ganancia_media": 1.2328,
+          "perdida_media": -0.9006,
+          "profit_factor": 1.3,
+          "caida_maxima": 12.63,
+          "velas_medias": 1.7,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 34,
+            "Tiempo": 44
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 22,
+          "win_rate": 0.6818,
+          "pnl_total": 2.66,
+          "pnl_medio": 0.1211,
+          "ic95_inf": -0.1312,
+          "ic95_sup": 0.3734,
+          "ganancia_media": 0.4233,
+          "perdida_media": -0.5265,
+          "profit_factor": 1.723,
+          "caida_maxima": 2.39,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 3,
+            "Tiempo": 19
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 122,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 13,
+        "diseno": {
+          "operaciones": 60,
+          "win_rate": 0.7167,
+          "pnl_total": 4.5,
+          "pnl_medio": 0.075,
+          "ic95_inf": -0.0975,
+          "ic95_sup": 0.2475,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.265,
+          "caida_maxima": 3.0,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 43,
+            "SL": 0,
+            "StopOut": 17,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 12,
+          "win_rate": 0.5833,
+          "pnl_total": -1.5,
+          "pnl_medio": -0.125,
+          "ic95_inf": -0.562,
+          "ic95_sup": 0.312,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 0.7,
+          "caida_maxima": 3.0,
+          "velas_medias": 2.2,
+          "salidas": {
+            "TP": 7,
+            "SL": 0,
+            "StopOut": 5,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 132,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 19,
+        "diseno": {
+          "operaciones": 39,
+          "win_rate": 0.7436,
+          "pnl_total": 4.5,
+          "pnl_medio": 0.1154,
+          "ic95_inf": -0.0929,
+          "ic95_sup": 0.3236,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.45,
+          "caida_maxima": 1.5,
+          "velas_medias": 4.7,
+          "salidas": {
+            "TP": 29,
+            "SL": 0,
+            "StopOut": 10,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 10,
+          "win_rate": 0.7,
+          "pnl_total": 0.5,
+          "pnl_medio": 0.05,
+          "ic95_inf": -0.3991,
+          "ic95_sup": 0.4991,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.167,
+          "caida_maxima": 2.0,
+          "velas_medias": 7.4,
+          "salidas": {
+            "TP": 7,
+            "SL": 0,
+            "StopOut": 3,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 113,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 17,
+        "diseno": {
+          "operaciones": 31,
+          "win_rate": 0.4194,
+          "pnl_total": -2.26,
+          "pnl_medio": -0.0729,
+          "ic95_inf": -0.2435,
+          "ic95_sup": 0.0978,
+          "ganancia_media": 0.3616,
+          "perdida_media": -0.3866,
+          "profit_factor": 0.675,
+          "caida_maxima": 5.0,
+          "velas_medias": 5.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 29
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 12,
+          "win_rate": 0.75,
+          "pnl_total": -0.91,
+          "pnl_medio": -0.0759,
+          "ic95_inf": -0.3355,
+          "ic95_sup": 0.1837,
+          "ganancia_media": 0.1556,
+          "perdida_media": -0.7702,
+          "profit_factor": 0.606,
+          "caida_maxima": 2.0,
+          "velas_medias": 5.8,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 10
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 106,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 0.5,
+          "max_velas": 6
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 6,
+        "diseno": {
+          "operaciones": 66,
+          "win_rate": 0.4848,
+          "pnl_total": -1.38,
+          "pnl_medio": -0.0209,
+          "ic95_inf": -0.1423,
+          "ic95_sup": 0.1004,
+          "ganancia_media": 0.489,
+          "perdida_media": -0.5008,
+          "profit_factor": 0.919,
+          "caida_maxima": 4.1,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 31,
+            "SL": 32,
+            "StopOut": 0,
+            "Tiempo": 3
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 4,
+          "win_rate": 0.75,
+          "pnl_total": 1.0,
+          "pnl_medio": 0.25,
+          "ic95_inf": -0.24,
+          "ic95_sup": 0.74,
+          "ganancia_media": 0.5,
+          "perdida_media": -0.5,
+          "profit_factor": 3.0,
+          "caida_maxima": 0.5,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 3,
+            "SL": 1,
+            "StopOut": 0,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 125,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 12,
+        "diseno": {
+          "operaciones": 96,
+          "win_rate": 0.0833,
+          "pnl_total": 10.32,
+          "pnl_medio": 0.1075,
+          "ic95_inf": -0.7983,
+          "ic95_sup": 1.0134,
+          "ganancia_media": 12.2906,
+          "perdida_media": -1.0,
+          "profit_factor": 1.117,
+          "caida_maxima": 36.58,
+          "velas_medias": 1.7,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 88,
+            "Tiempo": 8
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 5,
+          "win_rate": 0.0,
+          "pnl_total": -5.0,
+          "pnl_medio": -1.0,
+          "ic95_inf": -1.0,
+          "ic95_sup": -1.0,
+          "ganancia_media": 0.0,
+          "perdida_media": -1.0,
+          "profit_factor": 0.0,
+          "caida_maxima": 5.0,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 5,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "comision_pct": 0.00055,
+        "senales": 53,
+        "combinaciones_probadas": 63,
+        "error": "Ninguna combinacion llega a 30 operaciones en diseno."
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "estrategia": "CCIReversal_v2",
+    "min_confianza": 55,
+    "corte_utc": "2026-04-29",
+    "stake": 1,
+    "total_diseno": {
+      "operaciones": 2393,
+      "win_rate": 0.4079,
+      "pnl_total": 242.76,
+      "pnl_medio": 0.1014,
+      "ic95_inf": 0.0201,
+      "ic95_sup": 0.1828,
+      "ganancia_media": 1.3983,
+      "perdida_media": -0.7918,
+      "profit_factor": 1.216,
+      "caida_maxima": 43.59,
+      "velas_medias": 5.9,
+      "salidas": {
+        "TP": 374,
+        "SL": 51,
+        "StopOut": 989,
+        "Tiempo": 979
+      },
+      "veredicto": "VENTAJA ESTADISTICA"
+    },
+    "total_ciego": {
+      "operaciones": 720,
+      "win_rate": 0.3569,
+      "pnl_total": -13.93,
+      "pnl_medio": -0.0193,
+      "ic95_inf": -0.1793,
+      "ic95_sup": 0.1406,
+      "ganancia_media": 1.3945,
+      "perdida_media": -0.8041,
+      "profit_factor": 0.963,
+      "caida_maxima": 66.6,
+      "velas_medias": 6.3,
+      "salidas": {
+        "TP": 63,
+        "SL": 11,
+        "StopOut": 337,
+        "Tiempo": 309
+      },
+      "veredicto": "SIN VENTAJA"
+    },
+    "mercados_rentables_en_diseno": 13,
+    "total_ciego_solo_rentables_en_diseno": {
+      "operaciones": 638,
+      "win_rate": 0.3417,
+      "pnl_total": -11.43,
+      "pnl_medio": -0.0179,
+      "ic95_inf": -0.1982,
+      "ic95_sup": 0.1623,
+      "ganancia_media": 1.5947,
+      "perdida_media": -0.8549,
+      "profit_factor": 0.968,
+      "caida_maxima": 66.58,
+      "velas_medias": 6.4,
+      "salidas": {
+        "TP": 49,
+        "SL": 0,
+        "StopOut": 336,
+        "Tiempo": 253
+      },
+      "veredicto": "SIN VENTAJA"
+    },
+    "mercados": [
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 680,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 118,
+        "diseno": {
+          "operaciones": 213,
+          "win_rate": 0.6197,
+          "pnl_total": 13.44,
+          "pnl_medio": 0.0631,
+          "ic95_inf": -0.0121,
+          "ic95_sup": 0.1383,
+          "ganancia_media": 0.4563,
+          "perdida_media": -0.5776,
+          "profit_factor": 1.287,
+          "caida_maxima": 6.41,
+          "velas_medias": 13.5,
+          "salidas": {
+            "TP": 114,
+            "SL": 0,
+            "StopOut": 31,
+            "Tiempo": 68
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 54,
+          "win_rate": 0.5741,
+          "pnl_total": 0.96,
+          "pnl_medio": 0.0178,
+          "ic95_inf": -0.1278,
+          "ic95_sup": 0.1635,
+          "ganancia_media": 0.4204,
+          "perdida_media": -0.5247,
+          "profit_factor": 1.08,
+          "caida_maxima": 3.15,
+          "velas_medias": 15.9,
+          "salidas": {
+            "TP": 24,
+            "SL": 0,
+            "StopOut": 8,
+            "Tiempo": 22
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 551,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 92,
+        "diseno": {
+          "operaciones": 157,
+          "win_rate": 0.6306,
+          "pnl_total": 10.45,
+          "pnl_medio": 0.0666,
+          "ic95_inf": -0.0089,
+          "ic95_sup": 0.1421,
+          "ganancia_media": 0.3868,
+          "perdida_media": -0.48,
+          "profit_factor": 1.375,
+          "caida_maxima": 3.88,
+          "velas_medias": 18.2,
+          "salidas": {
+            "TP": 63,
+            "SL": 0,
+            "StopOut": 12,
+            "Tiempo": 82
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 47,
+          "win_rate": 0.5745,
+          "pnl_total": -2.25,
+          "pnl_medio": -0.0479,
+          "ic95_inf": -0.1761,
+          "ic95_sup": 0.0804,
+          "ganancia_media": 0.2524,
+          "perdida_media": -0.4532,
+          "profit_factor": 0.752,
+          "caida_maxima": 3.19,
+          "velas_medias": 20.9,
+          "salidas": {
+            "TP": 7,
+            "SL": 0,
+            "StopOut": 4,
+            "Tiempo": 36
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 606,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 8,
+        "diseno": {
+          "operaciones": 294,
+          "win_rate": 0.4762,
+          "pnl_total": 22.54,
+          "pnl_medio": 0.0767,
+          "ic95_inf": -0.0448,
+          "ic95_sup": 0.1981,
+          "ganancia_media": 1.0383,
+          "perdida_media": -0.7975,
+          "profit_factor": 1.184,
+          "caida_maxima": 12.34,
+          "velas_medias": 4.5,
+          "salidas": {
+            "TP": 37,
+            "SL": 0,
+            "StopOut": 105,
+            "Tiempo": 152
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 80,
+          "win_rate": 0.5625,
+          "pnl_total": 11.88,
+          "pnl_medio": 0.1484,
+          "ic95_inf": -0.0372,
+          "ic95_sup": 0.3341,
+          "ganancia_media": 0.7175,
+          "perdida_media": -0.5832,
+          "profit_factor": 1.582,
+          "caida_maxima": 3.13,
+          "velas_medias": 5.1,
+          "salidas": {
+            "TP": 6,
+            "SL": 0,
+            "StopOut": 16,
+            "Tiempo": 58
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 591,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 23,
+        "diseno": {
+          "operaciones": 208,
+          "win_rate": 0.4856,
+          "pnl_total": -2.03,
+          "pnl_medio": -0.0098,
+          "ic95_inf": -0.0469,
+          "ic95_sup": 0.0274,
+          "ganancia_media": 0.2034,
+          "perdida_media": -0.211,
+          "profit_factor": 0.91,
+          "caida_maxima": 6.24,
+          "velas_medias": 5.8,
+          "salidas": {
+            "TP": 16,
+            "SL": 0,
+            "StopOut": 1,
+            "Tiempo": 191
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 55,
+          "win_rate": 0.4545,
+          "pnl_total": -2.47,
+          "pnl_medio": -0.0449,
+          "ic95_inf": -0.1199,
+          "ic95_sup": 0.0301,
+          "ganancia_media": 0.188,
+          "perdida_media": -0.239,
+          "profit_factor": 0.656,
+          "caida_maxima": 3.79,
+          "velas_medias": 5.9,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 1,
+            "Tiempo": 52
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 519,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 77,
+        "diseno": {
+          "operaciones": 157,
+          "win_rate": 0.5669,
+          "pnl_total": 2.05,
+          "pnl_medio": 0.013,
+          "ic95_inf": -0.0693,
+          "ic95_sup": 0.0954,
+          "ganancia_media": 0.4115,
+          "perdida_media": -0.5085,
+          "profit_factor": 1.059,
+          "caida_maxima": 6.16,
+          "velas_medias": 17.2,
+          "salidas": {
+            "TP": 65,
+            "SL": 0,
+            "StopOut": 18,
+            "Tiempo": 74
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 50,
+          "win_rate": 0.52,
+          "pnl_total": -4.24,
+          "pnl_medio": -0.0848,
+          "ic95_inf": -0.2229,
+          "ic95_sup": 0.0533,
+          "ganancia_media": 0.2814,
+          "perdida_media": -0.4816,
+          "profit_factor": 0.633,
+          "caida_maxima": 6.93,
+          "velas_medias": 19.6,
+          "salidas": {
+            "TP": 11,
+            "SL": 0,
+            "StopOut": 8,
+            "Tiempo": 31
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 503,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 18,
+        "diseno": {
+          "operaciones": 327,
+          "win_rate": 0.3486,
+          "pnl_total": 26.89,
+          "pnl_medio": 0.0822,
+          "ic95_inf": -0.1204,
+          "ic95_sup": 0.2848,
+          "ganancia_media": 1.9903,
+          "perdida_media": -0.939,
+          "profit_factor": 1.134,
+          "caida_maxima": 41.13,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 195,
+            "Tiempo": 132
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 96,
+          "win_rate": 0.3438,
+          "pnl_total": -13.09,
+          "pnl_medio": -0.1363,
+          "ic95_inf": -0.3772,
+          "ic95_sup": 0.1046,
+          "ganancia_media": 1.358,
+          "perdida_media": -0.919,
+          "profit_factor": 0.774,
+          "caida_maxima": 16.48,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 55,
+            "Tiempo": 41
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 559,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 13,
+        "diseno": {
+          "operaciones": 405,
+          "win_rate": 0.2642,
+          "pnl_total": 27.63,
+          "pnl_medio": 0.0682,
+          "ic95_inf": -0.1566,
+          "ic95_sup": 0.293,
+          "ganancia_media": 2.9657,
+          "perdida_media": -0.9722,
+          "profit_factor": 1.095,
+          "caida_maxima": 26.31,
+          "velas_medias": 1.4,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 286,
+            "Tiempo": 119
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 100,
+          "win_rate": 0.25,
+          "pnl_total": 19.3,
+          "pnl_medio": 0.193,
+          "ic95_inf": -0.2758,
+          "ic95_sup": 0.6618,
+          "ganancia_media": 3.772,
+          "perdida_media": -1.0,
+          "profit_factor": 1.257,
+          "caida_maxima": 15.07,
+          "velas_medias": 1.3,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 75,
+            "Tiempo": 25
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "comision_pct": 0.00055,
+        "senales": 301,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 199,
+          "win_rate": 0.0955,
+          "pnl_total": 50.38,
+          "pnl_medio": 0.2532,
+          "ic95_inf": -0.3447,
+          "ic95_sup": 0.8511,
+          "ganancia_media": 12.1255,
+          "perdida_media": -1.0,
+          "profit_factor": 1.28,
+          "caida_maxima": 40.0,
+          "velas_medias": 4.6,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 180,
+            "Tiempo": 19
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 86,
+          "win_rate": 0.0698,
+          "pnl_total": 12.03,
+          "pnl_medio": 0.1399,
+          "ic95_inf": -0.914,
+          "ic95_sup": 1.1938,
+          "ganancia_media": 15.3386,
+          "perdida_media": -1.0,
+          "profit_factor": 1.15,
+          "caida_maxima": 25.3,
+          "velas_medias": 3.8,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 80,
+            "Tiempo": 6
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 137,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 33,
+        "diseno": {
+          "operaciones": 48,
+          "win_rate": 0.5,
+          "pnl_total": 9.53,
+          "pnl_medio": 0.1985,
+          "ic95_inf": -0.0495,
+          "ic95_sup": 0.4465,
+          "ganancia_media": 0.8752,
+          "perdida_media": -0.4782,
+          "profit_factor": 1.83,
+          "caida_maxima": 2.99,
+          "velas_medias": 5.5,
+          "salidas": {
+            "TP": 5,
+            "SL": 0,
+            "StopOut": 8,
+            "Tiempo": 35
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 13,
+          "win_rate": 0.5385,
+          "pnl_total": 0.43,
+          "pnl_medio": 0.0329,
+          "ic95_inf": -0.2892,
+          "ic95_sup": 0.3549,
+          "ganancia_media": 0.4909,
+          "perdida_media": -0.5015,
+          "profit_factor": 1.142,
+          "caida_maxima": 2.25,
+          "velas_medias": 5.8,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 1,
+            "Tiempo": 12
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 113,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 0.5,
+          "max_velas": 24
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 23,
+        "diseno": {
+          "operaciones": 40,
+          "win_rate": 0.5,
+          "pnl_total": 0.0,
+          "pnl_medio": 0.0,
+          "ic95_inf": -0.1569,
+          "ic95_sup": 0.1569,
+          "ganancia_media": 0.5,
+          "perdida_media": -0.5,
+          "profit_factor": 1.0,
+          "caida_maxima": 2.5,
+          "velas_medias": 4.0,
+          "salidas": {
+            "TP": 20,
+            "SL": 20,
+            "StopOut": 0,
+            "Tiempo": 0
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 14,
+          "win_rate": 0.5,
+          "pnl_total": 0.0,
+          "pnl_medio": 0.0,
+          "ic95_inf": -0.2718,
+          "ic95_sup": 0.2718,
+          "ganancia_media": 0.5,
+          "perdida_media": -0.5,
+          "profit_factor": 1.0,
+          "caida_maxima": 2.5,
+          "velas_medias": 5.0,
+          "salidas": {
+            "TP": 7,
+            "SL": 7,
+            "StopOut": 0,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 105,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 33,
+        "diseno": {
+          "operaciones": 32,
+          "win_rate": 0.5625,
+          "pnl_total": 4.0,
+          "pnl_medio": 0.125,
+          "ic95_inf": -0.2243,
+          "ic95_sup": 0.4743,
+          "ganancia_media": 1.0,
+          "perdida_media": -1.0,
+          "profit_factor": 1.286,
+          "caida_maxima": 4.0,
+          "velas_medias": 6.2,
+          "salidas": {
+            "TP": 18,
+            "SL": 0,
+            "StopOut": 14,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 7,
+          "win_rate": 0.1429,
+          "pnl_total": -5.0,
+          "pnl_medio": -0.7143,
+          "ic95_inf": -1.2743,
+          "ic95_sup": -0.1543,
+          "ganancia_media": 1.0,
+          "perdida_media": -1.0,
+          "profit_factor": 0.167,
+          "caida_maxima": 5.0,
+          "velas_medias": 7.4,
+          "salidas": {
+            "TP": 1,
+            "SL": 0,
+            "StopOut": 6,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 131,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 0.5,
+          "max_velas": 2
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 7,
+        "diseno": {
+          "operaciones": 83,
+          "win_rate": 0.5181,
+          "pnl_total": -1.2,
+          "pnl_medio": -0.0145,
+          "ic95_inf": -0.1083,
+          "ic95_sup": 0.0793,
+          "ganancia_media": 0.3745,
+          "perdida_media": -0.4327,
+          "profit_factor": 0.931,
+          "caida_maxima": 4.3,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 28,
+            "SL": 31,
+            "StopOut": 0,
+            "Tiempo": 24
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 13,
+          "win_rate": 0.5385,
+          "pnl_total": -0.03,
+          "pnl_medio": -0.0021,
+          "ic95_inf": -0.2466,
+          "ic95_sup": 0.2424,
+          "ganancia_media": 0.3635,
+          "perdida_media": -0.4287,
+          "profit_factor": 0.989,
+          "caida_maxima": 0.87,
+          "velas_medias": 1.7,
+          "salidas": {
+            "TP": 5,
+            "SL": 4,
+            "StopOut": 0,
+            "Tiempo": 4
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 113,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 4,
+        "diseno": {
+          "operaciones": 56,
+          "win_rate": 0.5893,
+          "pnl_total": 0.71,
+          "pnl_medio": 0.0127,
+          "ic95_inf": -0.0862,
+          "ic95_sup": 0.1117,
+          "ganancia_media": 0.259,
+          "perdida_media": -0.3406,
+          "profit_factor": 1.091,
+          "caida_maxima": 3.07,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 8,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 46
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 15,
+          "win_rate": 0.5333,
+          "pnl_total": -1.37,
+          "pnl_medio": -0.0914,
+          "ic95_inf": -0.3135,
+          "ic95_sup": 0.1307,
+          "ganancia_media": 0.2117,
+          "perdida_media": -0.4378,
+          "profit_factor": 0.553,
+          "caida_maxima": 2.27,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 2,
+            "Tiempo": 13
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 123,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 13,
+        "diseno": {
+          "operaciones": 70,
+          "win_rate": 0.2286,
+          "pnl_total": 65.39,
+          "pnl_medio": 0.9341,
+          "ic95_inf": -0.1447,
+          "ic95_sup": 2.013,
+          "ganancia_media": 7.4618,
+          "perdida_media": -1.0,
+          "profit_factor": 2.211,
+          "caida_maxima": 16.6,
+          "velas_medias": 2.5,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 54,
+            "Tiempo": 16
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 29,
+          "win_rate": 0.1034,
+          "pnl_total": -5.24,
+          "pnl_medio": -0.1809,
+          "ic95_inf": -1.2238,
+          "ic95_sup": 0.8621,
+          "ganancia_media": 6.9184,
+          "perdida_media": -1.0,
+          "profit_factor": 0.798,
+          "caida_maxima": 12.0,
+          "velas_medias": 1.7,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 26,
+            "Tiempo": 3
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 113,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 8,
+        "diseno": {
+          "operaciones": 72,
+          "win_rate": 0.1667,
+          "pnl_total": 10.47,
+          "pnl_medio": 0.1454,
+          "ic95_inf": -0.5578,
+          "ic95_sup": 0.8486,
+          "ganancia_media": 5.8723,
+          "perdida_media": -1.0,
+          "profit_factor": 1.174,
+          "caida_maxima": 14.29,
+          "velas_medias": 1.3,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 60,
+            "Tiempo": 12
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 28,
+          "win_rate": 0.0714,
+          "pnl_total": -8.53,
+          "pnl_medio": -0.3045,
+          "ic95_inf": -1.2508,
+          "ic95_sup": 0.6418,
+          "ganancia_media": 8.7371,
+          "perdida_media": -1.0,
+          "profit_factor": 0.672,
+          "caida_maxima": 13.0,
+          "velas_medias": 1.1,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 26,
+            "Tiempo": 2
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "comision_pct": 0.00055,
+        "senales": 67,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 32,
+          "win_rate": 0.2812,
+          "pnl_total": 2.52,
+          "pnl_medio": 0.0787,
+          "ic95_inf": -0.6011,
+          "ic95_sup": 0.7585,
+          "ganancia_media": 2.8354,
+          "perdida_media": -1.0,
+          "profit_factor": 1.11,
+          "caida_maxima": 8.16,
+          "velas_medias": 1.4,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 23,
+            "Tiempo": 9
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 33,
+          "win_rate": 0.1212,
+          "pnl_total": -16.31,
+          "pnl_medio": -0.4943,
+          "ic95_inf": -1.05,
+          "ic95_sup": 0.0614,
+          "ganancia_media": 3.1719,
+          "perdida_media": -1.0,
+          "profit_factor": 0.438,
+          "caida_maxima": 21.57,
+          "velas_medias": 1.2,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 29,
+            "Tiempo": 4
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "estrategia": "EmaRsiCruce_v4",
+    "min_confianza": 55,
+    "corte_utc": "2026-04-29",
+    "stake": 1,
+    "total_diseno": {
+      "operaciones": 3519,
+      "win_rate": 0.4444,
+      "pnl_total": 227.16,
+      "pnl_medio": 0.0646,
+      "ic95_inf": 0.0063,
+      "ic95_sup": 0.1229,
+      "ganancia_media": 1.1769,
+      "perdida_media": -0.8253,
+      "profit_factor": 1.141,
+      "caida_maxima": 68.36,
+      "velas_medias": 3.3,
+      "salidas": {
+        "TP": 540,
+        "SL": 0,
+        "StopOut": 1455,
+        "Tiempo": 1524
+      },
+      "veredicto": "VENTAJA ESTADISTICA"
+    },
+    "total_ciego": {
+      "operaciones": 964,
+      "win_rate": 0.4149,
+      "pnl_total": -47.34,
+      "pnl_medio": -0.0491,
+      "ic95_inf": -0.1369,
+      "ic95_sup": 0.0387,
+      "ganancia_media": 1.0182,
+      "perdida_media": -0.806,
+      "profit_factor": 0.896,
+      "caida_maxima": 80.93,
+      "velas_medias": 3.6,
+      "salidas": {
+        "TP": 103,
+        "SL": 0,
+        "StopOut": 402,
+        "Tiempo": 459
+      },
+      "veredicto": "SIN VENTAJA"
+    },
+    "mercados_rentables_en_diseno": 13,
+    "total_ciego_solo_rentables_en_diseno": {
+      "operaciones": 844,
+      "win_rate": 0.4028,
+      "pnl_total": -61.84,
+      "pnl_medio": -0.0733,
+      "ic95_inf": -0.1683,
+      "ic95_sup": 0.0217,
+      "ganancia_media": 0.9812,
+      "perdida_media": -0.7847,
+      "profit_factor": 0.844,
+      "caida_maxima": 90.54,
+      "velas_medias": 3.5,
+      "salidas": {
+        "TP": 60,
+        "SL": 0,
+        "StopOut": 344,
+        "Tiempo": 440
+      },
+      "veredicto": "SIN VENTAJA"
+    },
+    "mercados": [
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 891,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 83,
+        "diseno": {
+          "operaciones": 339,
+          "win_rate": 0.6283,
+          "pnl_total": 11.97,
+          "pnl_medio": 0.0353,
+          "ic95_inf": -0.0298,
+          "ic95_sup": 0.1004,
+          "ganancia_media": 0.4642,
+          "perdida_media": -0.6897,
+          "profit_factor": 1.138,
+          "caida_maxima": 8.27,
+          "velas_medias": 3.5,
+          "salidas": {
+            "TP": 191,
+            "SL": 0,
+            "StopOut": 71,
+            "Tiempo": 77
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 82,
+          "win_rate": 0.4878,
+          "pnl_total": -7.59,
+          "pnl_medio": -0.0925,
+          "ic95_inf": -0.2138,
+          "ic95_sup": 0.0287,
+          "ganancia_media": 0.3884,
+          "perdida_media": -0.5506,
+          "profit_factor": 0.672,
+          "caida_maxima": 7.59,
+          "velas_medias": 4.7,
+          "salidas": {
+            "TP": 25,
+            "SL": 0,
+            "StopOut": 16,
+            "Tiempo": 41
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 749,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 7,
+        "diseno": {
+          "operaciones": 441,
+          "win_rate": 0.4989,
+          "pnl_total": 9.72,
+          "pnl_medio": 0.022,
+          "ic95_inf": -0.0563,
+          "ic95_sup": 0.1004,
+          "ganancia_media": 0.6292,
+          "perdida_media": -0.5824,
+          "profit_factor": 1.075,
+          "caida_maxima": 13.11,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 85,
+            "Tiempo": 356
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 101,
+          "win_rate": 0.4455,
+          "pnl_total": -4.9,
+          "pnl_medio": -0.0485,
+          "ic95_inf": -0.1361,
+          "ic95_sup": 0.039,
+          "ganancia_media": 0.3268,
+          "perdida_media": -0.3501,
+          "profit_factor": 0.75,
+          "caida_maxima": 6.6,
+          "velas_medias": 2.0,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 6,
+            "Tiempo": 95
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 790,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 22,
+        "diseno": {
+          "operaciones": 294,
+          "win_rate": 0.4558,
+          "pnl_total": 16.87,
+          "pnl_medio": 0.0574,
+          "ic95_inf": -0.0568,
+          "ic95_sup": 0.1716,
+          "ganancia_media": 0.9274,
+          "perdida_media": -0.6713,
+          "profit_factor": 1.157,
+          "caida_maxima": 14.51,
+          "velas_medias": 5.2,
+          "salidas": {
+            "TP": 6,
+            "SL": 0,
+            "StopOut": 83,
+            "Tiempo": 205
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 81,
+          "win_rate": 0.5432,
+          "pnl_total": 5.43,
+          "pnl_medio": 0.067,
+          "ic95_inf": -0.0967,
+          "ic95_sup": 0.2308,
+          "ganancia_media": 0.5862,
+          "perdida_media": -0.5504,
+          "profit_factor": 1.267,
+          "caida_maxima": 9.44,
+          "velas_medias": 5.6,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 13,
+            "Tiempo": 68
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 767,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 68,
+        "diseno": {
+          "operaciones": 284,
+          "win_rate": 0.4894,
+          "pnl_total": -4.86,
+          "pnl_medio": -0.0171,
+          "ic95_inf": -0.1332,
+          "ic95_sup": 0.099,
+          "ganancia_media": 0.9994,
+          "perdida_media": -0.9916,
+          "profit_factor": 0.966,
+          "caida_maxima": 23.58,
+          "velas_medias": 5.2,
+          "salidas": {
+            "TP": 138,
+            "SL": 0,
+            "StopOut": 143,
+            "Tiempo": 3
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 66,
+          "win_rate": 0.5303,
+          "pnl_total": 3.72,
+          "pnl_medio": 0.0564,
+          "ic95_inf": -0.1833,
+          "ic95_sup": 0.2961,
+          "ganancia_media": 0.9791,
+          "perdida_media": -0.9854,
+          "profit_factor": 1.122,
+          "caida_maxima": 5.73,
+          "velas_medias": 6.5,
+          "salidas": {
+            "TP": 34,
+            "SL": 0,
+            "StopOut": 30,
+            "Tiempo": 2
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 898,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 35,
+        "diseno": {
+          "operaciones": 342,
+          "win_rate": 0.4532,
+          "pnl_total": 36.46,
+          "pnl_medio": 0.1066,
+          "ic95_inf": -0.0216,
+          "ic95_sup": 0.2348,
+          "ganancia_media": 1.2268,
+          "perdida_media": -0.8219,
+          "profit_factor": 1.237,
+          "caida_maxima": 8.48,
+          "velas_medias": 4.5,
+          "salidas": {
+            "TP": 19,
+            "SL": 0,
+            "StopOut": 139,
+            "Tiempo": 184
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 75,
+          "win_rate": 0.56,
+          "pnl_total": 9.29,
+          "pnl_medio": 0.1239,
+          "ic95_inf": -0.0756,
+          "ic95_sup": 0.3234,
+          "ganancia_media": 0.722,
+          "perdida_media": -0.6374,
+          "profit_factor": 1.442,
+          "caida_maxima": 5.1,
+          "velas_medias": 5.2,
+          "salidas": {
+            "TP": 2,
+            "SL": 0,
+            "StopOut": 15,
+            "Tiempo": 58
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 753,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 45,
+        "diseno": {
+          "operaciones": 451,
+          "win_rate": 0.4568,
+          "pnl_total": 49.32,
+          "pnl_medio": 0.1094,
+          "ic95_inf": -0.0087,
+          "ic95_sup": 0.2275,
+          "ganancia_media": 1.2626,
+          "perdida_media": -0.8603,
+          "profit_factor": 1.234,
+          "caida_maxima": 25.95,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 39,
+            "SL": 0,
+            "StopOut": 196,
+            "Tiempo": 216
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 108,
+          "win_rate": 0.3981,
+          "pnl_total": 8.23,
+          "pnl_medio": 0.0762,
+          "ic95_inf": -0.1889,
+          "ic95_sup": 0.3412,
+          "ganancia_media": 1.606,
+          "perdida_media": -0.9359,
+          "profit_factor": 1.135,
+          "caida_maxima": 10.4,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 10,
+            "SL": 0,
+            "StopOut": 57,
+            "Tiempo": 41
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "comision_pct": 0.0,
+        "senales": 735,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 59,
+        "diseno": {
+          "operaciones": 418,
+          "win_rate": 0.4187,
+          "pnl_total": 21.74,
+          "pnl_medio": 0.052,
+          "ic95_inf": -0.1414,
+          "ic95_sup": 0.2454,
+          "ganancia_media": 1.2272,
+          "perdida_media": -0.7943,
+          "profit_factor": 1.113,
+          "caida_maxima": 29.69,
+          "velas_medias": 1.7,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 165,
+            "Tiempo": 253
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 113,
+          "win_rate": 0.5133,
+          "pnl_total": 11.91,
+          "pnl_medio": 0.1054,
+          "ic95_inf": -0.0886,
+          "ic95_sup": 0.2994,
+          "ganancia_media": 0.9856,
+          "perdida_media": -0.8227,
+          "profit_factor": 1.263,
+          "caida_maxima": 8.99,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 37,
+            "Tiempo": 76
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "comision_pct": 0.00055,
+        "senales": 572,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 299,
+          "win_rate": 0.097,
+          "pnl_total": 36.47,
+          "pnl_medio": 0.122,
+          "ic95_inf": -0.3311,
+          "ic95_sup": 0.575,
+          "ganancia_media": 10.5679,
+          "perdida_media": -1.0,
+          "profit_factor": 1.135,
+          "caida_maxima": 52.75,
+          "velas_medias": 4.1,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 270,
+            "Tiempo": 29
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 151,
+          "win_rate": 0.0464,
+          "pnl_total": -77.39,
+          "pnl_medio": -0.5125,
+          "ic95_inf": -0.9013,
+          "ic95_sup": -0.1238,
+          "ganancia_media": 9.5159,
+          "perdida_media": -1.0,
+          "profit_factor": 0.463,
+          "caida_maxima": 77.39,
+          "velas_medias": 2.7,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 144,
+            "Tiempo": 7
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 237,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 6
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 51,
+        "diseno": {
+          "operaciones": 64,
+          "win_rate": 0.5156,
+          "pnl_total": 1.04,
+          "pnl_medio": 0.0162,
+          "ic95_inf": -0.067,
+          "ic95_sup": 0.0995,
+          "ganancia_media": 0.2858,
+          "perdida_media": -0.2707,
+          "profit_factor": 1.124,
+          "caida_maxima": 2.63,
+          "velas_medias": 5.5,
+          "salidas": {
+            "TP": 11,
+            "SL": 0,
+            "StopOut": 1,
+            "Tiempo": 52
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 16,
+          "win_rate": 0.5625,
+          "pnl_total": -0.51,
+          "pnl_medio": -0.0316,
+          "ic95_inf": -0.1873,
+          "ic95_sup": 0.1241,
+          "ganancia_media": 0.1945,
+          "perdida_media": -0.3222,
+          "profit_factor": 0.776,
+          "caida_maxima": 0.88,
+          "velas_medias": 5.8,
+          "salidas": {
+            "TP": 1,
+            "SL": 0,
+            "StopOut": 0,
+            "Tiempo": 15
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 214,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 500,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 9,
+        "diseno": {
+          "operaciones": 121,
+          "win_rate": 0.438,
+          "pnl_total": 7.52,
+          "pnl_medio": 0.0621,
+          "ic95_inf": -0.1895,
+          "ic95_sup": 0.3138,
+          "ganancia_media": 1.3026,
+          "perdida_media": -0.9047,
+          "profit_factor": 1.122,
+          "caida_maxima": 16.59,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 59,
+            "Tiempo": 62
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 35,
+          "win_rate": 0.6571,
+          "pnl_total": 8.31,
+          "pnl_medio": 0.2375,
+          "ic95_inf": -0.0956,
+          "ic95_sup": 0.5706,
+          "ganancia_media": 0.6526,
+          "perdida_media": -0.5581,
+          "profit_factor": 2.241,
+          "caida_maxima": 2.69,
+          "velas_medias": 1.9,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 5,
+            "Tiempo": 30
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 219,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 57,
+        "diseno": {
+          "operaciones": 61,
+          "win_rate": 0.6721,
+          "pnl_total": 0.5,
+          "pnl_medio": 0.0082,
+          "ic95_inf": -0.17,
+          "ic95_sup": 0.1864,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.025,
+          "caida_maxima": 7.0,
+          "velas_medias": 5.3,
+          "salidas": {
+            "TP": 41,
+            "SL": 0,
+            "StopOut": 20,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 19,
+          "win_rate": 0.6842,
+          "pnl_total": 0.5,
+          "pnl_medio": 0.0263,
+          "ic95_inf": -0.2958,
+          "ic95_sup": 0.3484,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.083,
+          "caida_maxima": 2.5,
+          "velas_medias": 6.5,
+          "salidas": {
+            "TP": 13,
+            "SL": 0,
+            "StopOut": 6,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 259,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 1.0,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 86,
+        "diseno": {
+          "operaciones": 55,
+          "win_rate": 0.5818,
+          "pnl_total": 8.14,
+          "pnl_medio": 0.1481,
+          "ic95_inf": -0.1133,
+          "ic95_sup": 0.4094,
+          "ganancia_media": 0.9732,
+          "perdida_media": -1.0,
+          "profit_factor": 1.354,
+          "caida_maxima": 3.0,
+          "velas_medias": 7.7,
+          "salidas": {
+            "TP": 31,
+            "SL": 0,
+            "StopOut": 23,
+            "Tiempo": 1
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 9,
+          "win_rate": 0.3333,
+          "pnl_total": -3.0,
+          "pnl_medio": -0.3333,
+          "ic95_inf": -0.9867,
+          "ic95_sup": 0.32,
+          "ganancia_media": 1.0,
+          "perdida_media": -1.0,
+          "profit_factor": 0.5,
+          "caida_maxima": 3.0,
+          "velas_medias": 12.4,
+          "salidas": {
+            "TP": 3,
+            "SL": 0,
+            "StopOut": 6,
+            "Tiempo": 0
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 194,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.5,
+          "stop_loss": 1.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 57,
+        "diseno": {
+          "operaciones": 43,
+          "win_rate": 0.7209,
+          "pnl_total": 3.5,
+          "pnl_medio": 0.0814,
+          "ic95_inf": -0.1221,
+          "ic95_sup": 0.2849,
+          "ganancia_media": 0.5,
+          "perdida_media": -1.0,
+          "profit_factor": 1.292,
+          "caida_maxima": 5.5,
+          "velas_medias": 6.7,
+          "salidas": {
+            "TP": 31,
+            "SL": 0,
+            "StopOut": 12,
+            "Tiempo": 0
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 13,
+          "win_rate": 0.6154,
+          "pnl_total": -0.93,
+          "pnl_medio": -0.0716,
+          "ic95_inf": -0.4379,
+          "ic95_sup": 0.2948,
+          "ganancia_media": 0.4213,
+          "perdida_media": -0.8601,
+          "profit_factor": 0.784,
+          "caida_maxima": 2.5,
+          "velas_medias": 14.8,
+          "salidas": {
+            "TP": 6,
+            "SL": 0,
+            "StopOut": 3,
+            "Tiempo": 4
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 163,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 2.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 9,
+        "diseno": {
+          "operaciones": 106,
+          "win_rate": 0.5,
+          "pnl_total": -0.7,
+          "pnl_medio": -0.0066,
+          "ic95_inf": -0.2047,
+          "ic95_sup": 0.1916,
+          "ganancia_media": 0.8901,
+          "perdida_media": -0.9033,
+          "profit_factor": 0.985,
+          "caida_maxima": 14.02,
+          "velas_medias": 1.6,
+          "salidas": {
+            "TP": 11,
+            "SL": 0,
+            "StopOut": 45,
+            "Tiempo": 50
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 20,
+          "win_rate": 0.55,
+          "pnl_total": -0.69,
+          "pnl_medio": -0.0347,
+          "ic95_inf": -0.4519,
+          "ic95_sup": 0.3825,
+          "ganancia_media": 0.718,
+          "perdida_media": -0.9547,
+          "profit_factor": 0.919,
+          "caida_maxima": 4.22,
+          "velas_medias": 1.8,
+          "salidas": {
+            "TP": 1,
+            "SL": 0,
+            "StopOut": 8,
+            "Tiempo": 11
+          },
+          "veredicto": "MUESTRA INSUFICIENTE"
+        }
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "comision_pct": 0.0,
+        "senales": 227,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 200,
+          "take_profit": 3.0,
+          "stop_loss": 1.0,
+          "max_velas": 2
+        },
+        "diseno_rentable": false,
+        "descartadas_por_hueco": 21,
+        "diseno": {
+          "operaciones": 139,
+          "win_rate": 0.3165,
+          "pnl_total": -3.12,
+          "pnl_medio": -0.0224,
+          "ic95_inf": -0.2741,
+          "ic95_sup": 0.2292,
+          "ganancia_media": 1.985,
+          "perdida_media": -0.9522,
+          "profit_factor": 0.966,
+          "caida_maxima": 20.08,
+          "velas_medias": 1.4,
+          "salidas": {
+            "TP": 22,
+            "SL": 0,
+            "StopOut": 87,
+            "Tiempo": 30
+          },
+          "veredicto": "SIN VENTAJA"
+        },
+        "ciego": {
+          "operaciones": 34,
+          "win_rate": 0.4118,
+          "pnl_total": 11.48,
+          "pnl_medio": 0.3375,
+          "ic95_inf": -0.2517,
+          "ic95_sup": 0.9268,
+          "ganancia_media": 2.2483,
+          "perdida_media": -1.0,
+          "profit_factor": 1.574,
+          "caida_maxima": 5.0,
+          "velas_medias": 1.5,
+          "salidas": {
+            "TP": 8,
+            "SL": 0,
+            "StopOut": 20,
+            "Tiempo": 6
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        }
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "comision_pct": 0.00055,
+        "senales": 139,
+        "combinaciones_probadas": 63,
+        "config_elegida": {
+          "multiplicador": 100,
+          "take_profit": 0.0,
+          "stop_loss": 0.0,
+          "max_velas": 24
+        },
+        "diseno_rentable": true,
+        "descartadas_por_hueco": 0,
+        "diseno": {
+          "operaciones": 62,
+          "win_rate": 0.0968,
+          "pnl_total": 32.59,
+          "pnl_medio": 0.5257,
+          "ic95_inf": -0.6879,
+          "ic95_sup": 1.7392,
+          "ganancia_media": 14.7652,
+          "perdida_media": -1.0,
+          "profit_factor": 1.582,
+          "caida_maxima": 40.0,
+          "velas_medias": 4.5,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 56,
+            "Tiempo": 6
+          },
+          "veredicto": "POSITIVO, NO SIGNIFICATIVO"
+        },
+        "ciego": {
+          "operaciones": 41,
+          "win_rate": 0.122,
+          "pnl_total": -11.2,
+          "pnl_medio": -0.2732,
+          "ic95_inf": -0.946,
+          "ic95_sup": 0.3997,
+          "ganancia_media": 4.96,
+          "perdida_media": -1.0,
+          "profit_factor": 0.689,
+          "caida_maxima": 22.0,
+          "velas_medias": 4.1,
+          "salidas": {
+            "TP": 0,
+            "SL": 0,
+            "StopOut": 36,
+            "Tiempo": 5
+          },
+          "veredicto": "SIN VENTAJA"
+        }
+      }
+    ]
+  }
+]
