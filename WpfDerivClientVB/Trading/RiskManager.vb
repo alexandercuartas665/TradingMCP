@@ -3,7 +3,7 @@
 '
 ' Gestor de riesgo UNICO para todas las operaciones automaticas
 ' (estrategias live, API HTTP, instrucciones SignalR). Se consulta
-' en MainWindow.ApiExecuteTrade ANTES de enviar nada a Deriv.
+' en DerivTradingService.ExecuteTradeAsync ANTES de enviar nada a Deriv.
 '
 ' Reglas (configurables en db_config.json):
 '   RiesgoMontoMaximo          tope de stake por operacion   (def. 2)

@@ -57,19 +57,16 @@ Namespace WpfDerivClientVB
         }
 
         ' ===== Trading Live (Tab Trading Live) =====
-        Private _tradingWs As ClientWebSocket
-        Private _tradingCts As CancellationTokenSource
+        ' La conexion vive en DerivTradingService (ver MainWindow.Trading.vb).
+        ' Aqui solo queda el estado de la interfaz.
         Private _tradingOperaciones As New ObservableCollection(Of OperacionModel)()
         Private _tradingClienteActual As ClientModel
         Private _tradingCredsActual As ClientDerivCredentials
         Private _pendingProposalAmount As Double = 0
         Private _pendingProposalId As String = ""
-        Private _modoAvanzado As Boolean = False
-        Private _tradingEsDemo As Boolean = True   ' guardado para reconexión automática
 
         ' ===== API Server embebido (Tab Server) =====
         Private _apiServer As TradingApiServer
-        Private _pendingApiSell As System.Threading.Tasks.TaskCompletionSource(Of JObject)
         ' Las compras automaticas ya no usan variables compartidas: cada una se correlaciona
         ' por req_id (ver MainWindow.TradingEnvio.vb).
 
@@ -133,10 +130,9 @@ Namespace WpfDerivClientVB
 
             InicializarTabDinamicas()
 
-            ' Registrar MainWindow como ITradingService para que el modulo Servidor
-            ' (cliente SignalR + LiveStrategiesController) pueda ejecutar trades en
-            ' Deriv usando el WebSocket que mantiene MainWindow.
-            RegistrarComoTradingService()
+            ' El trading con Deriv lo maneja DerivTradingService (registrado en App.OnStartup).
+            ' Esta ventana solo se suscribe a sus eventos para mostrar el estado.
+            InicializarTradingServicio()
         End Sub
 
         Protected Overrides Sub OnSourceInitialized(e As EventArgs)
@@ -170,7 +166,9 @@ Namespace WpfDerivClientVB
         Private Sub Window_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles Me.Closing
             If _cancellationTokenSource IsNot Nothing Then _cancellationTokenSource.Cancel()
             If _descargaService IsNot Nothing Then _descargaService.Detener()
-            If _tradingCts IsNot Nothing Then _tradingCts.Cancel()
+            ' La conexion de trading NO se cierra: vive en DerivTradingService y puede seguir
+            ' operando para el Servidor Live / API sin esta ventana. Solo dejamos de escuchar.
+            DesuscribirTradingServicio()
             If _apiServer IsNot Nothing AndAlso _apiServer.IsRunning Then _apiServer.Stop()
         End Sub
 

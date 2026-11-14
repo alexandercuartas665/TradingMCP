@@ -90,6 +90,11 @@ Namespace WpfDerivClientVB
                 ' Forzar instanciacion del controller de estrategias para que ya este listo
                 ' cuando lleguen las primeras instrucciones del servidor.
                 Dim _ctrl = WpfDerivClientVB.Servidor.LiveStrategiesController.GetInstance()
+
+                ' Servicio de trading con Deriv (sin ventana): lo usan Servidor Live, la API
+                ' y SignalR. Antes solo existia si se abria la ventana "Pruebas".
+                WpfDerivClientVB.Servidor.TradingServiceLocator.Register(
+                    WpfDerivClientVB.Servidor.DerivTradingService.Instance)
                 AppLogger.Info("Modulo Servidor (SignalR + LiveCtrl) inicializado.")
             Catch ex As Exception
                 AppLogger.Warn("[App] No se pudo inicializar modulo Servidor: " & ex.Message)

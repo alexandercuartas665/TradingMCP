@@ -5,9 +5,8 @@
 '   - Log de peticiones recibidas
 '   - Análisis de mercado: EMA(5), EMA(10), RSI(14) +
 '     últimas 3 velas → recomendación CALL / PUT / NEUTRAL
-'   - Handlers que conectan el servidor HTTP con el
-'     WebSocket de trading (ApiGetStatus, ApiGetOperations,
-'     ApiExecuteTrade, ApiExecuteSell)
+'   - El servidor HTTP opera a traves de DerivTradingService
+'     (GetStatus, GetOperations, ExecuteTradeAsync, ExecuteSellAsync)
 ' ============================================================
 Imports System.Net.WebSockets
 Imports System.Text
@@ -46,10 +45,11 @@ Namespace WpfDerivClientVB
                 Dim port As Integer = 8765
                 Integer.TryParse(txtApiPort.Text.Trim(), port)
                 _apiServer = New TradingApiServer(port)
-                _apiServer.GetStatus       = AddressOf ApiGetStatus
-                _apiServer.GetOperations   = AddressOf ApiGetOperations
-                _apiServer.ExecuteTrade    = AddressOf ApiExecuteTrade
-                _apiServer.ExecuteSell     = AddressOf ApiExecuteSell
+                ' El servidor HTTP opera a traves del servicio de trading (sin depender de la ventana)
+                _apiServer.GetStatus       = AddressOf Trading.GetStatus
+                _apiServer.GetOperations   = AddressOf Trading.GetOperations
+                _apiServer.ExecuteTrade    = AddressOf Trading.ExecuteTradeAsync
+                _apiServer.ExecuteSell     = AddressOf Trading.ExecuteSellAsync
                 _apiServer.LogAction       = AddressOf AgregarLogApi
                 _apiServer.DescargaService = _descargaService
                 _apiServer.OnTradeLiveAbierto = AddressOf TaggearOpLiveEnGrid
@@ -114,19 +114,7 @@ Namespace WpfDerivClientVB
         ''' La OperacionModel ya fue creada por ProcesarMensajeTrading "buy" — solo agregamos metadatos.
         ''' </summary>
         Private Sub TaggearOpLiveEnGrid(contractId As String, estrategia As String, sesionId As Integer, opId As Integer)
-            If String.IsNullOrEmpty(contractId) Then Return
-            Dispatcher.BeginInvoke(Sub()
-                                       Try
-                                           Dim op = _tradingOperaciones.FirstOrDefault(Function(o) o.ContractId = contractId)
-                                           If op IsNot Nothing Then
-                                               op.Estrategia = estrategia
-                                               op.EsLive = True
-                                               op.SesionId = sesionId
-                                               op.OperacionLiveId = opId
-                                           End If
-                                       Catch
-                                       End Try
-                                   End Sub, System.Windows.Threading.DispatcherPriority.Background)
+            Trading.TaggearOperacion(contractId, estrategia, sesionId, opId)
         End Sub
 
         Private Sub btnLimpiarLog_Click(sender As Object, e As System.Windows.RoutedEventArgs)
@@ -269,7 +257,7 @@ Namespace WpfDerivClientVB
 
                 ' Auto-operar si se solicitó y hay conexión trading activa
                 If autoOperar AndAlso recomendacion <> "NEUTRAL" Then
-                    If _tradingWs IsNot Nothing AndAlso _tradingWs.State = WebSocketState.Open Then
+                    If Trading.EstaConectado Then
                         Dim monto As Double = 1.0
                         Dim duracion As Integer = 5
                         Double.TryParse(txtTradingMonto.Text.Trim(), monto)
@@ -277,7 +265,7 @@ Namespace WpfDerivClientVB
                         If monto <= 0 Then monto = 1.0
                         If duracion <= 0 Then duracion = 5
 
-                        ' Pasa por ApiExecuteTrade para quedar sujeto al gestor de riesgo
+                        ' Pasa por DerivTradingService.ExecuteTradeAsync: sujeto al gestor de riesgo
                         ' (antes enviaba la propuesta directo al WebSocket, sin limites).
                         Dim autoBody As New JObject From {
                             {"contract_type", recomendacion},
@@ -288,7 +276,7 @@ Namespace WpfDerivClientVB
                             {"duration", duracion},
                             {"duration_unit", "t"}
                         }
-                        Dim autoRes = Await ApiExecuteTrade(autoBody)
+                        Dim autoRes = Await Trading.ExecuteTradeAsync(autoBody)
                         Dim autoOk = autoRes("ok") IsNot Nothing AndAlso CBool(autoRes("ok"))
                         txtAnalisisResult.Text = txtAnalisisResult.Text & Environment.NewLine &
                             If(autoOk,
@@ -303,127 +291,10 @@ Namespace WpfDerivClientVB
                 txtAnalisisResult.Text = "❌ Error al analizar: " & ex.Message
                 txtAnalisisResult.Foreground = New SolidColorBrush(Colors.OrangeRed)
             Finally
-                Dim isConnected = _tradingWs IsNot Nothing AndAlso _tradingWs.State = WebSocketState.Open
+                Dim isConnected = Trading.EstaConectado
                 btnAnalizar.IsEnabled = isConnected
                 btnAnalizarYOperar.IsEnabled = isConnected
             End Try
-        End Function
-
-        ' ===================================================
-        '  HANDLERS DEL SERVIDOR HTTP → WEBSOCKET TRADING
-        ' ===================================================
-        Private Function ApiGetStatus() As JObject
-            Dim connected = _tradingWs IsNot Nothing AndAlso _tradingWs.State = Net.WebSockets.WebSocketState.Open
-            Dim balance = ""
-            Dispatcher.Invoke(Sub() balance = txtTradingBalance.Text)
-            Return New JObject From {
-                {"ok", True},
-                {"connected", connected},
-                {"balance", balance},
-                {"account", If(_tradingClienteActual?.Name, "")},
-                {"timestamp", DateTime.UtcNow.ToString("o")}
-            }
-        End Function
-
-        Private Function ApiGetOperations() As JArray
-            Dim arr As New JArray()
-            Dispatcher.Invoke(Sub()
-                                  For Each op In _tradingOperaciones
-                                      arr.Add(New JObject From {
-                                          {"id", op.Id},
-                                          {"contract_id", op.ContractId},
-                                          {"tipo", op.Tipo},
-                                          {"simbolo", op.Simbolo},
-                                          {"monto", op.Monto},
-                                          {"estado", op.Estado},
-                                          {"profit_loss", op.ProfitLoss},
-                                          {"hora", op.Hora},
-                                          {"entry_spot", op.EntrySpot},
-                                          {"spot_actual", op.SpotActual},
-                                          {"tiempo_restante", op.TiempoRestante}
-                                      })
-                                  Next
-                              End Sub)
-            Return arr
-        End Function
-
-        Private Async Function ApiExecuteTrade(body As JObject) As Task(Of JObject)
-            If _tradingWs Is Nothing OrElse _tradingWs.State <> Net.WebSockets.WebSocketState.Open Then
-                Return New JObject From {{"ok", False}, {"error", "Trading no conectado. Conecta una cuenta primero."}}
-            End If
-            Dim contractType = body("contract_type")?.ToString()
-            Dim symbol = body("symbol")?.ToString()
-            Dim amount As Double = If(body("amount") IsNot Nothing, CDbl(body("amount")), 0)
-            If String.IsNullOrEmpty(contractType) OrElse String.IsNullOrEmpty(symbol) OrElse amount <= 0 Then
-                Return New JObject From {{"ok", False}, {"error", "Requeridos: contract_type, symbol, amount > 0"}}
-            End If
-
-            ' ── Gestor de riesgo: valida y reserva cupo ANTES de enviar nada a Deriv ──
-            Dim motivoRiesgo = RiskManager.ValidarYReservar(CDec(amount), _tradingEsDemo)
-            If motivoRiesgo <> "" Then
-                Return New JObject From {{"ok", False}, {"error", "Riesgo: " & motivoRiesgo}, {"bloqueado_por_riesgo", True}}
-            End If
-            Try
-                Return Await EjecutarTradeAprobadoAsync(body, contractType, symbol, amount)
-            Finally
-                RiskManager.LiberarReserva()
-            End Try
-        End Function
-
-        ''' <summary>Envia el trade a Deriv. Solo se llama tras pasar el gestor de riesgo.</summary>
-        Private Async Function EjecutarTradeAprobadoAsync(body As JObject, contractType As String,
-                                                         symbol As String, amount As Double) As Task(Of JObject)
-            ' Compra pendiente propia (req_id + metadata de estrategia). Ver MainWindow.TradingEnvio.vb
-            Dim compra = NuevaCompraPendiente(CDec(amount), body)
-            Dim req As New JObject()
-            req.Add("req_id", compra.ReqId)
-            req.Add("proposal", 1)
-            req.Add("amount", amount)
-            req.Add("basis", If(body("basis")?.ToString(), "stake"))
-            req.Add("contract_type", contractType)
-            req.Add("currency", If(body("currency")?.ToString(), "USD"))
-            req.Add("duration", If(body("duration") IsNot Nothing, CInt(body("duration")), 5))
-            req.Add("duration_unit", If(body("duration_unit")?.ToString(), "t"))
-            req.Add("underlying_symbol", symbol)
-            If body("barrier") IsNot Nothing Then req.Add("barrier", body("barrier").ToString())
-            If body("barrier2") IsNot Nothing Then req.Add("barrier2", body("barrier2").ToString())
-
-            Dim apiTradeTask = compra.Tcs.Task
-            Try
-                Await EnviarTradingBytesAsync(Encoding.UTF8.GetBytes(req.ToString()))
-            Catch ex As Exception
-                ResolverCompraPendiente(compra, Nothing)
-                Return New JObject From {{"ok", False}, {"error", "No se pudo enviar a Deriv: " & ex.Message}}
-            End Try
-
-            Dim winnerApi = Await Task.WhenAny(apiTradeTask, Task.Delay(10000))
-            If winnerApi Is apiTradeTask Then
-                Return apiTradeTask.Result
-            End If
-            ' Timeout: la compra pendiente se conserva un rato para que, si el "buy" llega
-            ' tarde, la operacion igual quede registrada y etiquetada con su estrategia.
-            AppLogger.Warn("[Trading] Timeout esperando compra req_id=" & compra.ReqId & " (" & contractType & " " & symbol & ")")
-            Return New JObject From {{"ok", False}, {"error", "Timeout: no se recibio respuesta en 10 segundos"}, {"req_id", compra.ReqId}}
-        End Function
-
-        Private Async Function ApiExecuteSell(contractId As String) As Task(Of JObject)
-            If _tradingWs Is Nothing OrElse _tradingWs.State <> Net.WebSockets.WebSocketState.Open Then
-                Return New JObject From {{"ok", False}, {"error", "Trading no conectado"}}
-            End If
-            _pendingApiSell = New System.Threading.Tasks.TaskCompletionSource(Of JObject)()
-            Dim apiSellTask = _pendingApiSell.Task   ' capturar antes de que UI thread lo anule
-            Dim req As New JObject()
-            req.Add("sell", contractId)
-            req.Add("price", 0)
-            Dim bytes = Encoding.UTF8.GetBytes(req.ToString())
-            Await EnviarTradingBytesAsync(bytes)
-            Dim winnerSell = Await Task.WhenAny(apiSellTask, Task.Delay(10000))
-            If winnerSell Is apiSellTask Then
-                Return apiSellTask.Result
-            Else
-                _pendingApiSell = Nothing
-                Return New JObject From {{"ok", False}, {"error", "Timeout esperando confirmacion de venta"}}
-            End If
         End Function
 
     End Class

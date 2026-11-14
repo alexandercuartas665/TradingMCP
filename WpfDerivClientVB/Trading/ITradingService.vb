@@ -5,9 +5,9 @@
 ' que las estrategias live puedan ejecutar trades en Deriv sin
 ' acoplarse directamente a la ventana.
 '
-' Implementado por MainWindow (delegando a sus metodos internos
-' ApiExecuteTrade / ApiExecuteSell / ApiGetStatus / ApiGetOperations).
-' Registrado al iniciar via TradingServiceLocator.Register(...).
+' Implementado por DerivTradingService (Trading/DerivTradingService.vb),
+' registrado en App.OnStartup via TradingServiceLocator.Register(...).
+' No depende de ninguna ventana.
 ' ============================================================
 Imports System.Threading.Tasks
 Imports Newtonsoft.Json.Linq

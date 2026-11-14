@@ -109,7 +109,7 @@ Namespace WpfDerivClientVB
                     tfMotor = If(estado("timeframe")?.ToString(), "")
                 End If
 
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     client.Timeout = TimeSpan.FromSeconds(15)
                     Dim body = New JObject From {{"sesion_id", sesionId}}
                     Dim content As New StringContent(body.ToString(), Encoding.UTF8, "application/json")
@@ -358,6 +358,16 @@ Namespace WpfDerivClientVB
 
         ' ── Helpers que el resto de la app puede llamar para reflejar estado de trading ─
         ''' <summary>Refresca el indicador de conexion del panel lateral.</summary>
+        ''' <summary>
+        ''' HttpClient para las llamadas de esta pestana a la API local (8765), con el
+        ''' header X-Agent-Token que exige desde el paso de seguridad (AgentAuth).
+        ''' </summary>
+        Private Shared Function NuevoClienteApiLocal() As HttpClient
+            Dim c As New HttpClient()
+            c.DefaultRequestHeaders.Add(AgentAuth.HeaderName, AgentAuth.GetOrCreateToken())
+            Return c
+        End Function
+
         Friend Sub PanelLiveSetConexion(conectado As Boolean)
             If _panelLive Is Nothing Then Return
             _panelLive.ActualizarConexion(conectado)
@@ -827,7 +837,7 @@ Namespace WpfDerivClientVB
                 If Not String.IsNullOrWhiteSpace(estrategia) Then
                     url &= "&estrategia=" & Uri.EscapeDataString(estrategia)
                 End If
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     client.Timeout = TimeSpan.FromSeconds(15)
                     Dim resp = Await client.GetStringAsync(url)
                     Dim json = JObject.Parse(resp)
@@ -1005,7 +1015,7 @@ Namespace WpfDerivClientVB
             If confirm <> System.Windows.MessageBoxResult.Yes Then Return
             Try
                 btnDinEliminar.IsEnabled = False
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     client.Timeout = TimeSpan.FromSeconds(30)
                     Dim body = New JObject From {{"sesion_id", row.Id}}
                     Dim content As New StringContent(body.ToString(), Text.Encoding.UTF8, "application/json")
@@ -1038,7 +1048,7 @@ Namespace WpfDerivClientVB
                 Dim limite = 500
                 Dim url = String.Format("http://localhost:{0}/api/dinamicas/operaciones?sesion_id={1}&limite={2}",
                                         _apiServer.Port, sesionId, limite)
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     client.Timeout = TimeSpan.FromSeconds(30)
                     Dim resp = Await client.GetStringAsync(url)
                     Dim json = JObject.Parse(resp)
@@ -1124,7 +1134,7 @@ Namespace WpfDerivClientVB
             End If
 
             ' 2. Trading WS conectado
-            If _tradingWs Is Nothing OrElse _tradingWs.State <> System.Net.WebSockets.WebSocketState.Open Then
+            If Not Trading.EstaConectado Then
                 System.Windows.MessageBox.Show(
                     "La cuenta de trading no esta conectada." & Environment.NewLine & Environment.NewLine &
                     "Ve a la pestana 'Trading Live', selecciona el cliente, elige Demo y pulsa 'Conectar'.",
@@ -1147,7 +1157,7 @@ Namespace WpfDerivClientVB
             End If
 
             ' 4. Confirmacion
-            Dim cuentaTxt = If(_tradingEsDemo, "DEMO (virtual)", "REAL")
+            Dim cuentaTxt = If(Trading.EsDemo, "DEMO (virtual)", "REAL")
             Dim mensaje = String.Format(
                 "Iniciar trading EN VIVO?{0}{0}" &
                 "Cuenta:      {1}{0}" &
@@ -1418,7 +1428,7 @@ Namespace WpfDerivClientVB
                     {"min_confianza", confianza}, {"monto", monto},
                     {"ventana", 30}
                 }
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     client.Timeout = TimeSpan.FromSeconds(30)
                     Dim content As New StringContent(body.ToString(), Encoding.UTF8, "application/json")
                     Dim httpResp = Await client.PostAsync(
@@ -1429,7 +1439,7 @@ Namespace WpfDerivClientVB
                         _dinLiveActivo = True
                         _dinReplayMotor = Nothing
                         _dinUltimoSesionId = CInt(json("sesion_id"))
-                        Dim cuentaTag = If(_tradingEsDemo, "DEMO", "REAL")
+                        Dim cuentaTag = If(Trading.EsDemo, "DEMO", "REAL")
                         txtDinEstado.Text = String.Format("LIVE {0} — Sesion #{1} | {2} | {3}/{4} | Esperando vela cerrada...",
                                                           cuentaTag, _dinUltimoSesionId, nombre, symbol, timeframe)
                         txtDinEstado.Foreground = New SolidColorBrush(Color.FromRgb(&HF5, &HC2, &HE7))
@@ -1464,7 +1474,7 @@ Namespace WpfDerivClientVB
             ' Streaming via API server
             If _apiServer Is Nothing OrElse Not _apiServer.IsRunning Then Return
             Try
-                Using client As New HttpClient()
+                Using client As HttpClient = NuevoClienteApiLocal()
                     Dim content As New StringContent("{}", Encoding.UTF8, "application/json")
                     Await client.PostAsync(
                         String.Format("http://localhost:{0}/api/dinamicas/live/detener", _apiServer.Port), content)
