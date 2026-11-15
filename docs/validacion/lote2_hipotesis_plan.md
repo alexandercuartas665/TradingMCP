@@ -51,3 +51,18 @@ conocidos, huecos, patrones de vela, rupturas y tendencia en diario. Periodos es
 
 Nota: la prueba no simula que Deriv no deja vencer contratos de divisas entre 21:50 y
 23:00 UTC ni el limite de 1h en indices OTC; si una idea pasa, se revisa si es operable.
+
+## Resultado (2026-11-15)
+
+**0 de 20 ideas con ventaja corregida**; 169.989 operaciones, acierto 50,34%. Ningun mercado
+llega a z 3,15 (maximo 2,38). Detalle en `lote2_hipotesis_2026-11-15.txt` / `.json`.
+
+- Mejores: RSI2Indices 65,0% en 140 ops (z 2,60 < 2,81; comprar siempre da 56,3%; diario, no
+  operable en indices OTC de Deriv) y LunesGap 56,7% en 1.347 ops (z 1,96).
+- AsiaReversion no se replica fuera de EUR/USD (53,3% en 1.438 ops).
+- Ichimoku, InsideBar, momentum diario y cruce de SMA60 quedan claramente por debajo del azar.
+- Controles 2024-26: Deriv y Dukascopy coinciden en divisas.
+
+Nota: la primera corrida del script tenia un error (en PowerShell `$G` y `$g` son la misma
+variable) que duplicaba los conteos por mercado; se corrigio y el reporte se regenero. Las
+cifras de arriba son las de la corrida corregida.
