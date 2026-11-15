@@ -1,0 +1,30 @@
+{
+  "nombre": "lote2_hipotesis_2026-11-15",
+  "corte": "2024-04-01",
+  "desde": "2003-05-01",
+  "pruebas": [
+    { "idea": 1,  "estrategia": "TokioFixYen_v1",           "mercados": ["frxUSDJPY", "frxGBPJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 2,  "estrategia": "LunesGap_v1",              "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "1h", "dur": 2 },
+    { "idea": 3,  "estrategia": "FixLondresReversion_v1",   "mercados": ["frxEURUSD", "frxGBPUSD"], "tf": "1h", "dur": 2 },
+    { "idea": 4,  "estrategia": "NYDatosMomentum_v1",       "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 5,  "estrategia": "ViernesTarde_v1",          "mercados": ["frxEURUSD", "frxGBPUSD"], "tf": "1h", "dur": 2 },
+    { "idea": 6,  "estrategia": "RSI2Indices_v1",           "mercados": ["OTC_SPC", "OTC_NDX"], "tf": "1d", "dur": 2 },
+    { "idea": 7,  "estrategia": "RupturaDonchianDiaria_v1", "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "1d", "dur": 1 },
+    { "idea": 8,  "estrategia": "MomentumSerieTemporal_v1", "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "1d", "dur": 1 },
+    { "idea": 9,  "estrategia": "ReversionDiariaExtrema_v1","mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "1d", "dur": 1 },
+    { "idea": 10, "estrategia": "InsideBarTendencia_v1",    "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "4h", "dur": 2 },
+    { "idea": 11, "estrategia": "EnvolventeBanda_v1",       "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "4h", "dur": 2 },
+    { "idea": 12, "estrategia": "MartilloBanda_v1",         "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 13, "estrategia": "CompresionRuptura_v1",     "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 14, "estrategia": "DobleVelaAgotamiento_v1",  "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 15, "estrategia": "ADXPullback_v1",           "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "4h", "dur": 2 },
+    { "idea": 16, "estrategia": "IchimokuNube_v1",          "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "4h", "dur": 2 },
+    { "idea": 17, "estrategia": "AsiaReversion_v1",         "mercados": ["frxUSDJPY", "frxUSDCHF", "frxGBPJPY"], "tf": "1h", "dur": 2 },
+    { "idea": 18, "estrategia": "MediodiaEuropa_v1",        "mercados": ["frxEURUSD", "frxGBPUSD"], "tf": "1h", "dur": 2 },
+    { "idea": 19, "estrategia": "CruceMediaLarga_v1",       "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY", "frxXAUUSD"], "tf": "4h", "dur": 2 },
+    { "idea": 20, "estrategia": "RangoEstrecho_v1",         "mercados": ["frxEURUSD", "frxGBPUSD", "frxUSDJPY"], "tf": "4h", "dur": 2 }
+  ],
+  "controles": [
+    { "estrategia": "TestSiempre", "mercados": ["OTC_SPC", "OTC_NDX"], "tf": "1d", "dur": 2, "nota": "comprar siempre: referencia para la idea 6 (los indices subieron)" }
+  ]
+}

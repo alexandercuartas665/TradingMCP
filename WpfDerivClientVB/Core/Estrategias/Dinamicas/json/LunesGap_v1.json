@@ -1,0 +1,40 @@
+{
+  "nombre": "LunesGap_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Hueco de apertura semanal: si la primera vela de la semana (domingo; 21-22 UTC en Dukascopy, 23 UTC en Deriv) abre mas de un 0,1% lejos del cierre del viernes, el hueco tiende a cerrarse en las 2 horas siguientes. Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "dia_semana",
+        "op": "igual_a",
+        "valor": 0
+      },
+      {
+        "campo": "open",
+        "op": "menor_que",
+        "valor": "prev_close",
+        "factor": 0.999
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "dia_semana",
+        "op": "igual_a",
+        "valor": 0
+      },
+      {
+        "campo": "open",
+        "op": "mayor_que",
+        "valor": "prev_close",
+        "factor": 1.001
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

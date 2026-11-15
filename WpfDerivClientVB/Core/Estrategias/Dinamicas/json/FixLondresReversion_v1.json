@@ -1,0 +1,58 @@
+{
+  "nombre": "FixLondresReversion_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Fix de Londres (16:00 Londres = 15-16 UTC): los flujos de cartera empujan el precio hacia el fix y se deshacen despues. Una vela de 14 o 15 UTC con cuerpo mayor que 0,5 ATR14 se revierte en las 2 horas siguientes. EUR/USD y GBP/USD 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 14
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 15
+      },
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": -0.5
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 14
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 15
+      },
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 0.5
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

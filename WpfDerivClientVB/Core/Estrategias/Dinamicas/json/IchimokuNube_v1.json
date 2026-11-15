@@ -1,0 +1,54 @@
+{
+  "nombre": "IchimokuNube_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Ichimoku clasico (9,26,52): cierre sobre la nube y Tenkan sobre Kijun -> tendencia alcista que continua 2 velas (y al reves). Divisas 4h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "ichi",
+      "tipo": "Ichimoku",
+      "params": {}
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "ichi.SenkouSpanA"
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "ichi.SenkouSpanB"
+      },
+      {
+        "campo": "ichi",
+        "op": "mayor_que",
+        "valor": "ichi.Kijun"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "ichi.SenkouSpanA"
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "ichi.SenkouSpanB"
+      },
+      {
+        "campo": "ichi",
+        "op": "menor_que",
+        "valor": "ichi.Kijun"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

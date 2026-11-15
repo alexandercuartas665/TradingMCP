@@ -1,0 +1,38 @@
+{
+  "nombre": "TokioFixYen_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Fix de Tokio (09:55 hora de Tokio = 00:55 UTC): los importadores japoneses compran dolares antes del fix y esa presion desaparece despues. Al cierre de la vela de 00 UTC de lunes a viernes, PUT en frxUSDJPY 1h durante 2 horas.",
+  "version": "1.0",
+  "indicadores": [],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "menor_que",
+        "valor": -1
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "igual_a",
+        "valor": 0
+      },
+      {
+        "campo": "dia_semana",
+        "op": "mayor_igual",
+        "valor": 1
+      },
+      {
+        "campo": "dia_semana",
+        "op": "menor_igual",
+        "valor": 5
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

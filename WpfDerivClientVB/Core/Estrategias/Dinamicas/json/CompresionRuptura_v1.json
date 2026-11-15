@@ -1,0 +1,57 @@
+{
+  "nombre": "CompresionRuptura_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Volatilidad comprimida (ATR5 menor que 0,7 x ATR50) seguida de una vela con cuerpo mayor que 0,5 ATR50: la ruptura de una compresion tiende a continuar 2 horas. Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr5",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 5
+      }
+    },
+    {
+      "id": "atr50",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 50
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "atr5",
+        "op": "menor_que",
+        "valor": "atr50",
+        "factor": 0.7
+      },
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": "atr50",
+        "factor": 0.5
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "atr5",
+        "op": "menor_que",
+        "valor": "atr50",
+        "factor": 0.7
+      },
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": "atr50",
+        "factor": -0.5
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

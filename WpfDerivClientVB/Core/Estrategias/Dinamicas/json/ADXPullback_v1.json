@@ -1,0 +1,63 @@
+{
+  "nombre": "ADXPullback_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Retroceso en tendencia fuerte: ADX14 mayor que 25 con +DI sobre -DI y RSI14 menor que 45 -> compra del retroceso (y al reves). Divisas y oro 4h, 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "adx",
+      "tipo": "ADX",
+      "params": {
+        "periodo": 14
+      }
+    },
+    {
+      "id": "rsi",
+      "tipo": "RSI",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "adx",
+        "op": "mayor_que",
+        "valor": 25
+      },
+      {
+        "campo": "adx.+DI",
+        "op": "mayor_que",
+        "valor": "adx.-DI"
+      },
+      {
+        "campo": "rsi",
+        "op": "menor_que",
+        "valor": 45
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "adx",
+        "op": "mayor_que",
+        "valor": 25
+      },
+      {
+        "campo": "adx.-DI",
+        "op": "mayor_que",
+        "valor": "adx.+DI"
+      },
+      {
+        "campo": "rsi",
+        "op": "mayor_que",
+        "valor": 55
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

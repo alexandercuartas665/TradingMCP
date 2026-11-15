@@ -1,0 +1,48 @@
+{
+  "nombre": "ReversionDiariaExtrema_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Sobrerreaccion diaria: un dia con rango mayor que 2 ATR14 suele corregir al dia siguiente en contra del cuerpo. Divisas 1d, 1 dia.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 2
+      },
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": 0
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 2
+      },
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": 0
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

@@ -1,0 +1,59 @@
+{
+  "nombre": "MartilloBanda_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Martillo / estrella fugaz en la banda: vela de cuerpo pequeno (rango > 3 x cuerpo) que perfora la banda de Bollinger y cierra dentro = rechazo; el precio vuelve hacia la media 2 horas. Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "bb",
+      "tipo": "BollingerBands",
+      "params": {
+        "periodo": 20,
+        "desviacion": 2.0
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "mayor_que",
+        "valor": "cuerpo_abs",
+        "factor": 3
+      },
+      {
+        "campo": "low",
+        "op": "menor_que",
+        "valor": "bb.Lower"
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "bb.Lower"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "mayor_que",
+        "valor": "cuerpo_abs",
+        "factor": 3
+      },
+      {
+        "campo": "high",
+        "op": "mayor_que",
+        "valor": "bb.Upper"
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "bb.Upper"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

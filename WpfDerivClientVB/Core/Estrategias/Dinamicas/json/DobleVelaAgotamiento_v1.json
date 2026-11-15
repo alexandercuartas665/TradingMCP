@@ -1,0 +1,50 @@
+{
+  "nombre": "DobleVelaAgotamiento_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Agotamiento: dos velas seguidas fuertes en la misma direccion (cuerpo mayor que 0,5 ATR14 cada una) tienden a corregir 2 horas. Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": -0.5
+      },
+      {
+        "campo": "prev_cuerpo",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": -0.5
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 0.5
+      },
+      {
+        "campo": "prev_cuerpo",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 0.5
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

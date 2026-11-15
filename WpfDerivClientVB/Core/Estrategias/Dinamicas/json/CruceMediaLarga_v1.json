@@ -1,0 +1,46 @@
+{
+  "nombre": "CruceMediaLarga_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Cambio de tendencia: el cierre de 4h cruza la SMA60 (unos 10 dias) desde el otro lado -> sigue 2 velas en esa direccion. Divisas y oro 4h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "sma60",
+      "tipo": "SMA",
+      "params": {
+        "periodo": 60
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "sma60"
+      },
+      {
+        "campo": "prev_close",
+        "op": "menor_que",
+        "valor": "sma60"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "sma60"
+      },
+      {
+        "campo": "prev_close",
+        "op": "mayor_que",
+        "valor": "sma60"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}
