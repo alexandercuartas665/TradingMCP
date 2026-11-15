@@ -91,9 +91,7 @@ Namespace WpfDerivClientVB.Backtesting
             _listener = New HttpListener()
             _listener.Prefixes.Add(String.Format("http://localhost:{0}/", _Port))
             _listener.Start()
-#Disable Warning BC42358
-            Task.Run(Function() ListenLoop())
-#Enable Warning BC42358
+            Tareas.EnSegundoPlano(Task.Run(Function() ListenLoop()), "HeavyApi: bucle de escucha")
             Log(String.Format("[HeavyApi] Servidor iniciado en http://localhost:{0}/", _Port))
         End Sub
 
@@ -120,9 +118,7 @@ Namespace WpfDerivClientVB.Backtesting
                 Try
                     If Not _listener.IsListening Then Exit Do
                     Dim ctx = Await _listener.GetContextAsync()
-#Disable Warning BC42358
-                    Task.Run(Function() HandleRequest(ctx))
-#Enable Warning BC42358
+                    Tareas.EnSegundoPlano(Task.Run(Function() HandleRequest(ctx)), "HeavyApi: peticion")
                 Catch ex As ObjectDisposedException
                     Exit Do
                 Catch ex As HttpListenerException
@@ -738,7 +734,7 @@ Namespace WpfDerivClientVB.Backtesting
 
             ' Disparar la ejecucion sin awaitearla — el cliente puede pollear /status
             Dim cArg = conc
-            UiDispatcher.BeginInvoke(Sub()
+            Dim operacionUi = UiDispatcher.BeginInvoke(Sub()
                                          Try
                                              Dim _ignore = StartEjecucion.Invoke(cArg)
                                          Catch ex As Exception

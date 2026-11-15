@@ -110,6 +110,19 @@ Namespace WpfDerivClientVB.Servidor
             End Get
         End Property
 
+        ''' <summary>Ultimo saldo recibido de Deriv (Nothing si aun no llego).</summary>
+        Public ReadOnly Property Saldo As Decimal?
+            Get
+                Return _saldo
+            End Get
+        End Property
+
+        Public ReadOnly Property Moneda As String
+            Get
+                Return _moneda
+            End Get
+        End Property
+
         Public ReadOnly Property TextoSaldo As String
             Get
                 If Not _saldo.HasValue Then Return "--"
@@ -171,16 +184,13 @@ Namespace WpfDerivClientVB.Servidor
                 Return err
             End If
 
-#Disable Warning BC42358
-            Task.Run(Function() EscucharAsync(_cts.Token))
-            Task.Run(Function() PingLoopAsync(_cts.Token))
-#Enable Warning BC42358
+            Dim ct = _cts.Token
+            Tareas.EnSegundoPlano(Task.Run(Function() EscucharAsync(ct)), "Trading: bucle de escucha")
+            Tareas.EnSegundoPlano(Task.Run(Function() PingLoopAsync(ct)), "Trading: ping")
 
             ' Operaciones live que quedaron Pendiente/Abierto (crash/cierre) + reconciliacion
             Await RecuperarOperacionesLiveAsync()
-#Disable Warning BC42358
-            ReconciliarOperacionesAbiertasAsync()
-#Enable Warning BC42358
+            Tareas.EnSegundoPlano(ReconciliarOperacionesAbiertasAsync(), "Trading: reconciliacion de operaciones abiertas")
             Return ""
         End Function
 

@@ -80,9 +80,7 @@ Namespace WpfDerivClientVB
             _listener = New HttpListener()
             _listener.Prefixes.Add(String.Format("http://localhost:{0}/", _Port))
             _listener.Start()
-#Disable Warning BC42358
-            Task.Run(Function() ListenLoop())
-#Enable Warning BC42358
+            Tareas.EnSegundoPlano(Task.Run(Function() ListenLoop()), "TradingApi: bucle de escucha")
         End Sub
 
         Public Sub [Stop]()
@@ -104,9 +102,7 @@ Namespace WpfDerivClientVB
                 Try
                     If _listener Is Nothing OrElse Not _listener.IsListening Then Exit Do
                     Dim ctx = Await _listener.GetContextAsync()
-#Disable Warning BC42358
-                    Task.Run(Function() HandleRequest(ctx))
-#Enable Warning BC42358
+                    Tareas.EnSegundoPlano(Task.Run(Function() HandleRequest(ctx)), "TradingApi: peticion")
                 Catch ex As ObjectDisposedException
                     Exit Do
                 Catch ex As System.Net.HttpListenerException
@@ -384,14 +380,8 @@ Namespace WpfDerivClientVB
                                 If Not DateTime.TryParse(desdeStr, fromD) Then fromD = DateTime.Today.AddDays(-30)
                                 If Not DateTime.TryParse(hastaStr, toD) Then toD = DateTime.Today
                                 ' Lanzar en background — no esperar para no bloquear HTTP
-#Disable Warning BC42358
-                                Task.Run(Async Function() As Task
-                                             Try
-                                                 Await DescargaService.DescargarAsync(sym2, tf2, fromD, toD)
-                                             Catch
-                                             End Try
-                                         End Function)
-#Enable Warning BC42358
+                                Tareas.EnSegundoPlano(DescargaService.DescargarAsync(sym2, tf2, fromD, toD),
+                                                      "TradingApi: descarga " & sym2 & " " & tf2)
                                 result = New JObject From {
                                     {"ok", True},
                                     {"mensaje", String.Format("Descarga iniciada en background: {0} {1} {2}→{3}", sym2, tf2, fromD.ToString("yyyy-MM-dd"), toD.ToString("yyyy-MM-dd"))},

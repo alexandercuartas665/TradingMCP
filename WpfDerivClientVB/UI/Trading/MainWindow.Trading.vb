@@ -48,7 +48,13 @@ Namespace WpfDerivClientVB
             Next
             AplicarEstadoConexion(Trading.EstaConectado,
                                   If(Trading.EstaConectado, If(Trading.EsDemo, "Demo", "Real") & " - Conectado", "Desconectado"))
-            If Trading.EstaConectado Then txtTradingBalance.Text = Trading.TextoSaldo
+            If Trading.EstaConectado Then
+                txtTradingBalance.Text = Trading.TextoSaldo
+                ' El panel lateral solo se actualizaba con el siguiente aviso de saldo de Deriv
+                PanelLiveSetConexion(True)
+                If Trading.Saldo.HasValue Then PanelLiveSetSaldo(Trading.Saldo.Value, Trading.Moneda)
+                Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
+            End If
         End Sub
 
         Private Sub DesuscribirTradingServicio()
@@ -86,9 +92,7 @@ Namespace WpfDerivClientVB
             EnUI(Sub()
                      AplicarEstadoConexion(conectado, texto)
                      If conectado Then
-#Disable Warning BC42358
-                         PanelLiveRefrescarPnlPeriodosAsync()
-#Enable Warning BC42358
+                         Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
                      End If
                  End Sub)
         End Sub
@@ -117,9 +121,7 @@ Namespace WpfDerivClientVB
 
         Private Sub OnTradingOpCerrada(op As OperacionModel)
             EnUI(Sub()
-#Disable Warning BC42358
-                     PanelLiveRefrescarPnlPeriodosAsync()
-#Enable Warning BC42358
+                     Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
                  End Sub)
         End Sub
 
