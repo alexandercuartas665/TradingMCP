@@ -86,9 +86,7 @@ Namespace WpfDerivClientVB
             EnUI(Sub()
                      AplicarEstadoConexion(conectado, texto)
                      If conectado Then
-#Disable Warning BC42358
-                         PanelLiveRefrescarPnlPeriodosAsync()
-#Enable Warning BC42358
+                         Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
                      End If
                  End Sub)
         End Sub
@@ -117,9 +115,7 @@ Namespace WpfDerivClientVB
 
         Private Sub OnTradingOpCerrada(op As OperacionModel)
             EnUI(Sub()
-#Disable Warning BC42358
-                     PanelLiveRefrescarPnlPeriodosAsync()
-#Enable Warning BC42358
+                     Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
                  End Sub)
         End Sub
 

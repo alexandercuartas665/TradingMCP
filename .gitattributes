@@ -1,0 +1,15 @@
+# Finales de linea: LF en el repositorio, CRLF en el directorio de trabajo (proyecto Windows).
+# Explicito para no depender del core.autocrlf de cada equipo.
+* text=auto eol=crlf
+
+# Scripts de shell siempre con LF
+*.sh text eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.dump binary
+*.bundle binary

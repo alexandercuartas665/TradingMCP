@@ -171,16 +171,13 @@ Namespace WpfDerivClientVB.Servidor
                 Return err
             End If
 
-#Disable Warning BC42358
-            Task.Run(Function() EscucharAsync(_cts.Token))
-            Task.Run(Function() PingLoopAsync(_cts.Token))
-#Enable Warning BC42358
+            Dim ct = _cts.Token
+            Tareas.EnSegundoPlano(Task.Run(Function() EscucharAsync(ct)), "Trading: bucle de escucha")
+            Tareas.EnSegundoPlano(Task.Run(Function() PingLoopAsync(ct)), "Trading: ping")
 
             ' Operaciones live que quedaron Pendiente/Abierto (crash/cierre) + reconciliacion
             Await RecuperarOperacionesLiveAsync()
-#Disable Warning BC42358
-            ReconciliarOperacionesAbiertasAsync()
-#Enable Warning BC42358
+            Tareas.EnSegundoPlano(ReconciliarOperacionesAbiertasAsync(), "Trading: reconciliacion de operaciones abiertas")
             Return ""
         End Function
 

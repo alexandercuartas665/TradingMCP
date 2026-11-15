@@ -86,7 +86,7 @@ Namespace WpfDerivClientVB
                     ' Auto-reanudar sesiones live que quedaron activas en BD (post-crash).
                     ' La estrategia se carga del registry, el motor se recrea, se abre WS background.
                     Dim _ignore = Dispatcher.BeginInvoke(
-                        Sub() ReanudarSesionesLiveActivasAsync(),
+                        Sub() Tareas.EnSegundoPlano(ReanudarSesionesLiveActivasAsync(), "Reanudar sesiones live"),
                         System.Windows.Threading.DispatcherPriority.Background)
                 Catch ex As Exception
                     System.Windows.MessageBox.Show("No se pudo iniciar el servidor: " & ex.Message)
