@@ -102,6 +102,7 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                 ctx.SetValor("open",  ultimo.OpenPrice)
                 ctx.SetValor("high",  ultimo.High)
                 ctx.SetValor("low",   ultimo.Low)
+                AgregarCamposDeVela(ctx, candleList)
 
                 ' ── 3. Evaluar condiciones de senal ────────────────────────
                 Dim esCall As Boolean = False
@@ -153,6 +154,30 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                 Return _def
             End Get
         End Property
+
+        ''' <summary>
+        ''' Campos derivados de la vela (disponibles en cualquier estrategia):
+        '''   hora_utc (0-23), dia_semana (0 = domingo), rango (high - low),
+        '''   cuerpo (close - open, con signo), cuerpo_abs, y la vela anterior:
+        '''   prev_open, prev_high, prev_low, prev_close, prev_cuerpo.
+        ''' </summary>
+        Friend Shared Sub AgregarCamposDeVela(ctx As EvalContext, candleList As List(Of CandleModel))
+            Dim ultimo = candleList(candleList.Count - 1)
+            Dim t = DateTimeOffset.FromUnixTimeSeconds(ultimo.Epoch).UtcDateTime
+            ctx.SetValor("hora_utc", t.Hour)
+            ctx.SetValor("dia_semana", CInt(t.DayOfWeek))
+            ctx.SetValor("rango", ultimo.High - ultimo.Low)
+            ctx.SetValor("cuerpo", ultimo.ClosePrice - ultimo.OpenPrice)
+            ctx.SetValor("cuerpo_abs", Math.Abs(ultimo.ClosePrice - ultimo.OpenPrice))
+            If candleList.Count >= 2 Then
+                Dim prev = candleList(candleList.Count - 2)
+                ctx.SetValor("prev_open", prev.OpenPrice)
+                ctx.SetValor("prev_high", prev.High)
+                ctx.SetValor("prev_low", prev.Low)
+                ctx.SetValor("prev_close", prev.ClosePrice)
+                ctx.SetValor("prev_cuerpo", prev.ClosePrice - prev.OpenPrice)
+            End If
+        End Sub
 
         ' ── Helpers privados ────────────────────────────────────────────
         Private Sub PoblarContexto(ctx As EvalContext, candleList As List(Of CandleModel))

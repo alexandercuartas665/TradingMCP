@@ -1,0 +1,27 @@
+{
+  "nombre": "AsiaReversion_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (sin ajustar parametros). En la sesion asiatica (00 a 05 UTC) el euro y la libra tienen poca liquidez y tienden a moverse en rango; un cierre fuera de Bollinger(20,2) con RSI14 extremo (menos de 30 o mas de 70) tiende a volver hacia dentro en las dos horas siguientes. Pensada para frxEURUSD y frxGBPUSD 1h, duracion 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "bb",  "tipo": "BollingerBands", "params": { "periodo": 20, "desviacion": 2.0 } },
+    { "id": "rsi", "tipo": "RSI",            "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "hora_utc", "op": "menor_igual", "valor": 5 },
+      { "campo": "close", "op": "menor_que", "valor": "bb.Lower" },
+      { "campo": "rsi",   "op": "menor_que", "valor": 30 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "hora_utc", "op": "menor_igual", "valor": 5 },
+      { "campo": "close", "op": "mayor_que", "valor": "bb.Upper" },
+      { "campo": "rsi",   "op": "mayor_que", "valor": 70 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

@@ -78,6 +78,7 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
             Dim campo  As String = cond.Campo
             Dim op     As String = If(cond.Op, "").ToLowerInvariant()
             Dim valorJ As JToken = cond.Valor
+            Dim factor As Decimal = If(cond.Factor, 1D)
 
             ' Pre-determinar si el valor es una referencia a otro campo o un literal
             Dim esReferencia As Boolean = False
@@ -108,6 +109,7 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
                            Else
                                derecha = literalVal
                            End If
+                           derecha *= factor
 
                            Select Case op
                                Case "mayor_que"
