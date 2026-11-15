@@ -81,6 +81,7 @@ Namespace WpfDerivClientVB.Servidor
 
         Public ReadOnly Property EstaConectado As Boolean
             Get
+                If EnvioPruebas IsNot Nothing Then Return True
                 Dim ws = _ws
                 Return ws IsNot Nothing AndAlso ws.State = WebSocketState.Open
             End Get
@@ -365,7 +366,41 @@ Namespace WpfDerivClientVB.Servidor
         ' ClientWebSocket NO admite dos SendAsync simultaneos: todo pasa por este semaforo.
         Private ReadOnly _envioLock As New SemaphoreSlim(1, 1)
 
+        ''' <summary>
+        ''' Solo pruebas: si se asigna, los mensajes no van a Deriv sino a esta funcion y el
+        ''' servicio se considera conectado. Las respuestas se inyectan con ProcesarMensajeParaPruebas.
+        ''' </summary>
+        Friend Property EnvioPruebas As Action(Of String) = Nothing
+
+        ''' <summary>En pruebas nunca se escribe en la BD (trading_operations es dinero real) ni se notifica.</summary>
+        Private ReadOnly Property ModoPruebas As Boolean
+            Get
+                Return EnvioPruebas IsNot Nothing
+            End Get
+        End Property
+
+        Friend Sub ProcesarMensajeParaPruebas(json As String)
+            ProcesarMensaje(json)
+        End Sub
+
+        ''' <summary>Solo pruebas: vuelve al estado inicial (sin conexion simulada, sin pendientes ni operaciones).</summary>
+        Friend Sub ReiniciarParaPruebas()
+            EnvioPruebas = Nothing
+            _pendientes.Clear()
+            SyncLock _opsLock
+                _ops.Clear()
+            End SyncLock
+            _suscripcionesVelas.Clear()
+            _esDemo = True
+            _rateLimitHastaUtc = DateTime.MinValue
+        End Sub
+
         Private Async Function EnviarBytesAsync(bytes As Byte()) As Task
+            Dim envio = EnvioPruebas
+            If envio IsNot Nothing Then
+                envio(Encoding.UTF8.GetString(bytes))
+                Return
+            End If
             Dim ws = _ws
             If ws Is Nothing OrElse ws.State <> WebSocketState.Open Then
                 Throw New InvalidOperationException("WebSocket de trading no conectado.")
@@ -923,7 +958,7 @@ Namespace WpfDerivClientVB.Servidor
                         RaiseEvent OperacionQuitada(op)
                     End If
                     Dim esLive = op IsNot Nothing AndAlso op.EsLive
-                    Task.Run(Async Function() As Task
+                    If Not ModoPruebas Then Task.Run(Async Function() As Task
                                  Try
                                      If esLive Then Await New LiveTestRepository().MarcarOperacionExpiradaPorContractIdAsync(cid)
                                      Await New ClientRepository().CerrarOperacionPorContractAsync(cid, "NoEncontrado", 0D)
@@ -1036,7 +1071,7 @@ Namespace WpfDerivClientVB.Servidor
             Avisar(String.Format("{0} abierto: {1} — ${2}", op.Tipo, op.ContractId, op.Monto))
 
             Dim opBd = op
-            Task.Run(Async Function() As Task
+            If Not ModoPruebas Then Task.Run(Async Function() As Task
                          Try
                              Await New ClientRepository().GuardarOperacionAsync(opBd)
                          Catch ex As Exception
@@ -1080,7 +1115,7 @@ Namespace WpfDerivClientVB.Servidor
                 End If
                 RiskManager.RegistrarCierre(contractId, profit, cierreEpoch)
                 Dim estadoReal = If(status = "won", "Ganado", If(status = "lost", "Perdido", If(profit > 0D, "Ganado", "Perdido")))
-                Task.Run(Async Function() As Task
+                If Not ModoPruebas Then Task.Run(Async Function() As Task
                              Try
                                  Await New ClientRepository().CerrarOperacionPorContractAsync(contractId, estadoReal, profit)
                              Catch ex As Exception
@@ -1115,7 +1150,7 @@ Namespace WpfDerivClientVB.Servidor
 
         ''' <summary>Cierre de una operacion de estrategia: BD live, motor y notificacion.</summary>
         Private Sub CerrarOperacionLive(op As OperacionModel, poc As JToken, ganada As Boolean, profit As Decimal)
-            If Not op.EsLive OrElse op.OperacionLiveId <= 0 Then Return
+            If Not op.EsLive OrElse op.OperacionLiveId <= 0 OrElse ModoPruebas Then Return
             Dim spotSalida As Decimal = 0D
             Dim epochSalida As Long = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             If poc("exit_tick") IsNot Nothing Then
@@ -1178,6 +1213,7 @@ Namespace WpfDerivClientVB.Servidor
 #Region "Notificacion WhatsApp"
         ''' <summary>Resumen de una operacion LIVE cerrada al cliente (en segundo plano).</summary>
         Private Sub EnviarNotificacionOpCerrada(op As OperacionModel, epochSalida As Long)
+            If ModoPruebas Then Return
             If op Is Nothing OrElse Not op.EsLive OrElse _cliente Is Nothing OrElse _cliente.Id <= 0 Then Return
             Dim clientId = _cliente.Id
             Dim saldoTxt = TextoSaldo

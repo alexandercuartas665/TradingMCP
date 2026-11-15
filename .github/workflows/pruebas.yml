@@ -1,0 +1,32 @@
+# Compila la app y ejecuta las pruebas MSTest en cada PR y en cada push a main.
+# Las pruebas no necesitan base de datos ni conexion a Deriv.
+name: Pruebas
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Compilar y probar
+        run: dotnet test Tests/WpfDerivClientVB.Tests --configuration Release --logger "trx;LogFileName=resultados.trx" --results-directory resultados
+
+      - name: Guardar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: resultados
