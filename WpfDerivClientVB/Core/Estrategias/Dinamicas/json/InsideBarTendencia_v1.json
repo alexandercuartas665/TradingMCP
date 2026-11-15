@@ -1,0 +1,56 @@
+{
+  "nombre": "InsideBarTendencia_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Vela interior (maximo y minimo dentro de la anterior) = compresion; se resuelve a favor de la tendencia (cierre respecto a la EMA50). Divisas 4h, 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "ema50",
+      "tipo": "EMA",
+      "params": {
+        "periodo": 50
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "high",
+        "op": "menor_que",
+        "valor": "prev_high"
+      },
+      {
+        "campo": "low",
+        "op": "mayor_que",
+        "valor": "prev_low"
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "ema50"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "high",
+        "op": "menor_que",
+        "valor": "prev_high"
+      },
+      {
+        "campo": "low",
+        "op": "mayor_que",
+        "valor": "prev_low"
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "ema50"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

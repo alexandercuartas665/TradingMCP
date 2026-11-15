@@ -1,0 +1,68 @@
+{
+  "nombre": "ViernesTarde_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Cierre de posiciones antes del fin de semana: el viernes de 16 a 18 UTC una vela con cuerpo mayor que 0,5 ATR14 tiende a revertirse 2 horas (los traders cierran lo ganado en la semana). Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "dia_semana",
+        "op": "igual_a",
+        "valor": 5
+      },
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 16
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 18
+      },
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": -0.5
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "dia_semana",
+        "op": "igual_a",
+        "valor": 5
+      },
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 16
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 18
+      },
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 0.5
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

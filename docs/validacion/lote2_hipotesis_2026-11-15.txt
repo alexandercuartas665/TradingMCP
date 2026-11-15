@@ -1,0 +1,91 @@
+LOTE lote2_hipotesis_2026-11-15 - plan pre-registrado en docs/validacion/
+Periodo limpio: Dukascopy 2003-05-01 a 2024-03-31. Payout supuesto 85% (equilibrio 54.05%); con 78% el equilibrio es 56,18%.
+Ventaja por idea: z >= 2.81 (20 ideas) y acierto > 56,18%. Por mercado: z >= 3.15 (61 pruebas).
+
+ 1. TokioFixYen_v1             1h dur 2:  10818 ops, acierto 53,14%, z -1,90 -> SIN VENTAJA
+     frxUSDJPY   5442 ops  54,2% (IC95 52,9-55,6) z  0,28 desde 2003-05-04 | control 2024-26 Deriv 516 ops 47,1% / Dukascopy 535 ops 47,7%
+     frxGBPJPY   5376 ops  52,0% (IC95 50,7-53,4) z -2,98 desde 2003-08-03 | control 2024-26 Deriv 518 ops 49,8% / Dukascopy 535 ops 49,7%
+ 2. LunesGap_v1                1h dur 2:   1347 ops, acierto 56,72%, z 1,96 -> POSITIVO, NO SIGNIFICATIVO
+     frxEURUSD    313 ops  56,9% (IC95 51,3-62,2) z  1,00 desde 2003-05-04 | control 2024-26 Deriv 23 ops 65,2% / Dukascopy 36 ops 66,7%
+     frxGBPUSD    340 ops  60,0% (IC95 54,7-65,1) z  2,20 desde 2003-05-04 | control 2024-26 Deriv 14 ops 64,3% / Dukascopy 31 ops 54,8%
+     frxUSDJPY    388 ops  56,7% (IC95 51,7-61,5) z  1,05 desde 2003-05-04 | control 2024-26 Deriv 34 ops 58,8% / Dukascopy 40 ops 50,0%
+     frxXAUUSD    306 ops  52,9% (IC95 47,3-58,5) z -0,39 desde 2003-05-05 | control 2024-26 Deriv 58 ops 65,5% / Dukascopy 43 ops 51,2%
+ 3. FixLondresReversion_v1     1h dur 2:   8347 ops, acierto 51,65%, z -4,41 -> SIN VENTAJA
+     frxEURUSD   4121 ops  51,3% (IC95 49,8-52,8) z -3,52 desde 2003-05-04 | control 2024-26 Deriv 424 ops 47,9% / Dukascopy 435 ops 49,4%
+     frxGBPUSD   4226 ops  52,0% (IC95 50,5-53,5) z -2,73 desde 2003-05-04 | control 2024-26 Deriv 427 ops 46,6% / Dukascopy 429 ops 46,6%
+ 4. NYDatosMomentum_v1         1h dur 2:   9815 ops, acierto 49,68%, z -8,70 -> SIN VENTAJA
+     frxEURUSD   3372 ops  48,1% (IC95 46,5-49,8) z -6,90 desde 2003-05-04 | control 2024-26 Deriv 342 ops 45,9% / Dukascopy 346 ops 45,1%
+     frxGBPUSD   3324 ops  50,4% (IC95 48,7-52,1) z -4,20 desde 2003-05-04 | control 2024-26 Deriv 345 ops 47,0% / Dukascopy 345 ops 47,5%
+     frxUSDJPY   3119 ops  50,6% (IC95 48,8-52,3) z -3,91 desde 2003-05-04 | control 2024-26 Deriv 302 ops 52,6% / Dukascopy 323 ops 51,7%
+ 5. ViernesTarde_v1            1h dur 2:   1573 ops, acierto 52,19%, z -1,48 -> SIN VENTAJA
+     frxEURUSD    779 ops  51,9% (IC95 48,4-55,4) z -1,23 desde 2003-05-04 | control 2024-26 Deriv 79 ops 57,0% / Dukascopy 79 ops 51,9%
+     frxGBPUSD    794 ops  52,5% (IC95 49,0-56,0) z -0,87 desde 2003-05-04 | control 2024-26 Deriv 82 ops 54,9% / Dukascopy 81 ops 56,8%
+ 6. RSI2Indices_v1             1d dur 2:    140 ops, acierto 65,00%, z 2,60 -> POSITIVO, NO SIGNIFICATIVO
+     OTC_SPC       72 ops  68,1% (IC95 56,6-77,7) z  2,38 desde 2011-09-18 | control 2024-26 Deriv 4 ops 25,0% / Dukascopy 8 ops 62,5%
+     OTC_NDX       68 ops  61,8% (IC95 49,9-72,4) z  1,28 desde 2011-09-18 | control 2024-26 Deriv sin ops / Dukascopy 9 ops 55,6%
+ 7. RupturaDonchianDiaria_v1   1d dur 1:   5090 ops, acierto 49,84%, z -6,03 -> SIN VENTAJA
+     frxEURUSD   1334 ops  48,7% (IC95 46,1-51,4) z -3,91 desde 2003-05-04 | control 2024-26 Deriv 47 ops 61,7% / Dukascopy 96 ops 47,9%
+     frxGBPUSD   1271 ops  52,6% (IC95 49,9-55,4) z -1,01 desde 2003-05-04 | control 2024-26 Deriv 97 ops 69,1% / Dukascopy 124 ops 49,2%
+     frxUSDJPY   1233 ops  48,9% (IC95 46,1-51,7) z -3,63 desde 2003-05-04 | control 2024-26 Deriv 77 ops 62,3% / Dukascopy 99 ops 48,5%
+     frxXAUUSD   1252 ops  49,1% (IC95 46,4-51,9) z -3,50 desde 2003-05-05 | control 2024-26 Deriv 44 ops 59,1% / Dukascopy 123 ops 52,8%
+ 8. MomentumSerieTemporal_v1   1d dur 1:  14672 ops, acierto 49,34%, z -11,46 -> SIN VENTAJA
+     frxEURUSD   3684 ops  49,6% (IC95 47,9-51,2) z -5,47 desde 2003-05-04 | control 2024-26 Deriv 149 ops 45,0% / Dukascopy 326 ops 45,7%
+     frxGBPUSD   3629 ops  49,4% (IC95 47,8-51,0) z -5,65 desde 2003-05-04 | control 2024-26 Deriv 233 ops 50,2% / Dukascopy 320 ops 49,7%
+     frxUSDJPY   3702 ops  48,4% (IC95 46,8-50,0) z -6,86 desde 2003-05-04 | control 2024-26 Deriv 247 ops 49,8% / Dukascopy 326 ops 50,6%
+     frxXAUUSD   3657 ops  50,0% (IC95 48,4-51,6) z -4,94 desde 2003-05-05 | control 2024-26 Deriv 108 ops 59,3% / Dukascopy 353 ops 53,5%
+ 9. ReversionDiariaExtrema_v1  1d dur 1:    456 ops, acierto 51,32%, z -1,17 -> SIN VENTAJA
+     frxEURUSD    135 ops  49,6% (IC95 41,3-58,0) z -1,03 desde 2003-05-04 | control 2024-26 Deriv 3 ops 100,0% / Dukascopy 20 ops 65,0%
+     frxGBPUSD    135 ops  51,1% (IC95 42,8-59,4) z -0,69 desde 2003-05-04 | control 2024-26 Deriv 2 ops 100,0% / Dukascopy 18 ops 61,1%
+     frxUSDJPY    186 ops  52,7% (IC95 45,5-59,7) z -0,37 desde 2003-05-04 | control 2024-26 Deriv sin ops / Dukascopy 11 ops 72,7%
+10. InsideBarTendencia_v1      4h dur 2:  13781 ops, acierto 48,78%, z -12,43 -> SIN VENTAJA
+     frxEURUSD   4409 ops  48,5% (IC95 47,0-50,0) z -7,38 desde 2003-05-04 | control 2024-26 Deriv 308 ops 49,0% / Dukascopy 371 ops 48,0%
+     frxGBPUSD   4531 ops  49,1% (IC95 47,6-50,5) z -6,74 desde 2003-05-04 | control 2024-26 Deriv 347 ops 48,4% / Dukascopy 381 ops 52,0%
+     frxUSDJPY   4841 ops  48,8% (IC95 47,3-50,2) z -7,40 desde 2003-05-04 | control 2024-26 Deriv 384 ops 51,6% / Dukascopy 411 ops 52,1%
+11. EnvolventeBanda_v1         4h dur 2:   1858 ops, acierto 46,72%, z -6,35 -> SIN VENTAJA
+     frxEURUSD    455 ops  49,9% (IC95 45,3-54,5) z -1,78 desde 2003-05-04 | control 2024-26 Deriv 37 ops 40,5% / Dukascopy 56 ops 51,8%
+     frxGBPUSD    459 ops  46,6% (IC95 42,1-51,2) z -3,19 desde 2003-05-04 | control 2024-26 Deriv 43 ops 55,8% / Dukascopy 43 ops 51,2%
+     frxUSDJPY    506 ops  42,9% (IC95 38,6-47,2) z -5,04 desde 2003-05-04 | control 2024-26 Deriv 39 ops 56,4% / Dukascopy 49 ops 55,1%
+     frxXAUUSD    438 ops  47,9% (IC95 43,3-52,6) z -2,57 desde 2003-05-05 | control 2024-26 Deriv 33 ops 45,5% / Dukascopy 32 ops 43,8%
+12. MartilloBanda_v1           1h dur 2:  21633 ops, acierto 51,05%, z -8,87 -> SIN VENTAJA
+     frxEURUSD   7486 ops  52,1% (IC95 51,0-53,2) z -3,35 desde 2003-05-04 | control 2024-26 Deriv 621 ops 51,2% / Dukascopy 724 ops 52,3%
+     frxGBPUSD   6989 ops  50,8% (IC95 49,6-52,0) z -5,44 desde 2003-05-04 | control 2024-26 Deriv 609 ops 47,0% / Dukascopy 714 ops 49,0%
+     frxUSDJPY   7158 ops  50,2% (IC95 49,0-51,3) z -6,62 desde 2003-05-04 | control 2024-26 Deriv 626 ops 50,0% / Dukascopy 643 ops 51,6%
+13. CompresionRuptura_v1       1h dur 2:   3526 ops, acierto 47,84%, z -7,40 -> SIN VENTAJA
+     frxEURUSD   1272 ops  47,3% (IC95 44,6-50,1) z -4,81 desde 2003-05-04 | control 2024-26 Deriv 169 ops 39,6% / Dukascopy 165 ops 41,8%
+     frxGBPUSD   1535 ops  47,6% (IC95 45,1-50,1) z -5,06 desde 2003-05-04 | control 2024-26 Deriv 178 ops 48,9% / Dukascopy 156 ops 46,2%
+     frxUSDJPY    719 ops  49,2% (IC95 45,6-52,9) z -2,59 desde 2003-05-04 | control 2024-26 Deriv 66 ops 48,5% / Dukascopy 90 ops 45,6%
+14. DobleVelaAgotamiento_v1    1h dur 2:  21146 ops, acierto 52,96%, z -3,21 -> SIN VENTAJA
+     frxEURUSD   6990 ops  53,1% (IC95 52,0-54,3) z -1,52 desde 2003-05-04 | control 2024-26 Deriv 777 ops 50,6% / Dukascopy 727 ops 51,3%
+     frxGBPUSD   7218 ops  52,1% (IC95 51,0-53,3) z -3,30 desde 2003-05-04 | control 2024-26 Deriv 814 ops 48,9% / Dukascopy 767 ops 48,6%
+     frxUSDJPY   6938 ops  53,6% (IC95 52,5-54,8) z -0,71 desde 2003-05-04 | control 2024-26 Deriv 713 ops 51,5% / Dukascopy 799 ops 50,4%
+15. ADXPullback_v1             4h dur 2:    517 ops, acierto 50,48%, z -1,63 -> SIN VENTAJA
+     frxEURUSD    140 ops  49,3% (IC95 41,1-57,5) z -1,13 desde 2003-05-04 | control 2024-26 Deriv 8 ops 75,0% / Dukascopy 15 ops 66,7%
+     frxGBPUSD     99 ops  51,5% (IC95 41,8-61,1) z -0,51 desde 2003-05-04 | control 2024-26 Deriv 7 ops 57,1% / Dukascopy 8 ops 50,0%
+     frxUSDJPY    132 ops  49,2% (IC95 40,9-57,7) z -1,11 desde 2003-05-04 | control 2024-26 Deriv 16 ops 43,8% / Dukascopy 22 ops 31,8%
+     frxXAUUSD    146 ops  52,1% (IC95 44,0-60,0) z -0,48 desde 2003-05-05 | control 2024-26 Deriv 13 ops 69,2% / Dukascopy 11 ops 63,6%
+16. IchimokuNube_v1            4h dur 2:  34222 ops, acierto 48,71%, z -19,85 -> SIN VENTAJA
+     frxEURUSD  11404 ops  48,4% (IC95 47,5-49,3) z -12,14 desde 2003-05-04 | control 2024-26 Deriv 943 ops 47,8% / Dukascopy 1076 ops 49,4%
+     frxGBPUSD  11413 ops  49,0% (IC95 48,1-49,9) z -10,82 desde 2003-05-04 | control 2024-26 Deriv 1017 ops 49,1% / Dukascopy 1076 ops 48,6%
+     frxUSDJPY  11405 ops  48,7% (IC95 47,8-49,6) z -11,42 desde 2003-05-04 | control 2024-26 Deriv 991 ops 51,2% / Dukascopy 1083 ops 50,5%
+17. AsiaReversion_v1           1h dur 2:   1438 ops, acierto 53,27%, z -0,60 -> SIN VENTAJA
+     frxUSDJPY    740 ops  51,8% (IC95 48,2-55,3) z -1,25 desde 2003-05-04 | control 2024-26 Deriv 111 ops 48,6% / Dukascopy 112 ops 48,2%
+     frxUSDCHF    210 ops  61,0% (IC95 54,2-67,3) z  2,01 desde 2003-05-04 | control 2024-26 Deriv 35 ops 40,0% / Dukascopy 32 ops 40,6%
+     frxGBPJPY    488 ops  52,3% (IC95 47,8-56,6) z -0,80 desde 2003-08-03 | control 2024-26 Deriv 68 ops 42,6% / Dukascopy 62 ops 45,2%
+18. MediodiaEuropa_v1          1h dur 2:   4140 ops, acierto 51,30%, z -3,55 -> SIN VENTAJA
+     frxEURUSD   1896 ops  51,5% (IC95 49,3-53,8) z -2,21 desde 2003-05-04 | control 2024-26 Deriv 154 ops 57,1% / Dukascopy 159 ops 54,7%
+     frxGBPUSD   2244 ops  51,1% (IC95 49,0-53,2) z -2,79 desde 2003-05-04 | control 2024-26 Deriv 170 ops 52,3% / Dukascopy 176 ops 53,4%
+19. CruceMediaLarga_v1         4h dur 2:   6318 ops, acierto 48,18%, z -9,37 -> SIN VENTAJA
+     frxEURUSD   1579 ops  49,5% (IC95 47,1-52,0) z -3,61 desde 2003-05-04 | control 2024-26 Deriv 111 ops 49,5% / Dukascopy 130 ops 50,8%
+     frxGBPUSD   1627 ops  48,9% (IC95 46,4-51,3) z -4,20 desde 2003-05-04 | control 2024-26 Deriv 150 ops 51,3% / Dukascopy 158 ops 47,5%
+     frxUSDJPY   1612 ops  49,0% (IC95 46,6-51,4) z -4,07 desde 2003-05-04 | control 2024-26 Deriv 151 ops 53,6% / Dukascopy 171 ops 57,9%
+     frxXAUUSD   1500 ops  45,1% (IC95 42,6-47,7) z -6,93 desde 2003-05-05 | control 2024-26 Deriv 134 ops 40,3% / Dukascopy 150 ops 46,7%
+20. RangoEstrecho_v1           4h dur 2:   9152 ops, acierto 49,98%, z -7,82 -> SIN VENTAJA
+     frxEURUSD   3360 ops  49,0% (IC95 47,3-50,7) z -5,86 desde 2003-05-04 | control 2024-26 Deriv 291 ops 44,3% / Dukascopy 337 ops 46,0%
+     frxGBPUSD   3611 ops  50,4% (IC95 48,8-52,1) z -4,37 desde 2003-05-04 | control 2024-26 Deriv 297 ops 51,8% / Dukascopy 303 ops 53,8%
+     frxUSDJPY   2181 ops  50,7% (IC95 48,6-52,8) z -3,13 desde 2003-05-04 | control 2024-26 Deriv 216 ops 48,6% / Dukascopy 221 ops 50,7%
+
+CONTROLES (no cuentan como pruebas):
+     TestSiempre OTC_SPC 1d dur 2: 1167 ops 56,3% (comprar siempre: referencia para la idea 6 (los indices subieron))
+     TestSiempre OTC_NDX 1d dur 2: 1187 ops 56,6% (comprar siempre: referencia para la idea 6 (los indices subieron))
+
+TOTAL: 169989 operaciones, acierto 50,34%. Ideas con ventaja corregida: 0 de 20.

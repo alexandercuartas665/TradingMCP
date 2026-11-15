@@ -1,0 +1,55 @@
+{
+  "nombre": "RangoEstrecho_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Vela de rango estrecho (menor que 0,5 ATR14) = calma antes del movimiento; se resuelve a favor de la tendencia de la EMA50. Divisas 4h, 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    },
+    {
+      "id": "ema50",
+      "tipo": "EMA",
+      "params": {
+        "periodo": 50
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": 0.5
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "ema50"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "rango",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": 0.5
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "ema50"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

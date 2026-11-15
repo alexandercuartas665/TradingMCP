@@ -1,0 +1,57 @@
+{
+  "nombre": "MediodiaEuropa_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Pausa del mediodia europeo (10-11 UTC): con poca actividad, un cierre fuera de Bollinger(20,2) vuelve hacia la media 2 horas. EUR/USD y GBP/USD 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "bb",
+      "tipo": "BollingerBands",
+      "params": {
+        "periodo": 20,
+        "desviacion": 2.0
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 10
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 11
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "bb.Lower"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 10
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 11
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "bb.Upper"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

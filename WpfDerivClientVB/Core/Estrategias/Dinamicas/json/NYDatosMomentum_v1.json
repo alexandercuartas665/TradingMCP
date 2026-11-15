@@ -1,0 +1,58 @@
+{
+  "nombre": "NYDatosMomentum_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Datos de EE. UU. (12:30 y 13:30 UTC): una vela de 12 o 13 UTC con cuerpo mayor que 0,7 ATR14 refleja informacion nueva que el mercado tarda en digerir; continua 2 horas. Divisas 1h.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "atr",
+      "tipo": "ATR",
+      "params": {
+        "periodo": 14
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 12
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 13
+      },
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": "atr",
+        "factor": 0.7
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "mayor_igual",
+        "valor": 12
+      },
+      {
+        "campo": "hora_utc",
+        "op": "menor_igual",
+        "valor": 13
+      },
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": "atr",
+        "factor": -0.7
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

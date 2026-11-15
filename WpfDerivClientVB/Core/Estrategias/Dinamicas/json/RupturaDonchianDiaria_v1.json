@@ -1,0 +1,46 @@
+{
+  "nombre": "RupturaDonchianDiaria_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Ruptura de 20 dias (tortugas): un nuevo maximo de 20 dias anticipa continuacion al dia siguiente; un nuevo minimo, caida. Divisas y oro 1d, 1 dia.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "dc",
+      "tipo": "DonchianChannel",
+      "params": {
+        "periodo": 20
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "high",
+        "op": "mayor_igual",
+        "valor": "dc.Upper"
+      },
+      {
+        "campo": "low",
+        "op": "mayor_que",
+        "valor": "dc.Lower"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "low",
+        "op": "menor_igual",
+        "valor": "dc.Lower"
+      },
+      {
+        "campo": "high",
+        "op": "menor_que",
+        "valor": "dc.Upper"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

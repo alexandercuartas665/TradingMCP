@@ -1,0 +1,48 @@
+{
+  "nombre": "RSI2Indices_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Retroceso corto en tendencia alcista de indices (tipo Connors): cierre diario sobre la SMA50 y RSI(2) menor que 10 -> CALL 2 dias. Solo compras. Indices 1d. Se compara con comprar siempre (TestSiempre) porque los indices subieron.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "rsi2",
+      "tipo": "RSI",
+      "params": {
+        "periodo": 2
+      }
+    },
+    {
+      "id": "sma50",
+      "tipo": "SMA",
+      "params": {
+        "periodo": 50
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "sma50"
+      },
+      {
+        "campo": "rsi2",
+        "op": "menor_que",
+        "valor": 10
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "hora_utc",
+        "op": "menor_que",
+        "valor": -1
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

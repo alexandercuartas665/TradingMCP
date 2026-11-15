@@ -1,0 +1,53 @@
+{
+  "nombre": "MomentumSerieTemporal_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Momentum de serie temporal: con EMA20 sobre SMA60 y cierre sobre la EMA20 la tendencia diaria sigue al dia siguiente (y al reves). Divisas y oro 1d, 1 dia.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "ema20",
+      "tipo": "EMA",
+      "params": {
+        "periodo": 20
+      }
+    },
+    {
+      "id": "sma60",
+      "tipo": "SMA",
+      "params": {
+        "periodo": 60
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "ema20",
+        "op": "mayor_que",
+        "valor": "sma60"
+      },
+      {
+        "campo": "close",
+        "op": "mayor_que",
+        "valor": "ema20"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "ema20",
+        "op": "menor_que",
+        "valor": "sma60"
+      },
+      {
+        "campo": "close",
+        "op": "menor_que",
+        "valor": "ema20"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

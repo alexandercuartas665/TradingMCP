@@ -1,0 +1,77 @@
+{
+  "nombre": "EnvolventeBanda_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (lote 2, sin ajustar parametros, periodos estandar). Vela envolvente que rechaza la banda de Bollinger(20,2): envolvente bajista que toco la banda superior -> PUT; alcista en la inferior -> CALL. Divisas y oro 4h, 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    {
+      "id": "bb",
+      "tipo": "BollingerBands",
+      "params": {
+        "periodo": 20,
+        "desviacion": 2.0
+      }
+    }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "cuerpo",
+        "op": "mayor_que",
+        "valor": 0
+      },
+      {
+        "campo": "prev_cuerpo",
+        "op": "menor_que",
+        "valor": 0
+      },
+      {
+        "campo": "open",
+        "op": "menor_igual",
+        "valor": "prev_close"
+      },
+      {
+        "campo": "close",
+        "op": "mayor_igual",
+        "valor": "prev_open"
+      },
+      {
+        "campo": "low",
+        "op": "menor_que",
+        "valor": "bb.Lower"
+      }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      {
+        "campo": "cuerpo",
+        "op": "menor_que",
+        "valor": 0
+      },
+      {
+        "campo": "prev_cuerpo",
+        "op": "mayor_que",
+        "valor": 0
+      },
+      {
+        "campo": "open",
+        "op": "mayor_igual",
+        "valor": "prev_close"
+      },
+      {
+        "campo": "close",
+        "op": "menor_igual",
+        "valor": "prev_open"
+      },
+      {
+        "campo": "high",
+        "op": "mayor_que",
+        "valor": "bb.Upper"
+      }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}
