@@ -6,10 +6,12 @@
 #   pwsh -File scripts\backtest\probar_hipotesis.ps1 -Estrategia EmaRsiCruce_v4 -Symbol frxUSDJPY -Timeframe 1h `
 #        -Duracion 2 -Confianza 55 -Motivo "En la sesion de Tokio el yen tiende a revertir tras excesos de RSI"
 #   pwsh -File scripts\backtest\probar_hipotesis.ps1 -Listar
+# -Fuente Dukascopy: prueba sobre el historico largo externo (desde 2003; ver scripts\descargas\historico_externo.ps1).
 param(
   [string]$Estrategia, [string]$Symbol, [string]$Timeframe = '1h',
   [int]$Duracion = 2, [int]$Confianza = 55, [string]$Motivo,
   [double]$Payout = 0, [string]$Corte = '2026-04-29',
+  [ValidateSet('Deriv','Dukascopy')][string]$Fuente = 'Deriv',
   [switch]$Listar
 )
 . (Join-Path $PSScriptRoot '..\agent_auth.ps1')
@@ -25,7 +27,7 @@ if ($Listar) {
   exit 0
 }
 if (-not $Estrategia -or -not $Symbol -or -not $Motivo) { throw 'Faltan -Estrategia, -Symbol y -Motivo (por que deberia funcionar).' }
-$body = @{ estrategia=$Estrategia; symbol=$Symbol; timeframe=$Timeframe; duracion=$Duracion; confianza=$Confianza; corte=$Corte; motivo=$Motivo }
+$body = @{ estrategia=$Estrategia; symbol=$Symbol; timeframe=$Timeframe; duracion=$Duracion; confianza=$Confianza; corte=$Corte; motivo=$Motivo; fuente=$Fuente }
 if ($Payout -gt 0) { $body.payout = $Payout }
 $r = Invoke-RestMethod $api -Method POST -Body ($body | ConvertTo-Json -Compress) -ContentType 'application/json' -TimeoutSec 3600
 if (-not $r.ok) { Write-Output ("ERROR: {0}" -f $r.error); exit 1 }

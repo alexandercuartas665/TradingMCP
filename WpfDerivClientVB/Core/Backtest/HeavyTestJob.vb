@@ -32,6 +32,8 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property Payout As Decimal = 0D
         ''' <summary>True: usar el payout real medido (PayoutsReales) si existe para este simbolo y duracion.</summary>
         Public Property UsarPayoutReal As Boolean = False
+        ''' <summary>Origen de las velas: Deriv (por defecto) o Dukascopy (historico largo externo).</summary>
+        Public Property Fuente As String = FuentesVelas.DERIV
         ''' <summary>True si Payout es un valor medido en Deriv (no supuesto).</summary>
         Public Property PayoutEsReal As Boolean = False
         Public Property Duracion As Integer = 0

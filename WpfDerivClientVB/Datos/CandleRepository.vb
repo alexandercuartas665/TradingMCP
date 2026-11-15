@@ -109,9 +109,82 @@ Namespace WpfDerivClientVB
         End Function
 
         ''' <summary>
-        ''' Cuenta cuantas velas hay guardadas para un activo/temporalidad.
-        ''' Util para verificar que la persistencia funciona.
+        ''' Guarda (o actualiza) muchas velas con un solo INSERT por bloque de 5000. A diferencia
+        ''' de SaveBatchAsync, los errores se propagan: quien descarga necesita saber si fallo.
+        ''' Devuelve cuantas velas se escribieron.
         ''' </summary>
+        Public Async Function GuardarLoteAsync(platform As String, symbol As String, timeframe As String,
+                                               candles As IList(Of CandleModel)) As Task(Of Integer)
+            If candles Is Nothing OrElse candles.Count = 0 Then Return 0
+            Const sql As String =
+                "INSERT INTO public.candles (platform, symbol, timeframe, epoch, open_time, open_price, high_price, low_price, close_price, is_closed) " &
+                "SELECT @p, @s, @tf, t.e, to_timestamp(t.e), t.o, t.h, t.l, t.c, TRUE " &
+                "FROM unnest(@e, @o, @h, @l, @c) AS t(e, o, h, l, c) " &
+                "ON CONFLICT (platform, symbol, timeframe, epoch) DO UPDATE SET " &
+                "  open_price = EXCLUDED.open_price, high_price = EXCLUDED.high_price, " &
+                "  low_price = EXCLUDED.low_price, close_price = EXCLUDED.close_price, is_closed = TRUE;"
+            Dim total = 0
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                For inicio = 0 To candles.Count - 1 Step 5000
+                    Dim bloque = candles.Skip(inicio).Take(5000).ToList()
+                    Using cmd As New NpgsqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("p", platform)
+                        cmd.Parameters.AddWithValue("s", symbol)
+                        cmd.Parameters.AddWithValue("tf", timeframe)
+                        cmd.Parameters.AddWithValue("e", bloque.Select(Function(c) c.Epoch).ToArray())
+                        cmd.Parameters.AddWithValue("o", bloque.Select(Function(c) c.OpenPrice).ToArray())
+                        cmd.Parameters.AddWithValue("h", bloque.Select(Function(c) c.High).ToArray())
+                        cmd.Parameters.AddWithValue("l", bloque.Select(Function(c) c.Low).ToArray())
+                        cmd.Parameters.AddWithValue("c", bloque.Select(Function(c) c.ClosePrice).ToArray())
+                        total += Await cmd.ExecuteNonQueryAsync()
+                    End Using
+                Next
+            End Using
+            Return total
+        End Function
+
+        ''' <summary>Periodos (formato de to_char, p. ej. 'YYYY-MM' o 'YYYY-MM-DD', en UTC) con al menos una vela guardada.</summary>
+        Public Async Function PeriodosConDatosAsync(platform As String, symbol As String, timeframe As String,
+                                                    formato As String) As Task(Of HashSet(Of String))
+            Dim res As New HashSet(Of String)()
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Using cmd As New NpgsqlCommand(
+                    "SELECT DISTINCT to_char(to_timestamp(epoch) AT TIME ZONE 'UTC', @f) FROM public.candles " &
+                    "WHERE platform = @p AND symbol = @s AND timeframe = @tf;", conn)
+                    cmd.Parameters.AddWithValue("f", formato)
+                    cmd.Parameters.AddWithValue("p", platform)
+                    cmd.Parameters.AddWithValue("s", symbol)
+                    cmd.Parameters.AddWithValue("tf", timeframe)
+                    Using rd = Await cmd.ExecuteReaderAsync()
+                        While Await rd.ReadAsync()
+                            res.Add(rd.GetString(0))
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return res
+        End Function
+
+        ''' <summary>Cobertura por serie de una fuente: (symbol, timeframe, velas, primer epoch, ultimo epoch).</summary>
+        Public Async Function CoberturaAsync(platform As String) As Task(Of List(Of Tuple(Of String, String, Long, Long, Long)))
+            Dim res As New List(Of Tuple(Of String, String, Long, Long, Long))()
+            Using conn As New NpgsqlConnection(_connectionString)
+                Await conn.OpenAsync()
+                Using cmd As New NpgsqlCommand(
+                    "SELECT symbol, timeframe, COUNT(*), MIN(epoch), MAX(epoch) FROM public.candles WHERE platform = @p GROUP BY symbol, timeframe ORDER BY symbol, timeframe;", conn)
+                    cmd.Parameters.AddWithValue("p", platform)
+                    Using rd = Await cmd.ExecuteReaderAsync()
+                        While Await rd.ReadAsync()
+                            res.Add(Tuple.Create(rd.GetString(0), rd.GetString(1), rd.GetInt64(2), rd.GetInt64(3), rd.GetInt64(4)))
+                        End While
+                    End Using
+                End Using
+            End Using
+            Return res
+        End Function
+
         ''' <summary>Series guardadas (symbol, timeframe) con el epoch de su ultima vela.</summary>
         Public Async Function ListarSeriesAsync(platform As String) As Task(Of List(Of Tuple(Of String, String, Long)))
             Dim res As New List(Of Tuple(Of String, String, Long))()

@@ -19,9 +19,10 @@ Namespace WpfDerivClientVB.Backtesting
 
     Public Module ValidacionCompleta
 
-        Public Function CargarVelasAsync(symbol As String, timeframe As String) As Task(Of List(Of CandleModel))
+        ''' <summary>Velas de una fuente (Deriv por defecto; Dukascopy = historico largo externo).</summary>
+        Public Function CargarVelasAsync(symbol As String, timeframe As String, Optional fuente As String = FuentesVelas.DERIV) As Task(Of List(Of CandleModel))
             Dim repo = New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
-            Return repo.GetCandlesRangoAsync("Deriv", symbol, timeframe, 0, DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+            Return repo.GetCandlesRangoAsync(FuentesVelas.Normalizar(fuente), symbol, timeframe, 0, DateTimeOffset.UtcNow.ToUnixTimeSeconds())
         End Function
 
         Private Function Fecha(epoch As Long) As String
@@ -35,14 +36,15 @@ Namespace WpfDerivClientVB.Backtesting
                                             Optional diasEntrenamiento As Integer = 365, Optional diasPrueba As Integer = 90,
                                             Optional grilla As List(Of Integer) = Nothing,
                                             Optional iteraciones As Integer = 5000,
-                                            Optional corridasRuido As Integer = 30, Optional nivelRuido As Double = 0.1) As Task(Of JObject)
+                                            Optional corridasRuido As Integer = 30, Optional nivelRuido As Double = 0.1,
+                                            Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
             Dim cfg As New BacktestConfig With {
                 .Symbol = symbol, .Timeframe = timeframe, .DuracionVelas = duracion,
                 .MinConfianza = confianza, .PayoutPct = payout, .VentanaIndicadores = 100, .UnaPosicionALaVez = True
             }
             cfg.Cuentas.Add(New BacktestCuenta With {.NombreCuenta = "robustez", .BalanceInicial = 1000D, .MontoPorOperacion = 1D})
             Dim g = If(grilla, New List(Of Integer) From {50, 55, 60, 65, 70})
-            Dim velas = Await CargarVelasAsync(symbol, timeframe)
+            Dim velas = Await CargarVelasAsync(symbol, timeframe, fuente)
             If velas.Count < 300 Then
                 Return New JObject From {{"ok", False}, {"error", String.Format("Velas insuficientes ({0}) para {1} {2}.", velas.Count, symbol, timeframe)}}
             End If
@@ -55,7 +57,7 @@ Namespace WpfDerivClientVB.Backtesting
                 Dim ruido = MonteCarlo.RuidoEnPrecios(velas, est, cfg, corridasRuido, nivelRuido)
                 Return New JObject From {
                     {"ok", True}, {"estrategia", est.Nombre}, {"symbol", symbol}, {"timeframe", timeframe},
-                    {"duracion_velas", duracion}, {"min_confianza", confianza}, {"payout_pct", payout},
+                    {"fuente", FuentesVelas.Normalizar(fuente)}, {"duracion_velas", duracion}, {"min_confianza", confianza}, {"payout_pct", payout},
                     {"desde", Fecha(velas.First().Epoch)}, {"hasta", Fecha(velas.Last().Epoch)},
                     {"walk_forward", wf}, {"monte_carlo", mc}, {"ruido_precios", ruido}
                 }
@@ -66,7 +68,8 @@ Namespace WpfDerivClientVB.Backtesting
         Public Async Function MultiMercadoAsync(est As IEstrategia, mercados As IEnumerable(Of Tuple(Of String, String)),
                                                 duracion As Integer, confianza As Integer, payout As Decimal,
                                                 corteEpoch As Long,
-                                                Optional payoutPorMercado As Func(Of String, String, Decimal) = Nothing) As Task(Of JObject)
+                                                Optional payoutPorMercado As Func(Of String, String, Decimal) = Nothing,
+                                                Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
             Dim filas As New JArray()
             Dim totD = 0, ganD = 0, totC = 0, ganC = 0, mercadosSobreEquilibrio = 0, mercadosConDatos = 0
             Dim sumaPayoutCiego As Double = 0
@@ -74,7 +77,7 @@ Namespace WpfDerivClientVB.Backtesting
                 Dim sym = m.Item1, tf = m.Item2
                 ' Con payoutPorMercado cada mercado se mide con su propio payout (p. ej. el real medido)
                 Dim pay = If(payoutPorMercado Is Nothing, payout, payoutPorMercado(sym, tf))
-                Dim velas = Await CargarVelasAsync(sym, tf)
+                Dim velas = Await CargarVelasAsync(sym, tf, fuente)
                 Dim r = Await Task.Run(Function() ValidacionEstrategia.Validar(velas, est, sym, tf, duracion, confianza, pay, corteEpoch))
                 filas.Add(r)
                 If r("ok") Is Nothing OrElse Not CBool(r("ok")) Then Continue For
@@ -91,7 +94,8 @@ Namespace WpfDerivClientVB.Backtesting
             If payoutPorMercado IsNot Nothing AndAlso totC > 0 Then payout = CDec(Math.Round(sumaPayoutCiego / totC, 2))
             Dim icD = Estadistica.IntervaloWilson(ganD, totD), icC = Estadistica.IntervaloWilson(ganC, totC)
             Return New JObject From {
-                {"ok", True}, {"estrategia", est.Nombre}, {"duracion_velas", duracion}, {"min_confianza", confianza}, {"payout_pct", payout},
+                {"ok", True}, {"estrategia", est.Nombre}, {"fuente", FuentesVelas.Normalizar(fuente)},
+                {"duracion_velas", duracion}, {"min_confianza", confianza}, {"payout_pct", payout},
                 {"punto_equilibrio", Math.Round(Estadistica.PuntoEquilibrio(payout), 4)},
                 {"total_diseno", New JObject From {{"operaciones", totD}, {"win_rate", If(totD > 0, Math.Round(ganD / CDbl(totD), 4), 0.0)},
                                                   {"ic95_inf", Math.Round(icD.Item1, 4)}, {"ic95_sup", Math.Round(icD.Item2, 4)}}},
@@ -132,15 +136,22 @@ Namespace WpfDerivClientVB.Backtesting
         ''' </summary>
         Public Async Function EjecutarTodoAsync(est As IEstrategia, symbol As String, timeframe As String,
                                                 duracion As Integer, confianza As Integer, payout As Decimal,
-                                                corteEpoch As Long) As Task(Of JObject)
-            Dim validar = Await ValidacionEstrategia.ValidarAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch)
-            Dim robustez = Await RobustezAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch)
-            Dim series = Await New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString()).ListarSeriesAsync("Deriv")
+                                                corteEpoch As Long,
+                                                Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
+            fuente = FuentesVelas.Normalizar(fuente)
+            Dim validar = Await ValidacionEstrategia.ValidarAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch, fuente:=fuente)
+            Dim robustez = Await RobustezAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch, fuente:=fuente)
+            Dim series = Await New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString()).ListarSeriesAsync(fuente)
             Dim mercados = series.Where(Function(s) s.Item2 = timeframe).Select(Function(s) Tuple.Create(s.Item1, s.Item2)).ToList()
-            Dim multi = Await MultiMercadoAsync(est, mercados, duracion, confianza, payout, corteEpoch)
+            Dim multi = Await MultiMercadoAsync(est, mercados, duracion, confianza, payout, corteEpoch, fuente:=fuente)
+            Dim informe = InformeTexto(validar, robustez, multi)
+            If fuente <> FuentesVelas.DERIV Then
+                informe = String.Format("FUENTE DE VELAS: {0} (historico externo; precios parecidos pero no identicos a los de Deriv: confirmar con forward test en Deriv).", fuente) &
+                          Environment.NewLine & informe
+            End If
             Return New JObject From {
-                {"ok", True}, {"conclusion", Conclusion(validar, robustez)},
-                {"informe", InformeTexto(validar, robustez, multi)},
+                {"ok", True}, {"fuente", fuente}, {"conclusion", Conclusion(validar, robustez)},
+                {"informe", informe},
                 {"validar", validar}, {"robustez", robustez}, {"multimercado", multi}
             }
         End Function
@@ -152,7 +163,8 @@ Namespace WpfDerivClientVB.Backtesting
         ''' </summary>
         Public Async Function ProbarHipotesisAsync(est As IEstrategia, symbol As String, timeframe As String,
                                                    duracion As Integer, confianza As Integer, payout As Decimal,
-                                                   corteEpoch As Long, motivo As String) As Task(Of JObject)
+                                                   corteEpoch As Long, motivo As String,
+                                                   Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
             If String.IsNullOrWhiteSpace(motivo) OrElse motivo.Trim().Length < 15 Then
                 Return New JObject From {{"ok", False}, {"error", "Escribe el motivo (por que deberia funcionar) antes de probar: minimo 15 caracteres."}}
             End If
@@ -162,7 +174,7 @@ Namespace WpfDerivClientVB.Backtesting
             ' Pruebas que cuentan para la correccion: las registradas mas las hechas antes del registro
             Dim numero = reg.Item2 + Math.Max(0, ConfigManager.LoadDbConfig().HipotesisPrevias)
             Try
-                Dim todo = Await EjecutarTodoAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch)
+                Dim todo = Await EjecutarTodoAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch, fuente)
                 Dim ciego = todo("validar")?("periodo_ciego")
                 Dim n = If(ciego IsNot Nothing, CInt(ciego("operaciones")), 0)
                 Dim g = If(ciego IsNot Nothing, CInt(ciego("ganadas")), 0)
