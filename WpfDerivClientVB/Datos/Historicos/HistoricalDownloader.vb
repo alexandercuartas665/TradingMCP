@@ -139,6 +139,20 @@ Namespace WpfDerivClientVB
                         Exit Do
                     End If
 
+                    ' Si Deriv ya no guarda historico tan antiguo para esta temporalidad, ignora "end"
+                    ' y devuelve las velas mas recientes: no hay nada que descargar en ese tramo.
+                    Dim primeraEpoch As Long = CLng(CType(arr(0), JObject)("epoch"))
+                    If primeraEpoch > currentEndEpoch + granularity Then
+                        onProgress(New DownloadProgress With {
+                            .PageNum = pageNum,
+                            .TotalSaved = totalSaved,
+                            .StatusMsg = String.Format("Deriv ya no guarda velas de {0} de {1} tan antiguas (respondio con las mas recientes): ese tramo no se puede descargar. Total: {2} velas.",
+                                                       timeframe, symbol, totalSaved),
+                            .IsComplete = True
+                        })
+                        Exit Do
+                    End If
+
                     ' Convertir a CandleModel
                     Dim candleList As New List(Of CandleModel)()
                     Dim ahoraEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
