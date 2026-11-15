@@ -1,0 +1,227 @@
+HIPOTESIS NUEVAS - registradas y probadas el 2026-11-15 con el embudo (scripts/backtest/probar_hipotesis.ps1).
+Payout: divisas y oro aun sin medir (mercado cerrado) -> 85% supuesto, mas favorable que el real (~75-79%).
+
+===== LondresMomentum_v1 frxEURUSD 1h =====
+HIPOTESIS registrada #1. Motivo: En la primera hora de Londres entran las ordenes europeas: si esa vela tiene un cuerpo fuerte (mas de 0,5 x ATR) su direccion tiende a continuar dos horas.
+Pruebas que cuentan para la correccion: 151 (150 anteriores al registro + 1 registradas).
+Veredicto del periodo ciego corregido por 151 pruebas: POSITIVO, NO SIGNIFICATIVO
+
+VALIDACION COMPLETA - LondresMomentum_v1  frxEURUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 409 ops  52.8%  IC95 48.0%-57.6%  -> SIN VENTAJA
+   Ciego:  113 ops  56.6%  IC95 47.4%-65.4%  -> POSITIVO, NO SIGNIFICATIVO
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    103 ops  53.4%  IC95 43.8%-62.7%  -> SIN VENTAJA
+   Antes del corte (sesgado): 103 ops  53.4%  IC95 43.8%-62.7%  -> SIN VENTAJA
+   Despues del corte (limpio): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 40.1%, caida maxima p95 36.2 USD, peor racha p95 11
+   Ruido en precios: base 53.6% -> media 53.6% (+/- 1.0%), 10 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1063 ops  50.9%  IC95 47.9%-53.9%  -> SIN VENTAJA
+   Mercados sobre el minimo: 2 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
+===== LondresMomentum_v1 frxGBPUSD 1h =====
+HIPOTESIS registrada #2. Motivo: En la primera hora de Londres entran las ordenes europeas: si esa vela tiene un cuerpo fuerte (mas de 0,5 x ATR) su direccion tiende a continuar dos horas.
+Pruebas que cuentan para la correccion: 152 (150 anteriores al registro + 2 registradas).
+Veredicto del periodo ciego corregido por 152 pruebas: POSITIVO, NO SIGNIFICATIVO
+
+VALIDACION COMPLETA - LondresMomentum_v1  frxGBPUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 432 ops  53.2%  IC95 48.5%-57.9%  -> SIN VENTAJA
+   Ciego:  114 ops  54.4%  IC95 45.3%-63.2%  -> POSITIVO, NO SIGNIFICATIVO
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    156 ops  50.6%  IC95 42.9%-58.4%  -> SIN VENTAJA
+   Antes del corte (sesgado): 156 ops  50.6%  IC95 42.9%-58.4%  -> SIN VENTAJA
+   Despues del corte (limpio): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 39.3%, caida maxima p95 37.65 USD, peor racha p95 11
+   Ruido en precios: base 53.5% -> media 52.4% (+/- 0.9%), 1 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1063 ops  50.9%  IC95 47.9%-53.9%  -> SIN VENTAJA
+   Mercados sobre el minimo: 2 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
+===== AsiaReversion_v1 frxEURUSD 1h =====
+HIPOTESIS registrada #3. Motivo: En la sesion asiatica el euro y la libra tienen poca liquidez y se mueven en rango: un cierre fuera de Bollinger con RSI extremo tiende a volver hacia dentro.
+Pruebas que cuentan para la correccion: 153 (150 anteriores al registro + 3 registradas).
+Veredicto del periodo ciego corregido por 153 pruebas: MUESTRA INSUFICIENTE
+
+VALIDACION COMPLETA - AsiaReversion_v1  frxEURUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 30 ops  40.0%  IC95 24.6%-57.7%  -> SIN VENTAJA
+   Ciego:  12 ops  66.7%  IC95 39.1%-86.2%  -> MUESTRA INSUFICIENTE
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    2 ops  50.0%  IC95 9.5%-90.6%  -> MUESTRA INSUFICIENTE
+   Antes del corte (sesgado): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Despues del corte (limpio): 2 ops  50.0%  IC95 9.5%-90.6%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 21.9%, caida maxima p95 11.5 USD, peor racha p95 8
+   Ruido en precios: base 47.6% -> media 51.1% (+/- 3.7%), 5 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  163 ops  48.5%  IC95 40.9%-56.1%  -> SIN VENTAJA
+   Mercados sobre el minimo: 2 de 8
+
+CONCLUSION: MUESTRA INSUFICIENTE: muy pocas operaciones en el periodo ciego para decidir.
+
+
+===== AsiaReversion_v1 frxGBPUSD 1h =====
+HIPOTESIS registrada #4. Motivo: En la sesion asiatica el euro y la libra tienen poca liquidez y se mueven en rango: un cierre fuera de Bollinger con RSI extremo tiende a volver hacia dentro.
+Pruebas que cuentan para la correccion: 154 (150 anteriores al registro + 4 registradas).
+Veredicto del periodo ciego corregido por 154 pruebas: MUESTRA INSUFICIENTE
+
+VALIDACION COMPLETA - AsiaReversion_v1  frxGBPUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 22 ops  45.5%  IC95 26.9%-65.3%  -> MUESTRA INSUFICIENTE
+   Ciego:  11 ops  63.6%  IC95 35.4%-84.8%  -> MUESTRA INSUFICIENTE
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    6 ops  50.0%  IC95 18.8%-81.2%  -> MUESTRA INSUFICIENTE
+   Antes del corte (sesgado): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Despues del corte (limpio): 6 ops  50.0%  IC95 18.8%-81.2%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 42.1%, caida maxima p95 8.6 USD, peor racha p95 6
+   Ruido en precios: base 51.5% -> media 53.7% (+/- 4.3%), 17 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  163 ops  48.5%  IC95 40.9%-56.1%  -> SIN VENTAJA
+   Mercados sobre el minimo: 2 de 8
+
+CONCLUSION: MUESTRA INSUFICIENTE: muy pocas operaciones en el periodo ciego para decidir.
+
+
+===== SobrerreaccionVela_v1 frxEURUSD 1h =====
+HIPOTESIS registrada #5. Motivo: Una vela de 1h con rango mayor que 2 x ATR suele ser un barrido de stops o una sobrerreaccion: el precio tiende a corregir en parte en las dos horas siguientes.
+Pruebas que cuentan para la correccion: 155 (150 anteriores al registro + 5 registradas).
+Veredicto del periodo ciego corregido por 155 pruebas: SIN VENTAJA
+
+VALIDACION COMPLETA - SobrerreaccionVela_v1  frxEURUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 503 ops  49.7%  IC95 45.4%-54.1%  -> SIN VENTAJA
+   Ciego:  128 ops  52.3%  IC95 43.8%-60.8%  -> SIN VENTAJA
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Antes del corte (sesgado): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Despues del corte (limpio): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 2.2%, caida maxima p95 64.35 USD, peor racha p95 12
+   Ruido en precios: base 50.2% -> media 50.4% (+/- 1.4%), 0 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1196 ops  52.8%  IC95 49.9%-55.6%  -> SIN VENTAJA
+   Mercados sobre el minimo: 5 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
+===== SobrerreaccionVela_v1 frxGBPUSD 1h =====
+HIPOTESIS registrada #6. Motivo: Una vela de 1h con rango mayor que 2 x ATR suele ser un barrido de stops o una sobrerreaccion: el precio tiende a corregir en parte en las dos horas siguientes.
+Pruebas que cuentan para la correccion: 156 (150 anteriores al registro + 6 registradas).
+Veredicto del periodo ciego corregido por 156 pruebas: SIN VENTAJA
+
+VALIDACION COMPLETA - SobrerreaccionVela_v1  frxGBPUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 467 ops  54.2%  IC95 49.6%-58.6%  -> POSITIVO, NO SIGNIFICATIVO
+   Ciego:  117 ops  48.7%  IC95 39.9%-57.7%  -> SIN VENTAJA
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    56 ops  50.0%  IC95 37.3%-62.7%  -> SIN VENTAJA
+   Antes del corte (sesgado): 56 ops  50.0%  IC95 37.3%-62.7%  -> SIN VENTAJA
+   Despues del corte (limpio): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 32.0%, caida maxima p95 41.25 USD, peor racha p95 11
+   Ruido en precios: base 53.1% -> media 52.3% (+/- 0.9%), 1 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1196 ops  52.8%  IC95 49.9%-55.6%  -> SIN VENTAJA
+   Mercados sobre el minimo: 5 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
+===== SobrerreaccionVela_v1 frxUSDJPY 1h =====
+HIPOTESIS registrada #7. Motivo: Una vela de 1h con rango mayor que 2 x ATR suele ser un barrido de stops o una sobrerreaccion: el precio tiende a corregir en parte en las dos horas siguientes.
+Pruebas que cuentan para la correccion: 157 (150 anteriores al registro + 7 registradas).
+Veredicto del periodo ciego corregido por 157 pruebas: POSITIVO, NO SIGNIFICATIVO
+
+VALIDACION COMPLETA - SobrerreaccionVela_v1  frxUSDJPY 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 398 ops  46.0%  IC95 41.2%-50.9%  -> SIN VENTAJA
+   Ciego:  147 ops  57.8%  IC95 49.7%-65.5%  -> POSITIVO, NO SIGNIFICATIVO
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Antes del corte (sesgado): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Despues del corte (limpio): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 1.3%, caida maxima p95 65.8 USD, peor racha p95 12
+   Ruido en precios: base 49.2% -> media 49.7% (+/- 0.9%), 0 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1196 ops  52.8%  IC95 49.9%-55.6%  -> SIN VENTAJA
+   Mercados sobre el minimo: 5 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
+===== SobrerreaccionVela_v1 frxXAUUSD 1h =====
+HIPOTESIS registrada #8. Motivo: Una vela de 1h con rango mayor que 2 x ATR suele ser un barrido de stops o una sobrerreaccion: el precio tiende a corregir en parte en las dos horas siguientes.
+Pruebas que cuentan para la correccion: 158 (150 anteriores al registro + 8 registradas).
+Veredicto del periodo ciego corregido por 158 pruebas: POSITIVO, NO SIGNIFICATIVO
+
+VALIDACION COMPLETA - SobrerreaccionVela_v1  frxXAUUSD 1h  confianza 50  duracion 2 velas
+Payout 85%  ->  minimo para no perder 54.1%.  Periodo ciego desde 2026-04-29.
+
+1) Prueba ciega (las reglas no vieron estos datos)
+   Diseno: 442 ops  52.0%  IC95 47.4%-56.7%  -> SIN VENTAJA
+   Ciego:  119 ops  56.3%  IC95 47.3%-64.9%  -> POSITIVO, NO SIGNIFICATIVO
+
+2) Walk-forward (365 dias de entrenamiento / 90 de prueba)
+   Total:                    24 ops  50.0%  IC95 31.4%-68.6%  -> MUESTRA INSUFICIENTE
+   Antes del corte (sesgado): 0 ops  0.0%  IC95 0.0%-0.0%  -> MUESTRA INSUFICIENTE
+   Despues del corte (limpio): 24 ops  50.0%  IC95 31.4%-68.6%  -> MUESTRA INSUFICIENTE
+
+3) Estres (mide fragilidad, no detecta sobreajuste)
+   Monte Carlo: P(terminar ganando) 30.5%, caida maxima p95 40.95 USD, peor racha p95 11
+   Ruido en precios: base 52.9% -> media 54.1% (+/- 1.1%), 15 de 30 corridas sobre el minimo
+
+4) Otros mercados con la misma temporalidad (periodo ciego)
+   Total:  1196 ops  52.8%  IC95 49.9%-55.6%  -> SIN VENTAJA
+   Mercados sobre el minimo: 5 de 11
+
+CONCLUSION: SIN VENTAJA DEMOSTRADA: no operar con dinero real.
+
+
