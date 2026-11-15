@@ -336,6 +336,7 @@ Namespace WpfDerivClientVB.Backtesting
                 .ProfitLossTotal  = totalPnl,
                 .MaxDrawdown      = maxDD,
                 .ProfitFactor     = profitFactor,
+                .Notas            = If(String.IsNullOrEmpty(config.Platform) OrElse config.Platform = FuentesVelas.DERIV, "", "fuente: " & config.Platform),
                 .CreatedAt        = DateTime.UtcNow
             }
         End Function

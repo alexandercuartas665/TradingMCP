@@ -30,6 +30,8 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property HastaEpoch As Long = 0L
         ''' <summary>True: cada job usa el payout real medido si existe (el rango de payouts se ignora).</summary>
         Public Property UsarPayoutReal As Boolean = False
+        ''' <summary>Origen de las velas de todos los jobs: Deriv o Dukascopy.</summary>
+        Public Property Fuente As String = FuentesVelas.DERIV
 
         Public ReadOnly Property TotalCombinaciones As Integer
             Get
@@ -101,6 +103,7 @@ Namespace WpfDerivClientVB.Backtesting
                                             .DesdeEpoch = seleccion.DesdeEpoch,
                                             .HastaEpoch = seleccion.HastaEpoch,
                                             .UsarPayoutReal = seleccion.UsarPayoutReal,
+                                            .Fuente = FuentesVelas.Normalizar(seleccion.Fuente),
                                             .Estado = HeavyJobEstado.Pendiente
                                         })
                                         agregados += 1
@@ -234,7 +237,7 @@ Namespace WpfDerivClientVB.Backtesting
                 Dim cfg As New BacktestConfig With {
                     .Symbol = job.Symbol,
                     .Timeframe = job.Timeframe,
-                    .Platform = "Deriv",
+                    .Platform = FuentesVelas.Normalizar(job.Fuente),
                     .DesdeEpoch = job.DesdeEpoch,
                     .HastaEpoch = job.HastaEpoch,
                     .DuracionVelas = job.Duracion,

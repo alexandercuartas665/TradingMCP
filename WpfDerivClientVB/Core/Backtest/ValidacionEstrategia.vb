@@ -96,11 +96,15 @@ Namespace WpfDerivClientVB.Backtesting
                                            duracionVelas As Integer, minConfianza As Integer, payoutPct As Decimal,
                                            corteEpoch As Long,
                                            Optional desdeEpoch As Long = 0,
-                                           Optional hastaEpoch As Long = 0) As Task(Of JObject)
+                                           Optional hastaEpoch As Long = 0,
+                                           Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
             If hastaEpoch <= 0 Then hastaEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             Dim repo = New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
-            Dim velas = Await repo.GetCandlesRangoAsync("Deriv", symbol, timeframe, desdeEpoch, hastaEpoch)
-            Return Validar(velas, estrategia, symbol, timeframe, duracionVelas, minConfianza, payoutPct, corteEpoch)
+            fuente = FuentesVelas.Normalizar(fuente)
+            Dim velas = Await repo.GetCandlesRangoAsync(fuente, symbol, timeframe, desdeEpoch, hastaEpoch)
+            Dim r = Validar(velas, estrategia, symbol, timeframe, duracionVelas, minConfianza, payoutPct, corteEpoch)
+            r("fuente") = fuente
+            Return r
         End Function
 
         ''' <summary>Validacion sobre velas ya cargadas (pura: se puede probar).</summary>

@@ -391,6 +391,7 @@ Partial Public Class HeavyStrategyTesterWindow
         ' Payout real: cada job toma el medido; el rango solo aporta el valor de respaldo
         sel.UsarPayoutReal = chkPayoutReal.IsChecked.GetValueOrDefault()
         If sel.UsarPayoutReal AndAlso sel.Payouts.Count > 1 Then sel.Payouts = New List(Of Decimal) From {sel.Payouts(0)}
+        sel.Fuente = If(chkHistoricoLargo.IsChecked.GetValueOrDefault(), FuentesVelas.DUKASCOPY, FuentesVelas.DERIV)
         sel.Duraciones = ParseRange(txtDurMin.Text, txtDurMax.Text, txtDurStep.Text).Select(Function(d) CInt(d)).ToList()
         ' Fechas — DatePicker retorna DateTime con Kind=Local. Forzamos UTC con la
         ' fecha tal cual (medianoche UTC) para construir un DateTimeOffset valido.

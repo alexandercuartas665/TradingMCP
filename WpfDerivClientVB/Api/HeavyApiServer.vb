@@ -432,6 +432,30 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' -- Historico largo externo (Dukascopy -> Postgres, platform = "Dukascopy") --
+                If path = "/api/heavy/historico-externo/descargar" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, HistoricoExternoDescargar(body))
+                    Return
+                End If
+                If path = "/api/heavy/historico-externo/estado" Then
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"estado", DukascopyDescarga.Instancia.Estado()}})
+                    Return
+                End If
+                If path = "/api/heavy/historico-externo/detener" AndAlso method = "POST" Then
+                    DukascopyDescarga.Instancia.Detener()
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"mensaje", "Detencion solicitada."}})
+                    Return
+                End If
+                If path = "/api/heavy/historico-externo/cobertura" Then
+                    Await WriteJson(res, 200, Await HistoricoCoberturaApi())
+                    Return
+                End If
+                If path = "/api/heavy/historico-externo/comparar" Then
+                    Await WriteJson(res, 200, Await DukascopyDescarga.CompararAsync(
+                        If(qs("symbol"), "frxEURUSD"), If(qs("timeframe"), "1h")))
+                    Return
+                End If
+
                 If path = "/api/heavy/sesiones" Then
                     Await WriteJson(res, 200, Await BuildSesiones(qs))
                     Return
@@ -525,6 +549,10 @@ Namespace WpfDerivClientVB.Backtesting
                 "POST /api/heavy/historico/descargar (body: {symbol, timeframe, desde:YYYY-MM-DD, hasta:YYYY-MM-DD})",
                 "GET  /api/heavy/historico/estado",
                 "POST /api/heavy/historico/detener",
+                "POST /api/heavy/historico-externo/descargar (body: {simbolos:[frxEURUSD,...], temporalidades:[1h,4h,1d], desde:YYYY-MM-DD, [hasta]})",
+                "GET  /api/heavy/historico-externo/estado | POST .../detener | GET .../cobertura",
+                "GET  /api/heavy/historico-externo/comparar?symbol=frxEURUSD&timeframe=1h",
+                "(validar, robustez, multimercado, validar-completo, hipotesis, jobs/agregar aceptan fuente: Deriv | Dukascopy)",
                 "(todas requieren header X-Agent-Token)"
             }
             Return New JObject From {
@@ -654,6 +682,8 @@ Namespace WpfDerivClientVB.Backtesting
                 sel.Capitales = JsonDecimalList(body, "capitales")
                 ' "payout_real": true -> cada job usa el payout medido en Deriv si existe
                 sel.UsarPayoutReal = body("payout_real") IsNot Nothing AndAlso CBool(body("payout_real"))
+                ' "fuente": "Dukascopy" -> los jobs corren sobre el historico largo externo
+                sel.Fuente = FuentesVelas.Normalizar(body("fuente")?.ToString())
                 ParseDesdeHasta(body, sel)
 
                 If sel.Activos.Count = 0 OrElse sel.Estrategias.Count = 0 OrElse sel.Timeframes.Count = 0 Then
@@ -689,6 +719,7 @@ Namespace WpfDerivClientVB.Backtesting
                     .Payout = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
                     .Duracion = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 5),
                     .Capital = If(body("capital") IsNot Nothing, CDec(body("capital")), 100D),
+                    .Fuente = FuentesVelas.Normalizar(body("fuente")?.ToString()),
                     .Estado = HeavyJobEstado.Pendiente
                 }
                 ' Fechas
@@ -1023,6 +1054,43 @@ Namespace WpfDerivClientVB.Backtesting
             }
         End Function
 
+        ''' <summary>body: {simbolos:[...] o symbol, temporalidades:[...] (por defecto 1h,4h,1d), desde:"YYYY-MM-DD" (por defecto 2003-05-05), hasta}</summary>
+        Private Function HistoricoExternoDescargar(body As JObject) As JObject
+            If body Is Nothing Then body = New JObject()
+            Dim simbolos As New List(Of String)()
+            If TypeOf body("simbolos") Is JArray Then
+                simbolos.AddRange(CType(body("simbolos"), JArray).Select(Function(t) t.ToString()))
+            ElseIf body("symbol") IsNot Nothing Then
+                simbolos.Add(body("symbol").ToString())
+            End If
+            Dim tfs As New List(Of String)()
+            If TypeOf body("temporalidades") Is JArray Then tfs.AddRange(CType(body("temporalidades"), JArray).Select(Function(t) t.ToString()))
+            Dim inv = Globalization.CultureInfo.InvariantCulture
+            Dim desde, hasta As DateTime
+            If Not DateTime.TryParseExact(If(body("desde")?.ToString(), "2003-05-05"), "yyyy-MM-dd", inv, Globalization.DateTimeStyles.None, desde) Then
+                Return ErrJson("'desde' no valido (YYYY-MM-DD)")
+            End If
+            If Not DateTime.TryParseExact(If(body("hasta")?.ToString(), DateTime.UtcNow.ToString("yyyy-MM-dd")), "yyyy-MM-dd", inv, Globalization.DateTimeStyles.None, hasta) Then
+                Return ErrJson("'hasta' no valido (YYYY-MM-DD)")
+            End If
+            Return DukascopyDescarga.Instancia.Iniciar(simbolos, tfs, desde, hasta)
+        End Function
+
+        ''' <summary>Cobertura de las dos fuentes por serie (velas, desde, hasta).</summary>
+        Private Async Function HistoricoCoberturaApi() As Task(Of JObject)
+            Dim repo As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
+            Dim fecha = Function(ep As Long) DateTimeOffset.FromUnixTimeSeconds(ep).UtcDateTime.ToString("yyyy-MM-dd")
+            Dim res As New JObject From {{"ok", True}}
+            For Each f In {FuentesVelas.DERIV, FuentesVelas.DUKASCOPY}
+                Dim arr As New JArray()
+                For Each c In Await repo.CoberturaAsync(f)
+                    arr.Add(New JObject From {{"symbol", c.Item1}, {"timeframe", c.Item2}, {"velas", c.Item3}, {"desde", fecha(c.Item4)}, {"hasta", fecha(c.Item5)}})
+                Next
+                res(f.ToLowerInvariant()) = arr
+            Next
+            Return res
+        End Function
+
         Private Function HistoricoEstado() As JObject
             Dim e = Descarga.ObtenerEstado()
             Return New JObject From {{"ok", True}, {"estado", EstadoDescargaJson(e)}}
@@ -1055,7 +1123,8 @@ Namespace WpfDerivClientVB.Backtesting
                     est, symV, tfV, durV,
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
                     PayoutsReales.Resolver(body("payout"), symV, tfV, durV),
-                    New DateTimeOffset(corte).ToUnixTimeSeconds(), desdeEpoch)
+                    New DateTimeOffset(corte).ToUnixTimeSeconds(), desdeEpoch,
+                    fuente:=FuentesVelas.Normalizar(body("fuente")?.ToString()))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
@@ -1106,7 +1175,8 @@ Namespace WpfDerivClientVB.Backtesting
                     grilla,
                     If(body("iteraciones") IsNot Nothing, CInt(body("iteraciones")), 5000),
                     If(body("corridas_ruido") IsNot Nothing, CInt(body("corridas_ruido")), 30),
-                    If(body("nivel_ruido") IsNot Nothing, CDbl(body("nivel_ruido")), 0.1))
+                    If(body("nivel_ruido") IsNot Nothing, CDbl(body("nivel_ruido")), 0.1),
+                    FuentesVelas.Normalizar(body("fuente")?.ToString()))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
@@ -1132,11 +1202,17 @@ Namespace WpfDerivClientVB.Backtesting
             Dim lista = CType(body("mercados"), JArray).Select(Function(m) Tuple.Create(m(0).ToString(), m(1).ToString())).ToList()
             ' Sin payout (o "real"): cada mercado con su payout medido en Deriv, o 85 si no se ha medido
             Dim pedido = body("payout")
+            Dim fuenteM As String
+            Try
+                fuenteM = FuentesVelas.Normalizar(body("fuente")?.ToString())
+            Catch ex As ArgumentException
+                Return ErrJson(ex.Message)
+            End Try
             If pedido Is Nothing OrElse String.Equals(pedido.ToString(), "real", StringComparison.OrdinalIgnoreCase) Then
                 Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, 85D, corteEpoch,
-                    Function(sym, tfM) PayoutsReales.Resolver(Nothing, sym, tfM, dur))
+                    Function(sym, tfM) PayoutsReales.Resolver(Nothing, sym, tfM, dur), fuenteM)
             End If
-            Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, CDec(pedido), corteEpoch)
+            Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, CDec(pedido), corteEpoch, fuente:=fuenteM)
         End Function
 
         ''' <summary>
@@ -1412,7 +1488,8 @@ Namespace WpfDerivClientVB.Backtesting
                 Return Await ValidacionCompleta.EjecutarTodoAsync(est, symC, tfC, durC,
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
                     PayoutsReales.Resolver(body("payout"), symC, tfC, durC),
-                    New DateTimeOffset(corte).ToUnixTimeSeconds())
+                    New DateTimeOffset(corte).ToUnixTimeSeconds(),
+                    FuentesVelas.Normalizar(body("fuente")?.ToString()))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
@@ -1435,7 +1512,8 @@ Namespace WpfDerivClientVB.Backtesting
                 Return Await ValidacionCompleta.ProbarHipotesisAsync(est, sym, tf, dur,
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
                     PayoutsReales.Resolver(body("payout"), sym, tf, dur),
-                    New DateTimeOffset(corte).ToUnixTimeSeconds(), If(body("motivo")?.ToString(), ""))
+                    New DateTimeOffset(corte).ToUnixTimeSeconds(), If(body("motivo")?.ToString(), ""),
+                    FuentesVelas.Normalizar(body("fuente")?.ToString()))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try

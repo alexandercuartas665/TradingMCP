@@ -223,6 +223,7 @@ Namespace WpfDerivClientVB.Servidor
             _estadoMantenimiento = res
             Try
                 If actualizarVelas Then res("velas") = Await ActualizarVelasAsync()
+                If actualizarVelas Then res("velas_externas") = Await ActualizarHistoricoExternoAsync()
                 If respaldo Then res("respaldo") = Await RespaldarAsync()
             Catch ex As Exception
                 res("ok") = False
@@ -296,6 +297,22 @@ Namespace WpfDerivClientVB.Servidor
         End Function
 
         ''' <summary>Carpeta de copias (config RespaldosCarpeta o %LOCALAPPDATA%\WpfDerivClientVB\respaldos).</summary>
+        ''' <summary>
+        ''' Completa el historico externo (Dukascopy) hasta ayer. Si el servidor de Dukascopy
+        ''' falla no se alerta por WhatsApp (son datos de investigacion, se reintentan la noche
+        ''' siguiente); queda en el log y en el resumen del mantenimiento.
+        ''' </summary>
+        Private Async Function ActualizarHistoricoExternoAsync() As Task(Of JObject)
+            Try
+                Dim r = Await DukascopyDescarga.Instancia.ActualizarTodoAsync()
+                If r("ok") IsNot Nothing AndAlso Not CBool(r("ok")) Then AppLogger.Warn("[Autonomo] Historico externo incompleto: " & r.ToString(Newtonsoft.Json.Formatting.None))
+                Return r
+            Catch ex As Exception
+                AppLogger.Warn("[Autonomo] Historico externo: " & ex.Message)
+                Return New JObject From {{"ok", False}, {"error", ex.Message}}
+            End Try
+        End Function
+
         Public Function CarpetaRespaldos() As String
             Dim cfg = ConfigManager.LoadDbConfig()
             If Not String.IsNullOrWhiteSpace(cfg.RespaldosCarpeta) Then Return cfg.RespaldosCarpeta
