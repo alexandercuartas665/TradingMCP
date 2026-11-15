@@ -272,7 +272,8 @@ Namespace WpfDerivClientVB
                         .PayoutPct = ses.PayoutPct,
                         .MinConfianza = ses.MinConfianza,
                         .MontoOperacion = 1D,
-                        .VentanaIndicadores = 30
+                        .VentanaIndicadores = 30,
+                        .ModoForward = True
                     }
                     Dim motor As New LiveTestMotor()
                     motor.ExecuteTrade = _apiServer.ExecuteTrade

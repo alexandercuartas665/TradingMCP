@@ -28,6 +28,8 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property Capitales As List(Of Decimal) = New List(Of Decimal)()
         Public Property DesdeEpoch As Long = 0L
         Public Property HastaEpoch As Long = 0L
+        ''' <summary>True: cada job usa el payout real medido si existe (el rango de payouts se ignora).</summary>
+        Public Property UsarPayoutReal As Boolean = False
 
         Public ReadOnly Property TotalCombinaciones As Integer
             Get
@@ -75,6 +77,8 @@ Namespace WpfDerivClientVB.Backtesting
             ' Asegurar al menos un valor en los rangos (defaults razonables si quedaron vacios)
             Dim confs = If(seleccion.Confianzas.Count > 0, seleccion.Confianzas, New List(Of Integer) From {55})
             Dim pays = If(seleccion.Payouts.Count > 0, seleccion.Payouts, New List(Of Decimal) From {85D})
+            ' Con payout real cada job toma el medido: varios payouts darian jobs repetidos
+            If seleccion.UsarPayoutReal Then pays = New List(Of Decimal) From {pays(0)}
             Dim durs = If(seleccion.Duraciones.Count > 0, seleccion.Duraciones, New List(Of Integer) From {5})
             Dim caps = If(seleccion.Capitales.Count > 0, seleccion.Capitales, New List(Of Decimal) From {100D})
 
@@ -96,6 +100,7 @@ Namespace WpfDerivClientVB.Backtesting
                                             .Capital = cap,
                                             .DesdeEpoch = seleccion.DesdeEpoch,
                                             .HastaEpoch = seleccion.HastaEpoch,
+                                            .UsarPayoutReal = seleccion.UsarPayoutReal,
                                             .Estado = HeavyJobEstado.Pendiente
                                         })
                                         agregados += 1
@@ -201,6 +206,11 @@ Namespace WpfDerivClientVB.Backtesting
             Try
                 Dim defEst = EstrategiasDinamicasRegistry.GetByNombre(job.Estrategia)
                 If defEst Is Nothing Then
+                    ' El registro solo se carga cuando alguien lo pide (p. ej. en modo agente sin ventanas)
+                    EstrategiasDinamicasRegistry.Inicializar()
+                    defEst = EstrategiasDinamicasRegistry.GetByNombre(job.Estrategia)
+                End If
+                If defEst Is Nothing Then
                     job.Estado = HeavyJobEstado.Error_
                     job.MensajeError = "Estrategia no encontrada en registry: " & job.Estrategia
                     job.FechaFin = DateTime.UtcNow
@@ -213,6 +223,14 @@ Namespace WpfDerivClientVB.Backtesting
                     .BalanceActual = job.Capital,
                     .MontoPorOperacion = 1D
                 }
+                ' Payout real medido en Deriv (si existe) en vez del supuesto
+                If job.UsarPayoutReal Then
+                    Dim real = PayoutsReales.Obtener(job.Symbol, job.Timeframe, job.Duracion)
+                    If real.HasValue Then
+                        job.Payout = real.Value
+                        job.PayoutEsReal = True
+                    End If
+                End If
                 Dim cfg As New BacktestConfig With {
                     .Symbol = job.Symbol,
                     .Timeframe = job.Timeframe,
@@ -224,6 +242,7 @@ Namespace WpfDerivClientVB.Backtesting
                     .MinConfianza = job.Confianza,
                     .VentanaIndicadores = 100,
                     .GuardarContextoVelas = 0,
+                    .UnaPosicionALaVez = True,   ' resultados independientes, igual que la validacion y el vivo
                     .Cuentas = New List(Of BacktestCuenta) From {cuenta}
                 }
 

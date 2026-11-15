@@ -50,6 +50,90 @@ Namespace WpfDerivClientVB.Backtesting
         Public Property FechaInicio As DateTime = DateTime.MinValue
         Public Property FechaFin As DateTime = DateTime.MinValue
 
+        ''' <summary>True si Pay es el payout real medido en Deriv (no un valor supuesto).</summary>
+        Public Property PayReal As Boolean = False
+
+        ' ── Periodo ciego: operaciones con entrada desde la fecha de corte ──
+        Public Property CiegoOps As Integer = 0
+        Public Property CiegoGanadas As Integer = 0
+        Public Property CiegoIcInf As Double = 0
+        Public Property CiegoIcSup As Double = 0
+        ''' <summary>Veredicto del periodo ciego ("" = sin fecha de corte).</summary>
+        Public Property Veredicto As String = ""
+
+        ''' <summary>Calcula el intervalo y el veredicto del periodo ciego con el payout de la fila.</summary>
+        Public Sub AplicarCiego(operaciones As Integer, ganadas As Integer, hayCorte As Boolean)
+            CiegoOps = operaciones
+            CiegoGanadas = ganadas
+            If hayCorte Then
+                Dim ic = Estadistica.IntervaloWilson(ganadas, operaciones)
+                CiegoIcInf = ic.Item1 : CiegoIcSup = ic.Item2
+                ' Sin operaciones desde el corte: el backtest no cubre el periodo ciego
+                Veredicto = If(operaciones = 0, "SIN DATOS", Estadistica.Veredicto(ganadas, operaciones, Pay))
+            Else
+                CiegoIcInf = 0 : CiegoIcSup = 0 : Veredicto = ""
+            End If
+            For Each n In {"CiegoOps", "CiegoOpsStr", "CiegoWinStr", "CiegoIcStr", "VeredictoStr", "VeredictoTip", "VeredictoBrush"}
+                Notify(n)
+            Next
+        End Sub
+
+        ''' <summary>(operaciones, ganadas) con entrada en o despues de corteEpoch.</summary>
+        Public Shared Function ContarCiego(ops As IEnumerable(Of BacktestOperacion), corteEpoch As Long) As Tuple(Of Integer, Integer)
+            If ops Is Nothing OrElse corteEpoch <= 0 Then Return Tuple.Create(0, 0)
+            Dim ciego = ops.Where(Function(o) o.EpochEntrada >= corteEpoch AndAlso (o.Estado = "Ganado" OrElse o.Estado = "Perdido")).ToList()
+            Return Tuple.Create(ciego.Count, ciego.Where(Function(o) o.Estado = "Ganado").Count())
+        End Function
+
+        Public ReadOnly Property CiegoOpsStr As String
+            Get
+                Return If(Veredicto = "", "", CiegoOps.ToString())
+            End Get
+        End Property
+        Public ReadOnly Property CiegoWinStr As String
+            Get
+                If Veredicto = "" OrElse CiegoOps = 0 Then Return ""
+                Return (100.0 * CiegoGanadas / CiegoOps).ToString("F1") & "%"
+            End Get
+        End Property
+        Public ReadOnly Property CiegoIcStr As String
+            Get
+                If Veredicto = "" OrElse CiegoOps = 0 Then Return ""
+                Return (CiegoIcInf * 100).ToString("F0") & "-" & (CiegoIcSup * 100).ToString("F0") & "%"
+            End Get
+        End Property
+        Public ReadOnly Property VeredictoStr As String
+            Get
+                Select Case Veredicto
+                    Case "VENTAJA ESTADISTICA" : Return "Ventaja"
+                    Case "POSITIVO, NO SIGNIFICATIVO" : Return "No significativo"
+                    Case "MUESTRA INSUFICIENTE" : Return "Muestra insuficiente"
+                    Case "SIN VENTAJA" : Return "Sin ventaja"
+                    Case "SIN DATOS" : Return "Sin datos ciegos"
+                    Case Else : Return ""
+                End Select
+            End Get
+        End Property
+        Public ReadOnly Property VeredictoBrush As Brush
+            Get
+                Select Case Veredicto
+                    Case "VENTAJA ESTADISTICA" : Return New SolidColorBrush(Color.FromRgb(&H3F, &HD1, &H7A))
+                    Case "POSITIVO, NO SIGNIFICATIVO" : Return New SolidColorBrush(Color.FromRgb(&HF2, &HC1, &H4E))
+                    Case "SIN VENTAJA" : Return New SolidColorBrush(Color.FromRgb(&HFF, &H5C, &H7A))
+                    Case Else : Return New SolidColorBrush(Color.FromRgb(&HAA, &HB3, &HC5))
+                End Select
+            End Get
+        End Property
+        Public ReadOnly Property VeredictoTip As String
+            Get
+                If Veredicto = "" Then Return "Indica una fecha de corte para medir el periodo ciego."
+                If Veredicto = "SIN DATOS" Then Return "Este backtest no tiene operaciones desde la fecha de corte (su periodo terminaba antes o no habia velas). Vuelve a ejecutarlo con un periodo que incluya el ciego."
+                Return String.Format("Periodo ciego: {0} operaciones, minimo para no perder {1:P1} (payout {2}%). " &
+                                     "Ventaja = el limite inferior del IC95 supera ese minimo.",
+                                     CiegoOps, Estadistica.PuntoEquilibrio(Pay), Pay)
+            End Get
+        End Property
+
         ''' <summary>Referencia al job para abrir el drawer al hacer click.</summary>
         Public Property JobRef As HeavyTestJob = Nothing
 
@@ -66,7 +150,7 @@ Namespace WpfDerivClientVB.Backtesting
         End Property
         Public ReadOnly Property PayStr As String
             Get
-                Return Pay.ToString("F0") & "%"
+                Return If(PayReal, Pay.ToString("F1") & "% real", Pay.ToString("F0") & "%")
             End Get
         End Property
         Public ReadOnly Property CapStr As String
@@ -169,7 +253,8 @@ Namespace WpfDerivClientVB.Backtesting
                 .Estado = job.EstadoStr,
                 .FechaInicio = job.FechaInicio,
                 .FechaFin = job.FechaFin,
-                .JobRef = job
+                .JobRef = job,
+                .PayReal = job.PayoutEsReal
             }
             If job.Resultado IsNot Nothing AndAlso job.Resultado.Sesion IsNot Nothing Then
                 Dim ses = job.Resultado.Sesion

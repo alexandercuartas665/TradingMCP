@@ -917,7 +917,8 @@ Namespace WpfDerivClientVB
                                     .PayoutPct        = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
                                     .MinConfianza     = If(body("min_confianza") IsNot Nothing, CInt(body("min_confianza")), 55),
                                     .MontoOperacion   = If(body("monto") IsNot Nothing, CDec(body("monto")), 1D),
-                                    .VentanaIndicadores = If(body("ventana") IsNot Nothing, CInt(body("ventana")), 100)
+                                    .VentanaIndicadores = If(body("ventana") IsNot Nothing, CInt(body("ventana")), 100),
+                                    .ModoForward = True
                                 }
                                 Dim sesIdLive = Await motorNuevo.IniciarAsync(cfgLive, estLive)
                                 SyncLock LiveMotors
