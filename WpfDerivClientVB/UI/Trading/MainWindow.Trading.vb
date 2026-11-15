@@ -48,7 +48,13 @@ Namespace WpfDerivClientVB
             Next
             AplicarEstadoConexion(Trading.EstaConectado,
                                   If(Trading.EstaConectado, If(Trading.EsDemo, "Demo", "Real") & " - Conectado", "Desconectado"))
-            If Trading.EstaConectado Then txtTradingBalance.Text = Trading.TextoSaldo
+            If Trading.EstaConectado Then
+                txtTradingBalance.Text = Trading.TextoSaldo
+                ' El panel lateral solo se actualizaba con el siguiente aviso de saldo de Deriv
+                PanelLiveSetConexion(True)
+                If Trading.Saldo.HasValue Then PanelLiveSetSaldo(Trading.Saldo.Value, Trading.Moneda)
+                Tareas.EnSegundoPlano(PanelLiveRefrescarPnlPeriodosAsync(), "Panel live: PnL por periodos")
+            End If
         End Sub
 
         Private Sub DesuscribirTradingServicio()

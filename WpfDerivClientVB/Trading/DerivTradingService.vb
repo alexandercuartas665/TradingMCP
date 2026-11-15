@@ -110,6 +110,19 @@ Namespace WpfDerivClientVB.Servidor
             End Get
         End Property
 
+        ''' <summary>Ultimo saldo recibido de Deriv (Nothing si aun no llego).</summary>
+        Public ReadOnly Property Saldo As Decimal?
+            Get
+                Return _saldo
+            End Get
+        End Property
+
+        Public ReadOnly Property Moneda As String
+            Get
+                Return _moneda
+            End Get
+        End Property
+
         Public ReadOnly Property TextoSaldo As String
             Get
                 If Not _saldo.HasValue Then Return "--"
