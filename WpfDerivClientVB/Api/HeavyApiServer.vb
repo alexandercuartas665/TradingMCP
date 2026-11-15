@@ -1043,12 +1043,12 @@ Namespace WpfDerivClientVB.Backtesting
                 desdeEpoch = New DateTimeOffset(desde).ToUnixTimeSeconds()
             End If
             Try
+                Dim symV = If(body("symbol")?.ToString(), ""), tfV = If(body("timeframe")?.ToString(), "")
+                Dim durV = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)
                 Return Await ValidacionEstrategia.ValidarAsync(
-                    est,
-                    If(body("symbol")?.ToString(), ""), If(body("timeframe")?.ToString(), ""),
-                    If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2),
+                    est, symV, tfV, durV,
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
-                    If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                    PayoutsReales.Resolver(body("payout"), symV, tfV, durV),
                     New DateTimeOffset(corte).ToUnixTimeSeconds(), desdeEpoch)
             Catch ex As Exception
                 Return ErrJson(ex.Message)
@@ -1075,7 +1075,7 @@ Namespace WpfDerivClientVB.Backtesting
                 .Symbol = symbol, .Timeframe = tf,
                 .DuracionVelas = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2),
                 .MinConfianza = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
-                .PayoutPct = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                .PayoutPct = PayoutsReales.Resolver(body("payout"), symbol, tf, If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)),
                 .VentanaIndicadores = 100, .UnaPosicionALaVez = True
             }
             cfg.Cuentas.Add(New BacktestCuenta With {.NombreCuenta = "robustez", .BalanceInicial = 1000D, .MontoPorOperacion = 1D})
@@ -1123,10 +1123,14 @@ Namespace WpfDerivClientVB.Backtesting
             Dim corteEpoch = New DateTimeOffset(corte).ToUnixTimeSeconds()
             Dim dur = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)
             Dim conf = If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55)
-            Dim payout = If(body("payout") IsNot Nothing, CDec(body("payout")), 85D)
-
             Dim lista = CType(body("mercados"), JArray).Select(Function(m) Tuple.Create(m(0).ToString(), m(1).ToString())).ToList()
-            Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, payout, corteEpoch)
+            ' Sin payout (o "real"): cada mercado con su payout medido en Deriv, o 85 si no se ha medido
+            Dim pedido = body("payout")
+            If pedido Is Nothing OrElse String.Equals(pedido.ToString(), "real", StringComparison.OrdinalIgnoreCase) Then
+                Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, 85D, corteEpoch,
+                    Function(sym, tfM) PayoutsReales.Resolver(Nothing, sym, tfM, dur))
+            End If
+            Return Await ValidacionCompleta.MultiMercadoAsync(est, lista, dur, conf, CDec(pedido), corteEpoch)
         End Function
 
         ''' <summary>
@@ -1397,11 +1401,11 @@ Namespace WpfDerivClientVB.Backtesting
                 Return ErrJson("corte requerido (YYYY-MM-DD)")
             End If
             Try
-                Return Await ValidacionCompleta.EjecutarTodoAsync(est,
-                    If(body("symbol")?.ToString(), ""), If(body("timeframe")?.ToString(), ""),
-                    If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2),
+                Dim symC = If(body("symbol")?.ToString(), ""), tfC = If(body("timeframe")?.ToString(), "")
+                Dim durC = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)
+                Return Await ValidacionCompleta.EjecutarTodoAsync(est, symC, tfC, durC,
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
-                    If(body("payout") IsNot Nothing, CDec(body("payout")), 85D),
+                    PayoutsReales.Resolver(body("payout"), symC, tfC, durC),
                     New DateTimeOffset(corte).ToUnixTimeSeconds())
             Catch ex As Exception
                 Return ErrJson(ex.Message)

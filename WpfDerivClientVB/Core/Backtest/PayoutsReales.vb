@@ -64,6 +64,18 @@ Namespace WpfDerivClientVB.Backtesting
             End SyncLock
         End Function
 
+        ''' <summary>
+        ''' Payout a usar en una validacion: el pedido si es un numero; si falta o es "real",
+        ''' el medido en Deriv para ese simbolo y duracion, y si no hay medicion, 85 (supuesto).
+        ''' </summary>
+        Public Function Resolver(pedido As JToken, symbol As String, timeframe As String, velas As Integer) As Decimal
+            If pedido IsNot Nothing AndAlso pedido.Type <> JTokenType.Null AndAlso
+               Not String.Equals(pedido.ToString(), "real", StringComparison.OrdinalIgnoreCase) Then
+                Return CDec(pedido)
+            End If
+            Return If(Obtener(symbol, timeframe, velas), 85D)
+        End Function
+
         Friend Function ObtenerDe(datos As JObject, symbol As String, timeframe As String, velas As Integer) As Decimal?
             If datos Is Nothing OrElse String.IsNullOrEmpty(symbol) Then Return Nothing
             Dim unidad As String = ""

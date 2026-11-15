@@ -65,23 +65,30 @@ Namespace WpfDerivClientVB.Backtesting
         ''' <summary>La misma regla en varios mercados: totales de diseno y de periodo ciego.</summary>
         Public Async Function MultiMercadoAsync(est As IEstrategia, mercados As IEnumerable(Of Tuple(Of String, String)),
                                                 duracion As Integer, confianza As Integer, payout As Decimal,
-                                                corteEpoch As Long) As Task(Of JObject)
+                                                corteEpoch As Long,
+                                                Optional payoutPorMercado As Func(Of String, String, Decimal) = Nothing) As Task(Of JObject)
             Dim filas As New JArray()
             Dim totD = 0, ganD = 0, totC = 0, ganC = 0, mercadosSobreEquilibrio = 0, mercadosConDatos = 0
+            Dim sumaPayoutCiego As Double = 0
             For Each m In mercados
                 Dim sym = m.Item1, tf = m.Item2
+                ' Con payoutPorMercado cada mercado se mide con su propio payout (p. ej. el real medido)
+                Dim pay = If(payoutPorMercado Is Nothing, payout, payoutPorMercado(sym, tf))
                 Dim velas = Await CargarVelasAsync(sym, tf)
-                Dim r = Await Task.Run(Function() ValidacionEstrategia.Validar(velas, est, sym, tf, duracion, confianza, payout, corteEpoch))
+                Dim r = Await Task.Run(Function() ValidacionEstrategia.Validar(velas, est, sym, tf, duracion, confianza, pay, corteEpoch))
                 filas.Add(r)
                 If r("ok") Is Nothing OrElse Not CBool(r("ok")) Then Continue For
                 Dim d = r("periodo_diseno"), c = r("periodo_ciego")
                 totD += CInt(d("operaciones")) : ganD += CInt(d("ganadas"))
                 totC += CInt(c("operaciones")) : ganC += CInt(c("ganadas"))
+                sumaPayoutCiego += CDbl(pay) * CInt(c("operaciones"))
                 If CInt(c("operaciones")) > 0 Then
                     mercadosConDatos += 1
-                    If CDbl(c("win_rate")) > Estadistica.PuntoEquilibrio(payout) Then mercadosSobreEquilibrio += 1
+                    If CDbl(c("win_rate")) > Estadistica.PuntoEquilibrio(pay) Then mercadosSobreEquilibrio += 1
                 End If
             Next
+            ' El total se juzga con el payout medio ponderado por operaciones del periodo ciego
+            If payoutPorMercado IsNot Nothing AndAlso totC > 0 Then payout = CDec(Math.Round(sumaPayoutCiego / totC, 2))
             Dim icD = Estadistica.IntervaloWilson(ganD, totD), icC = Estadistica.IntervaloWilson(ganC, totC)
             Return New JObject From {
                 {"ok", True}, {"estrategia", est.Nombre}, {"duracion_velas", duracion}, {"min_confianza", confianza}, {"payout_pct", payout},
