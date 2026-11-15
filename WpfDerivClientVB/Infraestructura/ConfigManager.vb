@@ -53,6 +53,11 @@ Namespace WpfDerivClientVB
         Public Property RespaldosConservar As Integer = 14
         ''' <summary>Contenedor Docker de PostgreSQL (para pg_dump).</summary>
         Public Property DockerContenedorPostgres As String = "traiding_postgres"
+        ''' <summary>
+        ''' Hipotesis ya probadas antes de existir el registro (se suman al numero de pruebas para
+        ''' corregir los veredictos). En este proyecto se probaron mas de 150 combinaciones.
+        ''' </summary>
+        Public Property HipotesisPrevias As Integer = 150
 
         ''' <summary>
         ''' Genera la cadena de conexión basada en los parámetros actuales.

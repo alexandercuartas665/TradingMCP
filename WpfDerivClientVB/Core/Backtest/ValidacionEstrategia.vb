@@ -50,6 +50,44 @@ Namespace WpfDerivClientVB.Backtesting
             If ganadas / CDbl(n) > be Then Return "POSITIVO, NO SIGNIFICATIVO"
             Return "SIN VENTAJA"
         End Function
+
+        ''' <summary>
+        ''' Veredicto corregido por pruebas multiples (Bonferroni): si se han probado N hipotesis,
+        ''' cada una debe superar el minimo con un intervalo mas exigente (nivel 95% repartido
+        ''' entre las N). Con N = 1 coincide con Veredicto.
+        ''' </summary>
+        Public Function VeredictoCorregido(ganadas As Integer, n As Integer, payoutPct As Decimal, numeroPruebas As Integer,
+                                           Optional minimoOps As Integer = 30) As String
+            If n < minimoOps Then Return "MUESTRA INSUFICIENTE"
+            Dim z = ZDeCola(0.025 / Math.Max(1, numeroPruebas))
+            Dim ic = IntervaloWilson(ganadas, n, z)
+            Dim be = PuntoEquilibrio(payoutPct)
+            If ic.Item1 > be Then Return "VENTAJA ESTADISTICA"
+            If ganadas / CDbl(n) > be Then Return "POSITIVO, NO SIGNIFICATIVO"
+            Return "SIN VENTAJA"
+        End Function
+
+        ''' <summary>
+        ''' z tal que P(Z &gt; z) = alfa en la normal estandar (inversa de Acklam, error &lt; 1e-9).
+        ''' alfa = 0.025 -> 1.96.
+        ''' </summary>
+        Public Function ZDeCola(alfa As Double) As Double
+            Dim p = 1.0 - Math.Min(Math.Max(alfa, 1.0E-15), 0.5)
+            Dim a() As Double = {-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239}
+            Dim b() As Double = {-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572}
+            Dim c() As Double = {-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783}
+            Dim d() As Double = {0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416}
+            Const pAlto As Double = 1 - 0.02425
+            If p > pAlto Then
+                Dim q = Math.Sqrt(-2 * Math.Log(1 - p))
+                Return -(((((c(0) * q + c(1)) * q + c(2)) * q + c(3)) * q + c(4)) * q + c(5)) /
+                        ((((d(0) * q + d(1)) * q + d(2)) * q + d(3)) * q + 1)
+            End If
+            Dim r = p - 0.5
+            Dim t = r * r
+            Return (((((a(0) * t + a(1)) * t + a(2)) * t + a(3)) * t + a(4)) * t + a(5)) * r /
+                   (((((b(0) * t + b(1)) * t + b(2)) * t + b(3)) * t + b(4)) * t + 1)
+        End Function
     End Module
 
     Public Module ValidacionEstrategia

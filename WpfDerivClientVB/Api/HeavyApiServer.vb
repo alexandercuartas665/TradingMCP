@@ -381,6 +381,16 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Embudo de hipotesis: registrar con motivo, validar y corregir por pruebas multiples
+                If path = "/api/heavy/hipotesis" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await HipotesisApi(body))
+                    Return
+                End If
+                If path = "/api/heavy/hipotesis" AndAlso method = "GET" Then
+                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"hipotesis", Await New HipotesisRepository().ListarAsync(200)}})
+                    Return
+                End If
+
                 ' Validacion completa con informe (lo mismo que el boton Validar del Heavy Tester)
                 If path = "/api/heavy/validar-completo" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await ValidarCompletoApi(body))
@@ -1407,6 +1417,29 @@ Namespace WpfDerivClientVB.Backtesting
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
                     PayoutsReales.Resolver(body("payout"), symC, tfC, durC),
                     New DateTimeOffset(corte).ToUnixTimeSeconds())
+            Catch ex As Exception
+                Return ErrJson(ex.Message)
+            End Try
+        End Function
+
+        ''' <summary>body: {estrategia, symbol, timeframe, duracion, confianza, motivo, [payout (sin payout: el real medido), corte="2026-04-29"]}</summary>
+        Private Async Function HipotesisApi(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body: {estrategia, symbol, timeframe, duracion, confianza, motivo, [payout], [corte]}")
+            EstrategiasDinamicasRegistry.Inicializar()
+            Dim est = EstrategiasDinamicasRegistry.GetByNombre(If(body("estrategia")?.ToString(), ""))
+            If est Is Nothing Then Return ErrJson("Estrategia no encontrada.")
+            Dim corte As DateTime
+            If Not DateTime.TryParse(If(body("corte")?.ToString(), "2026-04-29"), Globalization.CultureInfo.InvariantCulture,
+                                     Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, corte) Then
+                Return ErrJson("corte no valido (YYYY-MM-DD)")
+            End If
+            Dim sym = If(body("symbol")?.ToString(), ""), tf = If(body("timeframe")?.ToString(), "")
+            Dim dur = If(body("duracion") IsNot Nothing, CInt(body("duracion")), 2)
+            Try
+                Return Await ValidacionCompleta.ProbarHipotesisAsync(est, sym, tf, dur,
+                    If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
+                    PayoutsReales.Resolver(body("payout"), sym, tf, dur),
+                    New DateTimeOffset(corte).ToUnixTimeSeconds(), If(body("motivo")?.ToString(), ""))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try

@@ -145,6 +145,61 @@ Namespace WpfDerivClientVB.Backtesting
             }
         End Function
 
+        ''' <summary>
+        ''' Embudo para ideas nuevas: registra la hipotesis (con su motivo) ANTES de probarla, corre la
+        ''' validacion completa y corrige el veredicto del periodo ciego por el numero de hipotesis
+        ''' probadas hasta hoy (con muchas pruebas, alguna sale bien por azar).
+        ''' </summary>
+        Public Async Function ProbarHipotesisAsync(est As IEstrategia, symbol As String, timeframe As String,
+                                                   duracion As Integer, confianza As Integer, payout As Decimal,
+                                                   corteEpoch As Long, motivo As String) As Task(Of JObject)
+            If String.IsNullOrWhiteSpace(motivo) OrElse motivo.Trim().Length < 15 Then
+                Return New JObject From {{"ok", False}, {"error", "Escribe el motivo (por que deberia funcionar) antes de probar: minimo 15 caracteres."}}
+            End If
+            Dim repo As New HipotesisRepository()
+            Dim reg = Await repo.RegistrarAsync(est.Nombre, symbol, timeframe, duracion, confianza, payout, corteEpoch, motivo.Trim())
+            Dim id = reg.Item1, repetidas = reg.Item3
+            ' Pruebas que cuentan para la correccion: las registradas mas las hechas antes del registro
+            Dim numero = reg.Item2 + Math.Max(0, ConfigManager.LoadDbConfig().HipotesisPrevias)
+            Try
+                Dim todo = Await EjecutarTodoAsync(est, symbol, timeframe, duracion, confianza, payout, corteEpoch)
+                Dim ciego = todo("validar")?("periodo_ciego")
+                Dim n = If(ciego IsNot Nothing, CInt(ciego("operaciones")), 0)
+                Dim g = If(ciego IsNot Nothing, CInt(ciego("ganadas")), 0)
+                Dim veredicto = If(ciego?("veredicto")?.ToString(), "")
+                Dim corregido = Estadistica.VeredictoCorregido(g, n, payout, numero)
+                Dim conclusion = ConclusionCorregida(todo("conclusion").ToString(), corregido, numero)
+                Dim cab As New System.Text.StringBuilder()
+                cab.AppendLine(String.Format("HIPOTESIS registrada #{0}. Motivo: {1}", reg.Item2, motivo.Trim()))
+                cab.AppendLine(String.Format("Pruebas que cuentan para la correccion: {0} ({1} anteriores al registro + {2} registradas).",
+                                             numero, numero - reg.Item2, reg.Item2))
+                cab.AppendLine(String.Format("Veredicto del periodo ciego corregido por {0} pruebas: {1}", numero, corregido))
+                If repetidas > 0 Then
+                    cab.AppendLine(String.Format("AVISO: esta misma combinacion ya se habia probado {0} vez/veces. Repetir pruebas hasta que salga bien es sobreajuste.", repetidas))
+                End If
+                cab.AppendLine()
+                Dim informe = cab.ToString() & todo("informe").ToString().Replace("CONCLUSION: " & todo("conclusion").ToString(), "CONCLUSION: " & conclusion)
+                Dim res As New JObject From {
+                    {"ok", True}, {"id", id}, {"numero_prueba", numero}, {"repetidas", repetidas},
+                    {"veredicto_ciego", veredicto}, {"veredicto_corregido", corregido},
+                    {"conclusion", conclusion}, {"informe", informe}
+                }
+                Await repo.GuardarResultadoAsync(id, "probada", veredicto, corregido, conclusion, todo)
+                Return res
+            Catch ex As Exception
+                Dim t = repo.GuardarResultadoAsync(id, "error", "", "", ex.Message, Nothing)
+                Return New JObject From {{"ok", False}, {"id", id}, {"error", ex.Message}}
+            End Try
+        End Function
+
+        ''' <summary>Una "CANDIDATA" cuya ventaja no sobrevive a la correccion por pruebas multiples baja a "PROMETEDORA".</summary>
+        Public Function ConclusionCorregida(conclusion As String, veredictoCorregido As String, numeroPruebas As Integer) As String
+            If conclusion.StartsWith("CANDIDATA") AndAlso veredictoCorregido <> "VENTAJA ESTADISTICA" Then
+                Return String.Format("PROMETEDORA, SIN DEMOSTRAR: la ventaja del periodo ciego no sobrevive a la correccion por {0} hipotesis probadas. Hace falta un forward test en demo.", numeroPruebas)
+            End If
+            Return conclusion
+        End Function
+
         ''' <summary>Informe en texto plano de la validacion completa.</summary>
         Public Function InformeTexto(validar As JObject, robustez As JObject, multi As JObject) As String
             Dim inv = Globalization.CultureInfo.InvariantCulture
