@@ -1,0 +1,49 @@
+PRUEBA CON HISTORICO LARGO - plan pre-registrado en docs/validacion/historico_largo_plan.md
+Periodo limpio: Dukascopy 2003-05-01 a 2024-03-31 (nunca usado para disenar). Payout supuesto 85% (equilibrio 54,05%); con 78% el equilibrio es 56,18%.
+Ventaja = z >= 2.82 sobre el equilibrio (Bonferroni, 21 pruebas).
+
+ 1. BollingerMomentum_v2     OTC_NDX    1h conf 50:   556 ops, acierto 55,6% (IC95 51,4-59,7), z85 0,72, P&L a 1 USD 15,65 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2011-09-18 | control 2024-04 a 2026-04: Deriv 100 ops 68,0% / Dukascopy 115 ops 64,3%
+ 2. BollingerMomentum_v2     OTC_NDX    1h conf 60:   214 ops, acierto 56,1% (IC95 49,4-62,6), z85 0,59, P&L a 1 USD 8 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2011-09-18 | control 2024-04 a 2026-04: Deriv 49 ops 73,5% / Dukascopy 47 ops 55,3%
+ 3. IndicePullbackLong_v1    OTC_NDX    4h conf 50:   365 ops, acierto 56,4% (IC95 51,3-61,4), z85 0,91, P&L a 1 USD 16,1 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2011-09-18 | control 2024-04 a 2026-04: Deriv 66 ops 63,6% / Dukascopy 67 ops 59,7%
+ 4. IndicePullbackLong_v1    OTC_DJI    4h conf 50:   323 ops, acierto 51,7% (IC95 46,3-57,1), z85 -0,85, P&L a 1 USD -14,05 -> SIN VENTAJA
+     desde 2013-09-30 | control 2024-04 a 2026-04: Deriv 63 ops 52,4% / Dukascopy 77 ops 57,1%
+ 5. IndicePullbackLong_v1    OTC_SPC    4h conf 50:   338 ops, acierto 56,2% (IC95 50,9-61,4), z85 0,80, P&L a 1 USD 13,5 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2011-09-18 | control 2024-04 a 2026-04: Deriv 56 ops 55,4% / Dukascopy 68 ops 57,4%
+ 6. CCIReversal_v2           OTC_DJI    4h conf 55:   272 ops, acierto 58,5% (IC95 52,5-64,1), z85 1,46, P&L a 1 USD 22,15 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2013-09-30 | control 2024-04 a 2026-04: Deriv 48 ops 64,6% / Dukascopy 70 ops 51,4%
+ 7. EmaRsiCruce_v4           OTC_NDX    4h conf 55:   545 ops, acierto 52,5% (IC95 48,3-56,6), z85 -0,74, P&L a 1 USD -15,9 -> SIN VENTAJA
+     desde 2011-09-18 | control 2024-04 a 2026-04: Deriv 86 ops 57,0% / Dukascopy 98 ops 53,1%
+ 8. BollingerRsiReversal_d30 frxXAUUSD  1h conf 50:  1219 ops, acierto 50,0% (IC95 47,2-52,8), z85 -2,87, P&L a 1 USD -92,35 -> SIN VENTAJA
+     desde 2003-05-05 | control 2024-04 a 2026-04: Deriv 78 ops 66,7% / Dukascopy 75 ops 61,3%
+ 9. BollingerRsiReversal     frxEURUSD  4h conf 50:   467 ops, acierto 48,0% (IC95 43,5-52,5), z85 -2,64, P&L a 1 USD -52,6 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 43 ops 58,1% / Dukascopy 41 ops 61,0%
+10. IndicePullbackLong_v1    frxUSDJPY  1h conf 50:  2475 ops, acierto 52,4% (IC95 50,5-54,4), z85 -1,61, P&L a 1 USD -73,7 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 249 ops 56,6% / Dukascopy 262 ops 54,6%
+11. IndicePullbackLong_v1    frxGBPUSD  1h conf 50:  2458 ops, acierto 51,8% (IC95 49,9-53,8), z85 -2,21, P&L a 1 USD -101,1 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 229 ops 50,7% / Dukascopy 231 ops 50,6%
+12. EmaRsiCruce_v4           frxUSDJPY  1h conf 55:  4778 ops, acierto 51,7% (IC95 50,2-53,1), z85 -3,33, P&L a 1 USD -212,2 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 517 ops 51,4% / Dukascopy 524 ops 49,8%
+13. EmaRsiCruce_v4           frxGBPUSD  1h conf 55:  4805 ops, acierto 51,4% (IC95 50,0-52,8), z85 -3,71, P&L a 1 USD -237,35 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 455 ops 51,2% / Dukascopy 455 ops 51,6%
+14. LondresMomentum_v1       frxEURUSD  1h conf 50:  4259 ops, acierto 47,9% (IC95 46,4-49,4), z85 -8,03, P&L a 1 USD -483,15 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 409 ops 52,8% / Dukascopy 415 ops 52,8%
+15. LondresMomentum_v1       frxGBPUSD  1h conf 50:  4509 ops, acierto 49,8% (IC95 48,4-51,3), z85 -5,69, P&L a 1 USD -352,05 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 432 ops 53,2% / Dukascopy 434 ops 52,8%
+16. AsiaReversion_v1         frxEURUSD  1h conf 50:   303 ops, acierto 60,1% (IC95 54,5-65,4), z85 2,10, P&L a 1 USD 33,7 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 30 ops 40,0% / Dukascopy 26 ops 38,5%
+17. AsiaReversion_v1         frxGBPUSD  1h conf 50:   241 ops, acierto 57,7% (IC95 51,4-63,7), z85 1,13, P&L a 1 USD 16,15 -> POSITIVO, NO SIGNIFICATIVO
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 22 ops 45,5% / Dukascopy 24 ops 41,7%
+18. SobrerreaccionVela_v1    frxEURUSD  1h conf 50:  5552 ops, acierto 50,7% (IC95 49,4-52,0), z85 -5,01, P&L a 1 USD -344,25 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 503 ops 49,7% / Dukascopy 517 ops 51,6%
+19. SobrerreaccionVela_v1    frxGBPUSD  1h conf 50:  5961 ops, acierto 50,1% (IC95 48,9-51,4), z85 -6,09, P&L a 1 USD -433,2 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 467 ops 54,2% / Dukascopy 503 ops 51,7%
+20. SobrerreaccionVela_v1    frxUSDJPY  1h conf 50:  4709 ops, acierto 51,4% (IC95 50,0-52,8), z85 -3,67, P&L a 1 USD -232 -> SIN VENTAJA
+     desde 2003-05-04 | control 2024-04 a 2026-04: Deriv 398 ops 46,0% / Dukascopy 466 ops 49,1%
+21. SobrerreaccionVela_v1    frxXAUUSD  1h conf 50:  5353 ops, acierto 51,1% (IC95 49,8-52,5), z85 -4,29, P&L a 1 USD -289,55 -> SIN VENTAJA
+     desde 2003-05-05 | control 2024-04 a 2026-04: Deriv 442 ops 52,0% / Dukascopy 483 ops 52,8%
+
+TOTAL (todas juntas): 49702 operaciones, acierto 51,00%  (equilibrio 54,05% con payout 85%, 56,18% con 78%)
+Con ventaja corregida: 0 de 21
