@@ -16,10 +16,17 @@ $repo = Join-Path $PSScriptRoot '..\..'
 # --- ventanas de eventos, ordenadas y sin solaparse ---
 $ev = (Get-Content -Raw -Encoding utf8 (Join-Path $repo 'docs\validacion\eventos_eeuu_2003_2024.json') | ConvertFrom-Json).eventos |
   Sort-Object inicio_utc
+# ConvertFrom-Json de PowerShell 7 convierte las fechas ISO en DateTime (UTC); pasarlas por texto
+# con la cultura local invierte dia y mes, asi que se convierten sin pasar por texto.
+function EpochUtc($v) {
+  if ($v -is [datetime]) { return ([DateTimeOffset]::new($v.ToUniversalTime())).ToUnixTimeSeconds() }
+  return ([DateTimeOffset]::Parse([string]$v, [Globalization.CultureInfo]::InvariantCulture,
+      [Globalization.DateTimeStyles]::AssumeUniversal)).ToUnixTimeSeconds()
+}
 $vIni = [long[]]::new($ev.Count); $vFin = [long[]]::new($ev.Count); $vTipo = [string[]]::new($ev.Count)
 for ($i = 0; $i -lt $ev.Count; $i++) {
-  $vIni[$i] = ([DateTimeOffset]::Parse($ev[$i].inicio_utc)).ToUnixTimeSeconds() - 60 * $MargenMin
-  $vFin[$i] = ([DateTimeOffset]::Parse($ev[$i].fin_utc)).ToUnixTimeSeconds() + 60 * $MargenMin
+  $vIni[$i] = (EpochUtc $ev[$i].inicio_utc) - 60 * $MargenMin
+  $vFin[$i] = (EpochUtc $ev[$i].fin_utc) + 60 * $MargenMin
   $vTipo[$i] = $ev[$i].tipo
 }
 # Devuelve el tipo del evento cuya ventana toca [e0, e1], o $null

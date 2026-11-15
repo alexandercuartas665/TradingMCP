@@ -47,3 +47,20 @@ fuente historica fiable sin registro. Si el filtro sirve con NFP y FOMC, se agre
 
 Nada de esto convierte una estrategia sin ventaja en rentable: el filtro solo evita perder de
 mas. Si el resultado es nulo, no se construye el filtro.
+
+## Resultado (2026-11-15)
+
+Detalle en `filtro_noticias_2026-11-15.txt` / `.json`.
+
+- **Binarias: sin efecto.** Expuestas 4.609 ops con 50,38% de acierto frente a 186.247 con
+  50,48% (diferencia -0,10 pts, z -0,13). Peor en 13 de 35 configuraciones (p signos 0,96).
+  Filtrar quitaria el 2,4% de las operaciones sin cambiar el acierto. NFP 49,5%, FOMC 51,9%.
+  **No se construye el filtro para binarias.**
+- **Multiplicadores: filtro recomendado.** Durante una noticia el precio se mueve 1,62 veces mas
+  (media 0,278% frente a 0,172%; percentil 95: 0,88% frente a 0,54%). EUR/USD x1,63, GBP/USD
+  x1,41, USD/JPY x1,69, oro x1,29. Si se operan multiplicadores en divisas, hay que bloquear
+  las ventanas de NFP y FOMC.
+
+Nota: la primera corrida tenia un error de lectura de fechas (PowerShell 7 convierte las fechas
+del JSON y al pasarlas por texto se invertian dia y mes; salian 95 expuestas). Se corrigio el
+script, no el plan, y se volvio a correr; las cifras de arriba son las de la corrida corregida.
