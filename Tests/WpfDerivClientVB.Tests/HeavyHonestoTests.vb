@@ -45,6 +45,22 @@ Public Class HeavyHonestoTests
     End Sub
 
     <TestMethod>
+    Public Sub Resolver_payout_pedido_real_o_supuesto()
+        Dim ruta = IO.Path.Combine(IO.Path.GetTempPath(), "payouts_res_" & Guid.NewGuid().ToString("N") & ".json")
+        PayoutsReales.RutaOverride = ruta
+        Try
+            Assert.AreEqual(90D, PayoutsReales.Resolver(New JValue(90), "R_100", "1h", 2))      ' pedido explicito
+            Assert.AreEqual(85D, PayoutsReales.Resolver(Nothing, "R_100", "1h", 2))             ' sin medicion: supuesto
+            PayoutsReales.Registrar(New JArray From {New JObject From {{"symbol", "R_100"}, {"duracion", "120m"}, {"payout_pct", 78.55}}}, "x")
+            Assert.AreEqual(78.55D, PayoutsReales.Resolver(Nothing, "R_100", "1h", 2))           ' medido
+            Assert.AreEqual(78.55D, PayoutsReales.Resolver(New JValue("real"), "R_100", "1h", 2))
+        Finally
+            PayoutsReales.RutaOverride = Nothing
+            IO.File.Delete(ruta)
+        End Try
+    End Sub
+
+    <TestMethod>
     Public Sub Periodo_ciego_cuenta_solo_operaciones_desde_el_corte()
         Dim ops As New List(Of BacktestOperacion) From {
             New BacktestOperacion With {.EpochEntrada = 100, .Estado = "Ganado"},
