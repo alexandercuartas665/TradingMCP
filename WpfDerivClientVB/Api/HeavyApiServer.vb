@@ -1,4 +1,4 @@
-' ============================================================
+﻿' ============================================================
 ' HeavyApiServer.vb
 '
 ' Servidor HTTP embebido (HttpListener) dedicado al modulo Heavy
@@ -1097,7 +1097,8 @@ Namespace WpfDerivClientVB.Backtesting
         End Function
 
         ''' <summary>
-        ''' body: {estrategia, symbol, timeframe, duracion, confianza, payout, corte:"YYYY-MM-DD", [desde:"YYYY-MM-DD"]}
+        ''' body: {estrategia, symbol, timeframe, duracion, confianza, payout, corte:"YYYY-MM-DD", [desde:"YYYY-MM-DD"],
+        '''        [fuente], [incluir_operaciones:true -> lista [entrada, salida, dir, ganada] de cada operacion]}
         ''' </summary>
         Private Async Function ValidarEstrategiaApi(body As JObject) As Task(Of JObject)
             If body Is Nothing Then Return ErrJson("Body: {estrategia, symbol, timeframe, duracion, confianza, payout, corte}")
@@ -1124,7 +1125,8 @@ Namespace WpfDerivClientVB.Backtesting
                     If(body("confianza") IsNot Nothing, CInt(body("confianza")), 55),
                     PayoutsReales.Resolver(body("payout"), symV, tfV, durV),
                     New DateTimeOffset(corte).ToUnixTimeSeconds(), desdeEpoch,
-                    fuente:=FuentesVelas.Normalizar(body("fuente")?.ToString()))
+                    fuente:=FuentesVelas.Normalizar(body("fuente")?.ToString()),
+                    incluirOperaciones:=body("incluir_operaciones") IsNot Nothing AndAlso CBool(body("incluir_operaciones")))
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try

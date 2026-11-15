@@ -1,4 +1,4 @@
-' ============================================================
+﻿' ============================================================
 ' ValidacionEstrategia.vb
 '
 ' Valida una estrategia FUERA DE MUESTRA: separa el historico en
@@ -97,12 +97,13 @@ Namespace WpfDerivClientVB.Backtesting
                                            corteEpoch As Long,
                                            Optional desdeEpoch As Long = 0,
                                            Optional hastaEpoch As Long = 0,
-                                           Optional fuente As String = FuentesVelas.DERIV) As Task(Of JObject)
+                                           Optional fuente As String = FuentesVelas.DERIV,
+                                           Optional incluirOperaciones As Boolean = False) As Task(Of JObject)
             If hastaEpoch <= 0 Then hastaEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             Dim repo = New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
             fuente = FuentesVelas.Normalizar(fuente)
             Dim velas = Await repo.GetCandlesRangoAsync(fuente, symbol, timeframe, desdeEpoch, hastaEpoch)
-            Dim r = Validar(velas, estrategia, symbol, timeframe, duracionVelas, minConfianza, payoutPct, corteEpoch)
+            Dim r = Validar(velas, estrategia, symbol, timeframe, duracionVelas, minConfianza, payoutPct, corteEpoch, incluirOperaciones)
             r("fuente") = fuente
             Return r
         End Function
@@ -110,7 +111,8 @@ Namespace WpfDerivClientVB.Backtesting
         ''' <summary>Validacion sobre velas ya cargadas (pura: se puede probar).</summary>
         Public Function Validar(velas As List(Of CandleModel), estrategia As IEstrategia, symbol As String,
                                 timeframe As String, duracionVelas As Integer, minConfianza As Integer,
-                                payoutPct As Decimal, corteEpoch As Long) As JObject
+                                payoutPct As Decimal, corteEpoch As Long,
+                                Optional incluirOperaciones As Boolean = False) As JObject
             Dim cfg As New BacktestConfig With {
                 .Symbol = symbol, .Timeframe = timeframe, .DuracionVelas = duracionVelas,
                 .PayoutPct = payoutPct, .MinConfianza = minConfianza, .VentanaIndicadores = 100,
@@ -129,7 +131,7 @@ Namespace WpfDerivClientVB.Backtesting
             Dim ciego = ops.Where(Function(o) o.EpochEntrada >= corteEpoch).ToList()
             Dim velasCiego = velas.Where(Function(v) v.Epoch >= corteEpoch).ToList()
 
-            Return New JObject From {
+            Dim r = New JObject From {
                 {"ok", True},
                 {"estrategia", estrategia.Nombre},
                 {"symbol", symbol}, {"timeframe", timeframe},
@@ -142,6 +144,23 @@ Namespace WpfDerivClientVB.Backtesting
                 {"periodo_ciego", Resumen(ciego, payoutPct, corteEpoch, velas.LastOrDefault()?.Epoch)},
                 {"velas_periodo_ciego", velasCiego.Count}
             }
+            If incluirOperaciones Then r("operaciones") = OperacionesCompactas(ops)
+            Return r
+        End Function
+
+        ''' <summary>
+        ''' Lista compacta de operaciones para analisis externo (p. ej. filtro de noticias):
+        ''' cada fila es [epoch_entrada, epoch_salida, direccion (1 CALL / -1 PUT), ganada (1/0),
+        ''' precio_entrada, precio_salida].
+        ''' </summary>
+        Public Function OperacionesCompactas(ops As IEnumerable(Of BacktestOperacion)) As JArray
+            Dim arr As New JArray()
+            For Each o In ops
+                arr.Add(New JArray(o.EpochEntrada, o.EpochSalida,
+                                   If(String.Equals(o.Tipo, "CALL", StringComparison.OrdinalIgnoreCase), 1, -1),
+                                   If(o.Estado = "Ganado", 1, 0), o.PrecioEntrada, o.PrecioSalida))
+            Next
+            Return arr
         End Function
 
         Private Function Resumen(ops As List(Of BacktestOperacion), payoutPct As Decimal,

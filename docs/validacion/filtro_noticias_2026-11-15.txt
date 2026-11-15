@@ -1,0 +1,79 @@
+PRUEBA DEL FILTRO DE NOTICIAS - plan pre-registrado en docs/validacion/filtro_noticias_plan.md
+Eventos: 433 (NFP y FOMC 2003-2024), ventana +-30 min. Dukascopy 2003-05-01 a 2024-04-01. 60 configuraciones.
+
+1) BINARIAS: acierto de las operaciones abiertas durante una noticia frente al resto
+   Expuestas: 4609 ops, acierto 50,38%   |   Resto: 186247 ops, acierto 50,48%
+   Diferencia -0,10 pts, z -0,13. Configuraciones con >= 20 expuestas: 35; peor en 13 de 35 (empates 0), p signos 0,9552
+   Si se filtraran: se pierden 2,4% de las operaciones y el acierto total pasa de 50,48% a 50,48% (+0,00 pts)
+   Veredicto binarias: SIN EFECTO SUFICIENTE: no se recomienda el filtro para binarias
+   Por evento: NFP 2910 ops 49,48% | FOMC 1699 ops 51,91%
+
+2) MULTIPLICADORES: movimiento absoluto del precio durante la operacion
+   Expuestas: media 0,278%, p95 0,883%   |   Resto: media 0,172%, p95 0,539%   |   razon de medias x1,62
+   frxEURUSD  expuestas   1353 media 0,266% p95 0,807% | resto   56804 media 0,163% p95 0,512% | x1,63
+   frxGBPUSD  expuestas   1321 media 0,233% p95 0,725% | resto   65063 media 0,165% p95 0,508% | x1,41
+   frxUSDJPY  expuestas   1394 media 0,278% p95 0,882% | resto   55749 media 0,165% p95 0,518% | x1,69
+   frxXAUUSD  expuestas    541 media 0,422% p95 1,193% | resto    8421 media 0,328% p95 1,026% | x1,29
+   Veredicto multiplicadores: FILTRO RECOMENDADO (las expuestas se mueven >= 1,5 veces mas)
+
+DETALLE POR CONFIGURACION:
+BollingerRsiReversal_d30   frxXAUUSD  1h expuestas    91 ( 45,1%) | resto   1128 ( 50,4%) | dif   -5,3 pts
+BollingerRsiReversal       frxEURUSD  4h expuestas    36 ( 55,6%) | resto    431 ( 47,3%) | dif    8,2 pts
+IndicePullbackLong_v1      frxUSDJPY  1h expuestas    34 ( 38,2%) | resto   2441 ( 52,6%) | dif  -14,4 pts
+IndicePullbackLong_v1      frxGBPUSD  1h expuestas    27 ( 48,1%) | resto   2431 ( 51,9%) | dif   -3,7 pts
+EmaRsiCruce_v4             frxUSDJPY  1h expuestas    52 ( 44,2%) | resto   4726 ( 51,7%) | dif   -7,5 pts
+EmaRsiCruce_v4             frxGBPUSD  1h expuestas    52 ( 48,1%) | resto   4753 ( 51,4%) | dif   -3,3 pts
+LondresMomentum_v1         frxEURUSD  1h expuestas     0 (  0,0%) | resto   4259 ( 47,9%) | dif  -47,9 pts
+LondresMomentum_v1         frxGBPUSD  1h expuestas     0 (  0,0%) | resto   4509 ( 49,8%) | dif  -49,8 pts
+AsiaReversion_v1           frxEURUSD  1h expuestas     0 (  0,0%) | resto    303 ( 60,1%) | dif  -60,1 pts
+AsiaReversion_v1           frxGBPUSD  1h expuestas     0 (  0,0%) | resto    241 ( 57,7%) | dif  -57,7 pts
+SobrerreaccionVela_v1      frxEURUSD  1h expuestas   369 ( 50,9%) | resto   5183 ( 50,7%) | dif    0,3 pts
+SobrerreaccionVela_v1      frxGBPUSD  1h expuestas   319 ( 51,1%) | resto   5642 ( 50,1%) | dif    1,0 pts
+SobrerreaccionVela_v1      frxUSDJPY  1h expuestas   366 ( 51,9%) | resto   4343 ( 51,3%) | dif    0,6 pts
+SobrerreaccionVela_v1      frxXAUUSD  1h expuestas   335 ( 50,1%) | resto   5018 ( 51,2%) | dif   -1,0 pts
+TokioFixYen_v1             frxUSDJPY  1h expuestas     0 (  0,0%) | resto   5442 ( 54,2%) | dif  -54,2 pts
+LunesGap_v1                frxEURUSD  1h expuestas     0 (  0,0%) | resto    313 ( 56,9%) | dif  -56,9 pts
+LunesGap_v1                frxGBPUSD  1h expuestas     0 (  0,0%) | resto    340 ( 60,0%) | dif  -60,0 pts
+LunesGap_v1                frxUSDJPY  1h expuestas     0 (  0,0%) | resto    388 ( 56,7%) | dif  -56,7 pts
+LunesGap_v1                frxXAUUSD  1h expuestas     0 (  0,0%) | resto    306 ( 52,9%) | dif  -52,9 pts
+FixLondresReversion_v1     frxEURUSD  1h expuestas    23 ( 60,9%) | resto   4098 ( 51,3%) | dif    9,6 pts
+FixLondresReversion_v1     frxGBPUSD  1h expuestas    14 ( 64,3%) | resto   4212 ( 51,9%) | dif   12,4 pts
+NYDatosMomentum_v1         frxEURUSD  1h expuestas   200 ( 50,0%) | resto   3172 ( 48,0%) | dif    2,0 pts
+NYDatosMomentum_v1         frxGBPUSD  1h expuestas   190 ( 55,3%) | resto   3134 ( 50,1%) | dif    5,1 pts
+NYDatosMomentum_v1         frxUSDJPY  1h expuestas   197 ( 48,2%) | resto   2922 ( 50,7%) | dif   -2,5 pts
+ViernesTarde_v1            frxEURUSD  1h expuestas     0 (  0,0%) | resto    779 ( 51,9%) | dif  -51,9 pts
+ViernesTarde_v1            frxGBPUSD  1h expuestas     0 (  0,0%) | resto    794 ( 52,5%) | dif  -52,5 pts
+InsideBarTendencia_v1      frxEURUSD  4h expuestas    51 ( 43,1%) | resto   4358 ( 48,6%) | dif   -5,4 pts
+InsideBarTendencia_v1      frxGBPUSD  4h expuestas    69 ( 50,7%) | resto   4462 ( 49,0%) | dif    1,7 pts
+InsideBarTendencia_v1      frxUSDJPY  4h expuestas    59 ( 49,2%) | resto   4782 ( 48,7%) | dif    0,4 pts
+EnvolventeBanda_v1         frxEURUSD  4h expuestas    32 ( 56,2%) | resto    423 ( 49,4%) | dif    6,8 pts
+EnvolventeBanda_v1         frxGBPUSD  4h expuestas    31 ( 38,7%) | resto    428 ( 47,2%) | dif   -8,5 pts
+EnvolventeBanda_v1         frxUSDJPY  4h expuestas    34 ( 55,9%) | resto    472 ( 41,9%) | dif   13,9 pts
+EnvolventeBanda_v1         frxXAUUSD  4h expuestas    30 ( 46,7%) | resto    408 ( 48,0%) | dif   -1,4 pts
+MartilloBanda_v1           frxEURUSD  1h expuestas   156 ( 56,4%) | resto   7330 ( 52,0%) | dif    4,4 pts
+MartilloBanda_v1           frxGBPUSD  1h expuestas   123 ( 53,7%) | resto   6866 ( 50,8%) | dif    2,9 pts
+MartilloBanda_v1           frxUSDJPY  1h expuestas   149 ( 53,7%) | resto   7009 ( 50,1%) | dif    3,6 pts
+CompresionRuptura_v1       frxEURUSD  1h expuestas     0 (  0,0%) | resto   1272 ( 47,3%) | dif  -47,3 pts
+CompresionRuptura_v1       frxGBPUSD  1h expuestas     1 (  0,0%) | resto   1534 ( 47,7%) | dif  -47,7 pts
+CompresionRuptura_v1       frxUSDJPY  1h expuestas     4 (100,0%) | resto    715 ( 49,0%) | dif   51,0 pts
+DobleVelaAgotamiento_v1    frxEURUSD  1h expuestas    83 ( 43,4%) | resto   6907 ( 53,3%) | dif   -9,9 pts
+DobleVelaAgotamiento_v1    frxGBPUSD  1h expuestas    89 ( 52,8%) | resto   7129 ( 52,1%) | dif    0,7 pts
+DobleVelaAgotamiento_v1    frxUSDJPY  1h expuestas    59 ( 54,2%) | resto   6879 ( 53,6%) | dif    0,6 pts
+ADXPullback_v1             frxEURUSD  4h expuestas     8 ( 12,5%) | resto    132 ( 51,5%) | dif  -39,0 pts
+ADXPullback_v1             frxGBPUSD  4h expuestas     7 ( 57,1%) | resto     92 ( 51,1%) | dif    6,1 pts
+ADXPullback_v1             frxUSDJPY  4h expuestas     7 ( 71,4%) | resto    125 ( 48,0%) | dif   23,4 pts
+ADXPullback_v1             frxXAUUSD  4h expuestas     9 ( 33,3%) | resto    137 ( 53,3%) | dif  -20,0 pts
+IchimokuNube_v1            frxEURUSD  4h expuestas   293 ( 50,2%) | resto  11111 ( 48,3%) | dif    1,8 pts
+IchimokuNube_v1            frxGBPUSD  4h expuestas   292 ( 52,7%) | resto  11121 ( 48,9%) | dif    3,8 pts
+IchimokuNube_v1            frxUSDJPY  4h expuestas   310 ( 44,5%) | resto  11095 ( 48,8%) | dif   -4,3 pts
+AsiaReversion_v1           frxUSDJPY  1h expuestas     0 (  0,0%) | resto    740 ( 51,8%) | dif  -51,8 pts
+AsiaReversion_v1           frxUSDCHF  1h expuestas     0 (  0,0%) | resto    210 ( 61,0%) | dif  -61,0 pts
+MediodiaEuropa_v1          frxEURUSD  1h expuestas    13 ( 69,2%) | resto   1883 ( 51,4%) | dif   17,8 pts
+MediodiaEuropa_v1          frxGBPUSD  1h expuestas    16 ( 43,8%) | resto   2228 ( 51,2%) | dif   -7,4 pts
+CruceMediaLarga_v1         frxEURUSD  4h expuestas    86 ( 50,0%) | resto   1493 ( 49,5%) | dif    0,5 pts
+CruceMediaLarga_v1         frxGBPUSD  4h expuestas    88 ( 51,1%) | resto   1539 ( 48,7%) | dif    2,4 pts
+CruceMediaLarga_v1         frxUSDJPY  4h expuestas    91 ( 49,5%) | resto   1521 ( 49,0%) | dif    0,5 pts
+CruceMediaLarga_v1         frxXAUUSD  4h expuestas    76 ( 48,7%) | resto   1424 ( 44,9%) | dif    3,7 pts
+RangoEstrecho_v1           frxEURUSD  4h expuestas     3 ( 33,3%) | resto   3357 ( 49,0%) | dif  -15,7 pts
+RangoEstrecho_v1           frxGBPUSD  4h expuestas     3 ( 33,3%) | resto   3608 ( 50,4%) | dif  -17,1 pts
+RangoEstrecho_v1           frxUSDJPY  4h expuestas    32 ( 40,6%) | resto   2149 ( 50,9%) | dif  -10,2 pts

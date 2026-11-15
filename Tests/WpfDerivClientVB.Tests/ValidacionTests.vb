@@ -76,6 +76,27 @@ Public Class ValidacionTests
         ' Una posicion a la vez con duracion 2: como mucho 1 operacion cada 2 velas
         Assert.IsTrue(CInt(a("operaciones")) + CInt(b("operaciones")) <= (400 - 100) \ 2 + 1)
         Assert.AreEqual(0.5405, CDbl(r("punto_equilibrio")), 0.001)
+        Assert.IsNull(r("operaciones"), "sin pedirlo no se devuelve la lista")
+    End Sub
+
+    <TestMethod>
+    Public Sub Validar_devuelve_la_lista_de_operaciones_si_se_pide()
+        Dim velas As New List(Of CandleModel)()
+        Dim epoch As Long = 1700000000
+        For i = 1 To 400
+            velas.Add(New CandleModel With {.Epoch = epoch, .OpenPrice = i, .High = i, .Low = i, .ClosePrice = i})
+            epoch += 3600
+        Next
+        Dim r = ValidacionEstrategia.Validar(velas, New SiempreCall(), "R_TEST", "1h", 2, 0, 85D, velas(250).Epoch, True)
+        Dim ops = CType(r("operaciones"), Newtonsoft.Json.Linq.JArray)
+        Dim total = CInt(r("periodo_diseno")("operaciones")) + CInt(r("periodo_ciego")("operaciones"))
+        Assert.AreEqual(total, ops.Count)
+        Dim primera = ops(0)
+        Assert.AreEqual(6, primera.Count())
+        Assert.AreEqual(7200L, CLng(primera(1)) - CLng(primera(0)), "duracion 2 velas de 1h")
+        Assert.AreEqual(1, CInt(primera(2)), "CALL")
+        Assert.AreEqual(1, CInt(primera(3)), "al alza el CALL gana")
+        Assert.IsTrue(CDec(primera(5)) > CDec(primera(4)))
     End Sub
 
 End Class

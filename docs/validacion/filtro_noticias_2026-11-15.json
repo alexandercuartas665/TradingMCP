@@ -1,0 +1,619 @@
+{
+  "eventos": 433,
+  "margen_min": 30,
+  "total": {
+    "gFOMC": 882,
+    "gN": 94013,
+    "gE": 2322,
+    "nE": 4609,
+    "gNFP": 1440,
+    "nFOMC": 1699,
+    "nN": 186247,
+    "nNFP": 2910
+  },
+  "z": -0.13131851579489529,
+  "p_signos": 0.9552344605326653,
+  "razon_movimiento": 1.621348380675256,
+  "configuraciones": [
+    {
+      "estrategia": "BollingerRsiReversal_d30",
+      "symbol": "frxXAUUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 91,
+      "ganadas_expuestas": 41,
+      "resto": 1128,
+      "ganadas_resto": 568
+    },
+    {
+      "estrategia": "BollingerRsiReversal",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 36,
+      "ganadas_expuestas": 20,
+      "resto": 431,
+      "ganadas_resto": 204
+    },
+    {
+      "estrategia": "IndicePullbackLong_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 34,
+      "ganadas_expuestas": 13,
+      "resto": 2441,
+      "ganadas_resto": 1285
+    },
+    {
+      "estrategia": "IndicePullbackLong_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 27,
+      "ganadas_expuestas": 13,
+      "resto": 2431,
+      "ganadas_resto": 1261
+    },
+    {
+      "estrategia": "EmaRsiCruce_v4",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 52,
+      "ganadas_expuestas": 23,
+      "resto": 4726,
+      "ganadas_resto": 2445
+    },
+    {
+      "estrategia": "EmaRsiCruce_v4",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 52,
+      "ganadas_expuestas": 25,
+      "resto": 4753,
+      "ganadas_resto": 2444
+    },
+    {
+      "estrategia": "LondresMomentum_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 4259,
+      "ganadas_resto": 2041
+    },
+    {
+      "estrategia": "LondresMomentum_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 4509,
+      "ganadas_resto": 2247
+    },
+    {
+      "estrategia": "AsiaReversion_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 303,
+      "ganadas_resto": 182
+    },
+    {
+      "estrategia": "AsiaReversion_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 241,
+      "ganadas_resto": 139
+    },
+    {
+      "estrategia": "SobrerreaccionVela_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 369,
+      "ganadas_expuestas": 188,
+      "resto": 5183,
+      "ganadas_resto": 2627
+    },
+    {
+      "estrategia": "SobrerreaccionVela_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 319,
+      "ganadas_expuestas": 163,
+      "resto": 5642,
+      "ganadas_resto": 2825
+    },
+    {
+      "estrategia": "SobrerreaccionVela_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 366,
+      "ganadas_expuestas": 190,
+      "resto": 4343,
+      "ganadas_resto": 2230
+    },
+    {
+      "estrategia": "SobrerreaccionVela_v1",
+      "symbol": "frxXAUUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 335,
+      "ganadas_expuestas": 168,
+      "resto": 5018,
+      "ganadas_resto": 2569
+    },
+    {
+      "estrategia": "TokioFixYen_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 5442,
+      "ganadas_resto": 2952
+    },
+    {
+      "estrategia": "LunesGap_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 313,
+      "ganadas_resto": 178
+    },
+    {
+      "estrategia": "LunesGap_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 340,
+      "ganadas_resto": 204
+    },
+    {
+      "estrategia": "LunesGap_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 388,
+      "ganadas_resto": 220
+    },
+    {
+      "estrategia": "LunesGap_v1",
+      "symbol": "frxXAUUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 306,
+      "ganadas_resto": 162
+    },
+    {
+      "estrategia": "FixLondresReversion_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 23,
+      "ganadas_expuestas": 14,
+      "resto": 4098,
+      "ganadas_resto": 2101
+    },
+    {
+      "estrategia": "FixLondresReversion_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 14,
+      "ganadas_expuestas": 9,
+      "resto": 4212,
+      "ganadas_resto": 2187
+    },
+    {
+      "estrategia": "NYDatosMomentum_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 200,
+      "ganadas_expuestas": 100,
+      "resto": 3172,
+      "ganadas_resto": 1523
+    },
+    {
+      "estrategia": "NYDatosMomentum_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 190,
+      "ganadas_expuestas": 105,
+      "resto": 3134,
+      "ganadas_resto": 1571
+    },
+    {
+      "estrategia": "NYDatosMomentum_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 197,
+      "ganadas_expuestas": 95,
+      "resto": 2922,
+      "ganadas_resto": 1482
+    },
+    {
+      "estrategia": "ViernesTarde_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 779,
+      "ganadas_resto": 404
+    },
+    {
+      "estrategia": "ViernesTarde_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 794,
+      "ganadas_resto": 417
+    },
+    {
+      "estrategia": "InsideBarTendencia_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 51,
+      "ganadas_expuestas": 22,
+      "resto": 4358,
+      "ganadas_resto": 2117
+    },
+    {
+      "estrategia": "InsideBarTendencia_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 69,
+      "ganadas_expuestas": 35,
+      "resto": 4462,
+      "ganadas_resto": 2188
+    },
+    {
+      "estrategia": "InsideBarTendencia_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 59,
+      "ganadas_expuestas": 29,
+      "resto": 4782,
+      "ganadas_resto": 2331
+    },
+    {
+      "estrategia": "EnvolventeBanda_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 32,
+      "ganadas_expuestas": 18,
+      "resto": 423,
+      "ganadas_resto": 209
+    },
+    {
+      "estrategia": "EnvolventeBanda_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 31,
+      "ganadas_expuestas": 12,
+      "resto": 428,
+      "ganadas_resto": 202
+    },
+    {
+      "estrategia": "EnvolventeBanda_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 34,
+      "ganadas_expuestas": 19,
+      "resto": 472,
+      "ganadas_resto": 198
+    },
+    {
+      "estrategia": "EnvolventeBanda_v1",
+      "symbol": "frxXAUUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 30,
+      "ganadas_expuestas": 14,
+      "resto": 408,
+      "ganadas_resto": 196
+    },
+    {
+      "estrategia": "MartilloBanda_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 156,
+      "ganadas_expuestas": 88,
+      "resto": 7330,
+      "ganadas_resto": 3814
+    },
+    {
+      "estrategia": "MartilloBanda_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 123,
+      "ganadas_expuestas": 66,
+      "resto": 6866,
+      "ganadas_resto": 3485
+    },
+    {
+      "estrategia": "MartilloBanda_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 149,
+      "ganadas_expuestas": 80,
+      "resto": 7009,
+      "ganadas_resto": 3510
+    },
+    {
+      "estrategia": "CompresionRuptura_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 1272,
+      "ganadas_resto": 602
+    },
+    {
+      "estrategia": "CompresionRuptura_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 1,
+      "ganadas_expuestas": 0,
+      "resto": 1534,
+      "ganadas_resto": 731
+    },
+    {
+      "estrategia": "CompresionRuptura_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 4,
+      "ganadas_expuestas": 4,
+      "resto": 715,
+      "ganadas_resto": 350
+    },
+    {
+      "estrategia": "DobleVelaAgotamiento_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 83,
+      "ganadas_expuestas": 36,
+      "resto": 6907,
+      "ganadas_resto": 3679
+    },
+    {
+      "estrategia": "DobleVelaAgotamiento_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 89,
+      "ganadas_expuestas": 47,
+      "resto": 7129,
+      "ganadas_resto": 3715
+    },
+    {
+      "estrategia": "DobleVelaAgotamiento_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 59,
+      "ganadas_expuestas": 32,
+      "resto": 6879,
+      "ganadas_resto": 3689
+    },
+    {
+      "estrategia": "ADXPullback_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 8,
+      "ganadas_expuestas": 1,
+      "resto": 132,
+      "ganadas_resto": 68
+    },
+    {
+      "estrategia": "ADXPullback_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 7,
+      "ganadas_expuestas": 4,
+      "resto": 92,
+      "ganadas_resto": 47
+    },
+    {
+      "estrategia": "ADXPullback_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 7,
+      "ganadas_expuestas": 5,
+      "resto": 125,
+      "ganadas_resto": 60
+    },
+    {
+      "estrategia": "ADXPullback_v1",
+      "symbol": "frxXAUUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 9,
+      "ganadas_expuestas": 3,
+      "resto": 137,
+      "ganadas_resto": 73
+    },
+    {
+      "estrategia": "IchimokuNube_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 293,
+      "ganadas_expuestas": 147,
+      "resto": 11111,
+      "ganadas_resto": 5371
+    },
+    {
+      "estrategia": "IchimokuNube_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 292,
+      "ganadas_expuestas": 154,
+      "resto": 11121,
+      "ganadas_resto": 5439
+    },
+    {
+      "estrategia": "IchimokuNube_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 310,
+      "ganadas_expuestas": 138,
+      "resto": 11095,
+      "ganadas_resto": 5419
+    },
+    {
+      "estrategia": "AsiaReversion_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 740,
+      "ganadas_resto": 383
+    },
+    {
+      "estrategia": "AsiaReversion_v1",
+      "symbol": "frxUSDCHF",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 0,
+      "ganadas_expuestas": 0,
+      "resto": 210,
+      "ganadas_resto": 128
+    },
+    {
+      "estrategia": "MediodiaEuropa_v1",
+      "symbol": "frxEURUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 13,
+      "ganadas_expuestas": 9,
+      "resto": 1883,
+      "ganadas_resto": 968
+    },
+    {
+      "estrategia": "MediodiaEuropa_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "1h",
+      "dur": 2,
+      "expuestas": 16,
+      "ganadas_expuestas": 7,
+      "resto": 2228,
+      "ganadas_resto": 1140
+    },
+    {
+      "estrategia": "CruceMediaLarga_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 86,
+      "ganadas_expuestas": 43,
+      "resto": 1493,
+      "ganadas_resto": 739
+    },
+    {
+      "estrategia": "CruceMediaLarga_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 88,
+      "ganadas_expuestas": 45,
+      "resto": 1539,
+      "ganadas_resto": 750
+    },
+    {
+      "estrategia": "CruceMediaLarga_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 91,
+      "ganadas_expuestas": 45,
+      "resto": 1521,
+      "ganadas_resto": 745
+    },
+    {
+      "estrategia": "CruceMediaLarga_v1",
+      "symbol": "frxXAUUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 76,
+      "ganadas_expuestas": 37,
+      "resto": 1424,
+      "ganadas_resto": 640
+    },
+    {
+      "estrategia": "RangoEstrecho_v1",
+      "symbol": "frxEURUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 3,
+      "ganadas_expuestas": 1,
+      "resto": 3357,
+      "ganadas_resto": 1646
+    },
+    {
+      "estrategia": "RangoEstrecho_v1",
+      "symbol": "frxGBPUSD",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 3,
+      "ganadas_expuestas": 1,
+      "resto": 3608,
+      "ganadas_resto": 1820
+    },
+    {
+      "estrategia": "RangoEstrecho_v1",
+      "symbol": "frxUSDJPY",
+      "tf": "4h",
+      "dur": 2,
+      "expuestas": 32,
+      "ganadas_expuestas": 13,
+      "resto": 2149,
+      "ganadas_resto": 1093
+    }
+  ]
+}
