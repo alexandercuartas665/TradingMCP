@@ -1,0 +1,24 @@
+{
+  "nombre": "SobrerreaccionVela_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (sin ajustar parametros). Una vela de 1h con un rango mayor que 2 x ATR14 suele reflejar un barrido de stops o una sobrerreaccion a una noticia; el precio tiende a corregir en parte en las dos horas siguientes, en contra de la direccion de esa vela. Pensada para frxEURUSD, frxGBPUSD, frxUSDJPY y frxXAUUSD 1h, duracion 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "atr", "tipo": "ATR", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "rango",  "op": "mayor_que", "valor": "atr", "factor": 2 },
+      { "campo": "cuerpo", "op": "menor_que", "valor": 0 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "rango",  "op": "mayor_que", "valor": "atr", "factor": 2 },
+      { "campo": "cuerpo", "op": "mayor_que", "valor": 0 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}

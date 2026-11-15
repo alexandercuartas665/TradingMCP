@@ -70,6 +70,13 @@ Namespace WpfDerivClientVB.EstrategiasDinamicas
         Public Property Valor As JToken = Nothing
 
         ''' <summary>
+        ''' Multiplicador opcional del valor (solo en nodos hoja). Permite reglas como
+        ''' "rango mayor que 2 x atr": {"campo":"rango","op":"mayor_que","valor":"atr","factor":2}.
+        ''' </summary>
+        <JsonProperty("factor")>
+        Public Property Factor As Decimal? = Nothing
+
+        ''' <summary>
         ''' Operador logico para nodos compuestos: "AND" (default) u "OR".
         ''' </summary>
         <JsonProperty("operador")>

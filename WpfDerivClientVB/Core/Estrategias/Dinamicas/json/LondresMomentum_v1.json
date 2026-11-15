@@ -1,0 +1,26 @@
+{
+  "nombre": "LondresMomentum_v1",
+  "descripcion": "Hipotesis pre-registrada 2026-11-15 (sin ajustar parametros). En la primera hora de Londres (07 u 08 UTC segun horario de verano) entran las ordenes europeas; si esa vela de 1h tiene un cuerpo fuerte (mas de 0,5 x ATR14), su direccion tiende a continuar las dos horas siguientes. Pensada para frxEURUSD y frxGBPUSD 1h, duracion 2 velas.",
+  "version": "1.0",
+  "indicadores": [
+    { "id": "atr", "tipo": "ATR", "params": { "periodo": 14 } }
+  ],
+  "senal_call": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "hora_utc", "op": "mayor_igual", "valor": 7 },
+      { "campo": "hora_utc", "op": "menor_igual", "valor": 8 },
+      { "campo": "cuerpo", "op": "mayor_que", "valor": "atr", "factor": 0.5 }
+    ]
+  },
+  "senal_put": {
+    "operador": "AND",
+    "condiciones": [
+      { "campo": "hora_utc", "op": "mayor_igual", "valor": 7 },
+      { "campo": "hora_utc", "op": "menor_igual", "valor": 8 },
+      { "campo": "cuerpo", "op": "menor_que", "valor": "atr", "factor": -0.5 }
+    ]
+  },
+  "confianza_base": 60,
+  "ajustes_confianza": []
+}
