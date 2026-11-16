@@ -62,3 +62,13 @@ D:\traiding_ml\venv\Scripts\python.exe -I scripts\ml\forward_lightgbm.py --resum
 Registros en `D:\traiding_ml\forward\` (predicciones.jsonl, senales.jsonl, resultados.jsonl,
 forward.log). Arranca solo al iniciar sesion en Windows (acceso directo en la carpeta Inicio,
 `scripts\ml\forward_inicio.ps1`).
+
+## Nota posterior (2026-11-16, no cambia las reglas)
+
+Medido con el mercado abierto: Deriv no vende Rise/Fall de divisas de menos de 5 horas entre 21:00
+y 23:59 UTC, ni con vencimiento entre 21:50 y 23:00 UTC. Las entradas de 20h a 23h UTC, donde el
+modelo concentra sus senales fuertes, no se pueden comprar. En la reserva de Deriv las senales
+primarias en horas operables fueron solo 7 al mes con 53,1% de acierto (ver
+`modelo_lstm_plan.md`, comprobacion posterior). Se espera que la hipotesis primaria no llegue a 200
+operaciones en un plazo razonable y que no muestre ventaja. El forward sigue en papel (no cuesta
+nada) como control del modelo; activar compras demo no aporta.

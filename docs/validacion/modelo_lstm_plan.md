@@ -49,3 +49,27 @@ D:\traiding_ml\venv\Scripts\python.exe -I scripts\ml\modelo_lstm.py D:\traiding_
 ```
 
 PyTorch (CPU) instalado en `D:\traiding_ml\venv`; modelo en `D:\traiding_ml\modelos\lstm_binarias.pt`.
+
+## Resultado (2026-11-16)
+
+Detalle en `modelo_lstm_2026-11-16.txt` / `.json` (162 min de CPU).
+
+| Prueba | 5% | 10% |
+|---|---|---|
+| Reserva 1 Dukascopy 2019-2024 | 62,37% (3.261 ops) | 58,55% (10.550 ops, z 9,3) |
+| **Reserva 2 Deriv** | 57,33% (2.224 ops) | **56,48%** (5.752 ops) |
+| Promedio LSTM + LightGBM, Deriv (secundaria) | 59,94% (2.369 ops) | 57,08% (6.324 ops) |
+| Referencia LightGBM, Deriv | 59,83% (2.975 ops) | 55,47% (7.226 ops) |
+
+**Veredicto: VENTAJA pero NO OPERABLE.** La LSTM supera un poco al LightGBM al 10% (56,5% frente a
+55,5%), pero queda por debajo del punto de equilibrio real (58,0%). Segun el plan, la LSTM se
+descarta y no entra al forward test.
+
+**Comprobacion posterior (no cambia el veredicto):** las senales fuertes de ambos modelos se
+concentran en la entrada de 19h a 23h UTC. Deriv no vende Rise/Fall de divisas de menos de 5 horas
+entre 21:00 y 23:59 UTC ni con vencimiento entre 21:50 y 23:00 UTC (medido el 2026-11-16). Con el
+LightGBM en la reserva de Deriv, divisas al 5%: todas las horas 63,4% (1.725 ops, 56 al mes); solo
+horas que se pueden comprar (entrada fuera de 20-23 UTC) **53,1%** (211 ops, 7 al mes); al 10%,
+53,9% (1.649 ops). La ventaja del modelo vive en la franja del cierre diario de divisas (rollover,
+spreads anchos), justo la que Deriv no permite operar: es muy probable que sea en parte un
+artefacto de precios de esa franja, como el rebote bid-ask de Dukascopy.

@@ -1,0 +1,21 @@
+RED NEURONAL LSTM - plan pre-registrado en docs/validacion/modelo_lstm_plan.md
+Secuencia de 48 velas de 1h, 14 variables por vela, LSTM de 32 unidades. Binarias (2 velas).
+Ventaja: reserva 1 10%% acierto > 56,18%% con z(85%%) >= 2,24 y reserva 2 Deriv 10%% > 54,05%%. Operable: reserva 2 10%% > 58,0%%.
+
+LSTM => VENTAJA, no operable   (modelo en D:/traiding_ml\modelos\lstm_binarias.pt)
+  reserva 1 2019-2024              5%:   3261 ops  acierto  62.37%  z(85%)   9.53  retorno medio +0.0242%
+  reserva 1 2019-2024             10%:  10550 ops  acierto  58.55%  z(85%)   9.27  retorno medio +0.0171%
+  reserva 1 2019-2024             20%:  24987 ops  acierto  56.19%  z(85%)   6.77  retorno medio +0.0125%
+  reserva 1 2019-2024            100%: 109913 ops  acierto  51.94%  z(85%) -14.05  retorno medio +0.0039%
+  reserva 2 Deriv                  5%:   2224 ops  acierto  57.33%  z(85%)   3.10  retorno medio +0.0106%
+  reserva 2 Deriv                 10%:   5752 ops  acierto  56.48%  z(85%)   3.70  retorno medio +0.0162%
+  reserva 2 Deriv                 20%:  12495 ops  acierto  54.17%  z(85%)   0.25  retorno medio +0.0116%
+  reserva 2 Deriv                100%:  52542 ops  acierto  51.66%  z(85%) -11.01  retorno medio +0.0052%
+  promedio con LightGBM, Deriv     5%:   2369 ops  acierto  59.94%  z(85%)   5.75  retorno medio +0.0328%
+  promedio con LightGBM, Deriv    10%:   6324 ops  acierto  57.08%  z(85%)   4.83  retorno medio +0.0290%
+  promedio con LightGBM, Deriv    20%:  13932 ops  acierto  53.93%  z(85%)  -0.30  retorno medio +0.0110%
+  promedio con LightGBM, Deriv   100%:  52542 ops  acierto  51.65%  z(85%) -11.04  retorno medio +0.0051%
+  por ano (10%): 2019 60.1%, 2020 57.9%, 2021 61.2%, 2022 55.9%, 2023 57.5%, 2024 59.0%
+  referencia LightGBM reserva 2 Deriv 10%: 55,47% (7226 ops); 5%: 59,83% (2975 ops)
+
+Tiempo total: 162 min
