@@ -102,9 +102,14 @@ def variables_serie(df, eventos):
 
 
 def construir(carpeta, plataforma, eventos):
+    return construir_desde_series({sym: cargar(carpeta, plataforma, sym) for sym in MERCADOS}, eventos)
+
+
+def construir_desde_series(series, eventos):
+    """series: {symbol: DataFrame(epoch, o, h, l, c)}. Los mercados que falten quedan como NaN."""
     partes = {}
-    for sym in MERCADOS:
-        f = variables_serie(cargar(carpeta, plataforma, sym), eventos)
+    for sym, df in series.items():
+        f = variables_serie(df, eventos)
         f['symbol'] = sym
         partes[sym] = f
     # retornos de los otros mercados en la misma hora
@@ -112,6 +117,10 @@ def construir(carpeta, plataforma, eventos):
     for sym, f in partes.items():
         x = f[['epoch', '_r1', '_r6']].rename(columns={'_r1': 'x_%s_r1' % sym[3:], '_r6': 'x_%s_r6' % sym[3:]})
         cruz = x if cruz is None else cruz.merge(x, on='epoch', how='outer')
+    for sym in MERCADOS:
+        for suf in ('_r1', '_r6'):
+            if 'x_%s%s' % (sym[3:], suf) not in cruz.columns:
+                cruz['x_%s%s' % (sym[3:], suf)] = np.nan
     todo = []
     for sym, f in partes.items():
         g = f.drop(columns=['_r1', '_r6']).merge(cruz, on='epoch', how='left')
