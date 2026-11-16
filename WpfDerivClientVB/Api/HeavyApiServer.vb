@@ -333,6 +333,12 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
+                ' Compra automatica SOLO en cuenta demo (forward tests). Pasa por el gestor de riesgo.
+                If path = "/api/heavy/trading/comprar-demo" AndAlso method = "POST" Then
+                    Await WriteJson(res, 200, Await ComprarDemo(body))
+                    Return
+                End If
+
                 ' Consulta de solo lectura por la conexion autenticada (lista blanca en el servicio)
                 If path = "/api/heavy/trading/consulta" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, Await DerivTradingService.Instance.ConsultarAsync(body))
@@ -542,6 +548,7 @@ Namespace WpfDerivClientVB.Backtesting
                 "DELETE /api/heavy/estrategias/{nombre}",
                 "GET  /api/heavy/trading/estado",
                 "POST /api/heavy/trading/conectar (body: {demo:true, cliente:''})  demo:false bloqueado salvo PermitirRealRemoto",
+                "POST /api/heavy/trading/comprar-demo (body: {contract_type:CALL|PUT, symbol, amount, duration, duration_unit})  solo cuenta demo, pasa por el gestor de riesgo",
                 "POST /api/heavy/app/ventana      (body: {nombre: trading|servidorlive|heavy})",
                 "GET  /api/heavy/riesgo/estado",
                 "POST /api/heavy/riesgo/parar     (body: {motivo})",
@@ -996,6 +1003,21 @@ Namespace WpfDerivClientVB.Backtesting
             Catch ex As Exception
                 Return ErrJson(ex.Message)
             End Try
+        End Function
+
+        ''' <summary>
+        ''' Compra automatica para forward tests, SOLO si la cuenta conectada es demo. Usa la misma
+        ''' ruta que las estrategias (ExecuteTradeAsync), asi que pasa por el gestor de riesgo.
+        ''' body: {contract_type: CALL|PUT, symbol, amount, duration, duration_unit, [basis, _meta_estrategia]}
+        ''' </summary>
+        Private Async Function ComprarDemo(body As JObject) As Task(Of JObject)
+            If body Is Nothing Then Return ErrJson("Body: {contract_type, symbol, amount, duration, duration_unit}")
+            Dim svc = DerivTradingService.Instance
+            If Not svc.EstaConectado Then Return ErrJson("Trading no conectado: POST /api/heavy/trading/conectar {""demo"":true}")
+            If Not svc.EsDemo Then Return ErrJson("comprar-demo solo opera en la cuenta DEMO y la conectada es REAL.")
+            Dim tipo = If(body("contract_type")?.ToString(), "").ToUpperInvariant()
+            If tipo <> "CALL" AndAlso tipo <> "PUT" Then Return ErrJson("contract_type debe ser CALL o PUT.")
+            Return Await svc.ExecuteTradeAsync(body)
         End Function
 
         Private Async Function TradingConectar(body As JObject) As Task(Of JObject)
