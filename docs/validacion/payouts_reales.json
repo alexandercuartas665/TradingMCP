@@ -496,5 +496,759 @@
         "punto_equilibrio": 0.5599
       }
     ]
+  },
+  {
+    "ok": true,
+    "medido_utc": "2026-11-16T13:59:04Z",
+    "monto": 10.0,
+    "cuenta": "demo",
+    "mercados": [
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.6,
+        "put_payout_pct": 72.2,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_NDX",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_DJI",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "OTC_SPC",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not offered for this duration. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.4,
+        "payout_pct": 72.45,
+        "punto_equilibrio": 0.5799
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxEURUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.4,
+        "payout_pct": 72.45,
+        "punto_equilibrio": 0.5799
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.4,
+        "payout_pct": 72.45,
+        "punto_equilibrio": 0.5799
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 72.6,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.45,
+        "punto_equilibrio": 0.5799
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.4,
+        "payout_pct": 72.45,
+        "punto_equilibrio": 0.5799
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 72.5,
+        "put_payout_pct": 72.3,
+        "payout_pct": 72.4,
+        "punto_equilibrio": 0.58
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:50:00 to 23:00:00. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxUSOIL",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}",
+        "put_error": "Trading is not offered for this asset. [InvalidInputAsset] — {\r\n  \"field\": \"symbol\"\r\n}"
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 65.6,
+        "put_payout_pct": 65.0,
+        "payout_pct": 65.3,
+        "punto_equilibrio": 0.605
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 65.7,
+        "put_payout_pct": 64.9,
+        "payout_pct": 65.3,
+        "punto_equilibrio": 0.605
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 65.8,
+        "put_payout_pct": 64.8,
+        "payout_pct": 65.3,
+        "punto_equilibrio": 0.605
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 65.8,
+        "put_payout_pct": 64.7,
+        "payout_pct": 65.25,
+        "punto_equilibrio": 0.6051
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:00:00 to 23:59:59. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:00:00 to 23:59:59. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 65.4,
+        "put_payout_pct": 65.1,
+        "payout_pct": 65.25,
+        "punto_equilibrio": 0.6051
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 65.5,
+        "put_payout_pct": 65.0,
+        "payout_pct": 65.25,
+        "punto_equilibrio": 0.6051
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 65.6,
+        "put_payout_pct": 65.0,
+        "payout_pct": 65.3,
+        "punto_equilibrio": 0.605
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 65.6,
+        "put_payout_pct": 64.9,
+        "payout_pct": 65.25,
+        "punto_equilibrio": 0.6051
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_error": "Trading is not available from 21:00:00 to 23:59:59. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}",
+        "put_error": "Trading is not available from 21:00:00 to 23:59:59. [ContractBuyValidationError] — {\r\n  \"field\": \"duration\"\r\n}"
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 1,
+        "duracion": "60m",
+        "call_payout_pct": 79.3,
+        "put_payout_pct": 77.9,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 2,
+        "duracion": "120m",
+        "call_payout_pct": 79.5,
+        "put_payout_pct": 77.6,
+        "payout_pct": 78.55,
+        "punto_equilibrio": 0.5601
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 3,
+        "duracion": "180m",
+        "call_payout_pct": 79.8,
+        "put_payout_pct": 77.4,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "1h",
+        "velas": 4,
+        "duracion": "240m",
+        "call_payout_pct": 79.9,
+        "put_payout_pct": 77.2,
+        "payout_pct": 78.55,
+        "punto_equilibrio": 0.5601
+      },
+      {
+        "symbol": "R_100",
+        "timeframe": "4h",
+        "velas": 2,
+        "duracion": "480m",
+        "call_payout_pct": 80.5,
+        "put_payout_pct": 76.7,
+        "payout_pct": 78.6,
+        "punto_equilibrio": 0.5599
+      }
+    ],
+    "multiplicadores": [
+      {
+        "symbol": "frxEURUSD",
+        "multiplicador": 100,
+        "multup_comision": 0.23,
+        "multup_comision_pct": 0.00023,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837545,
+          "value": "1.09035"
+        },
+        "multup_spot": 1.1011,
+        "multdown_comision": 0.23,
+        "multdown_comision_pct": 0.00023,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837546,
+          "value": "1.11185"
+        },
+        "multdown_spot": 1.1011
+      },
+      {
+        "symbol": "frxGBPJPY",
+        "multiplicador": 100,
+        "multup_comision": 0.23,
+        "multup_comision_pct": 0.00023,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837548,
+          "value": "208.621"
+        },
+        "multup_spot": 210.678,
+        "multdown_comision": 0.23,
+        "multdown_comision_pct": 0.00023,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837549,
+          "value": "212.735"
+        },
+        "multdown_spot": 210.678
+      },
+      {
+        "symbol": "frxGBPUSD",
+        "multiplicador": 100,
+        "multup_comision": 0.2,
+        "multup_comision_pct": 0.0002,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837551,
+          "value": "1.30686"
+        },
+        "multup_spot": 1.3198,
+        "multdown_comision": 0.2,
+        "multdown_comision_pct": 0.0002,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837552,
+          "value": "1.33275"
+        },
+        "multdown_spot": 1.31981
+      },
+      {
+        "symbol": "frxUSDCHF",
+        "multiplicador": 100,
+        "multup_comision": 0.35,
+        "multup_comision_pct": 0.00035,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837554,
+          "value": "0.83141"
+        },
+        "multup_spot": 0.83951,
+        "multdown_comision": 0.35,
+        "multdown_comision_pct": 0.00035,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837555,
+          "value": "0.84761"
+        },
+        "multdown_spot": 0.83951
+      },
+      {
+        "symbol": "frxUSDJPY",
+        "multiplicador": 100,
+        "multup_comision": 0.28,
+        "multup_comision_pct": 0.00028,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837557,
+          "value": "158.076"
+        },
+        "multup_spot": 159.627,
+        "multdown_comision": 0.28,
+        "multdown_comision_pct": 0.00028,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837558,
+          "value": "161.178"
+        },
+        "multdown_spot": 159.627
+      },
+      {
+        "symbol": "frxXAUUSD",
+        "multiplicador": 100,
+        "multup_comision": 0.19,
+        "multup_comision_pct": 0.00019,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837560,
+          "value": "3828.20"
+        },
+        "multup_spot": 3866.12,
+        "multdown_comision": 0.19,
+        "multdown_comision_pct": 0.00019,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837561,
+          "value": "3903.82"
+        },
+        "multdown_spot": 3865.9
+      },
+      {
+        "symbol": "frxXAGUSD",
+        "multiplicador": 100,
+        "multup_comision": 0.87,
+        "multup_comision_pct": 0.00087,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837562,
+          "value": "46.8325"
+        },
+        "multup_spot": 47.2629,
+        "multdown_comision": 0.87,
+        "multdown_comision_pct": 0.00087,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837564,
+          "value": "47.6917"
+        },
+        "multdown_spot": 47.2613
+      },
+      {
+        "symbol": "R_100",
+        "multiplicador": 100,
+        "multup_comision": 0.55,
+        "multup_comision_pct": 0.00055,
+        "multup_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837565,
+          "value": "577.60"
+        },
+        "multup_spot": 583.1,
+        "multdown_comision": 0.55,
+        "multdown_comision_pct": 0.00055,
+        "multdown_stop_out": {
+          "display_name": "Stop out",
+          "display_order_amount": "-10.00",
+          "order_amount": -10.0,
+          "order_date": 1794837567,
+          "value": "588.70"
+        },
+        "multdown_spot": 583.19
+      }
+    ]
   }
 ]

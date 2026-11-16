@@ -1,0 +1,146 @@
+MULTIPLICADORES CON HISTORICO LARGO - plan pre-registrado en docs/validacion/multiplicadores_historico_largo_plan.md
+Resultados por cada 1 USD de stake. Ventaja = z >= 2,24 en bruto (Bonferroni, 4 estrategias) y media > 0 en mas de la mitad de los mercados.
+
+PRUEBA A: configuracion fija (elegida con Deriv), Dukascopy 2003-05-01 a 2024-04-01
+
+BollingerMomentum_v2 (10 mercados con configuracion fija)
+  comision 0,00 %:   9091 ops  acierto 44,5 %  medio -0,0284  IC -0,0547 / -0,0021  z -2,12  pf 0,943  mercados positivos 4/10 | control 2024-04 a 2026-04: 872 ops medio  0,1159
+      frxEURUSD  1h  x500 TP 1   SL 1   24v | 2003-2024:  1263 ops medio  0,0140 IC -0,0408/ 0,0688 | control Duka  106 ops  0,1621 vs Deriv diseno  100 ops  0,0863
+      frxGBPJPY  1h  x500 TP 2   SL 1    6v | 2003-2024:  1006 ops medio  0,0090 IC -0,0674/ 0,0854 | control Duka   87 ops  0,0293 vs Deriv diseno   84 ops  0,0810
+      frxGBPUSD  1h  x200 TP 0,5 SL 1   24v | 2003-2024:  1125 ops medio  0,0037 IC -0,0351/ 0,0425 | control Duka  107 ops  0,0513 vs Deriv diseno   99 ops  0,0393
+      frxUSDCHF  1h  x500 TP 0,5 SL 1    6v | 2003-2024:  1581 ops medio -0,0540 IC -0,0886/-0,0194 | control Duka  139 ops  0,0413 vs Deriv diseno  136 ops  0,0328
+      frxUSDJPY  1h  x500 TP 3   SL 1    2v | 2003-2024:  1110 ops medio -0,0094 IC -0,0634/ 0,0445 | control Duka  103 ops  0,1161 vs Deriv diseno   92 ops  0,1298
+      frxXAUUSD  1h  x500 TP 3   SL 1    6v | 2003-2024:  1341 ops medio -0,1111 IC -0,1927/-0,0296 | control Duka  106 ops  0,2522 vs Deriv diseno  101 ops  0,0743
+      frxXAGUSD  1h  x500 TP 0   SL 0    2v | 2003-2024:   907 ops medio -0,0155 IC -0,1707/ 0,1397 | control Duka  118 ops  0,2081 vs Deriv diseno  117 ops  0,2614
+      frxUSDJPY  4h  x200 TP 0,5 SL 0,5  2v | 2003-2024:   249 ops medio -0,0466 IC -0,1002/ 0,0070 | control Duka   34 ops  0,0552 vs Deriv diseno   31 ops  0,0424
+      frxXAUUSD  4h  x500 TP 2   SL 1    2v | 2003-2024:   313 ops medio -0,0780 IC -0,2217/ 0,0656 | control Duka   40 ops  0,1014 vs Deriv diseno   32 ops -0,0198
+      frxXAGUSD  4h  x200 TP 0   SL 0    6v | 2003-2024:   196 ops medio  0,0274 IC -0,2962/ 0,3510 | control Duka   32 ops  0,0281 vs Deriv diseno   33 ops  0,0154
+  comision 0,01 %:   9061 ops  acierto 42,3 %  medio -0,0692  IC -0,0954 / -0,0431  z -5,19  pf 0,866  mercados positivos 1/10 | control 2024-04 a 2026-04: 865 ops medio  0,0672
+  comision 0,02 %:   9049 ops  acierto 40,1 %  medio -0,1094  IC -0,1353 / -0,0834  z -8,26  pf 0,796  mercados positivos 1/10 | control 2024-04 a 2026-04: 864 ops medio  0,0080
+  comision 0,04 %:   9014 ops  acierto 36,0 %  medio -0,1933  IC -0,2188 / -0,1678  z -14,86  pf 0,666  mercados positivos 0/10 | control 2024-04 a 2026-04: 861 ops medio -0,0893
+  => SIN VENTAJA DEMOSTRADA (media <= 0 incluso en bruto)
+
+IndicePullbackLong_v1 (14 mercados con configuracion fija)
+  comision 0,00 %:  19017 ops  acierto 45,9 %  medio -0,0338  IC -0,0467 / -0,0210  z -5,16  pf 0,907  mercados positivos 5/14 | control 2024-04 a 2026-04: 2037 ops medio  0,0628
+      frxEURUSD  1h  x500 TP 0,5 SL 1    2v | 2003-2024:  2668 ops medio -0,0096 IC -0,0307/ 0,0114 | control Duka  289 ops  0,0164 vs Deriv diseno  258 ops  0,0226
+      frxGBPJPY  1h  x500 TP 1   SL 0,5 24v | 2003-2024:  2190 ops medio  0,0085 IC -0,0212/ 0,0383 | control Duka  208 ops -0,0181 vs Deriv diseno  200 ops  0,0250
+      frxGBPUSD  1h  x500 TP 1   SL 0,5  2v | 2003-2024:  2612 ops medio -0,0056 IC -0,0258/ 0,0147 | control Duka  238 ops  0,0067 vs Deriv diseno  232 ops  0,0284
+      frxUSDCHF  1h  x500 TP 1   SL 1   24v | 2003-2024:  1480 ops medio  0,0079 IC -0,0427/ 0,0585 | control Duka  138 ops  0,0431 vs Deriv diseno  131 ops  0,0528
+      frxUSDJPY  1h  x500 TP 2   SL 1    6v | 2003-2024:  1694 ops medio -0,0240 IC -0,0720/ 0,0240 | control Duka  183 ops  0,0614 vs Deriv diseno  168 ops  0,1212
+      frxXAUUSD  1h  x500 TP 3   SL 1    2v | 2003-2024:  2646 ops medio -0,0502 IC -0,0910/-0,0094 | control Duka  263 ops  0,1615 vs Deriv diseno  263 ops  0,0596
+      frxXAGUSD  1h  x100 TP 0   SL 0    2v | 2003-2024:  1889 ops medio -0,0178 IC -0,0459/ 0,0103 | control Duka  237 ops  0,0744 vs Deriv diseno  225 ops -0,0067
+      frxEURUSD  4h  x500 TP 3   SL 1    2v | 2003-2024:   599 ops medio  0,0398 IC -0,0577/ 0,1373 | control Duka   80 ops  0,0284 vs Deriv diseno   72 ops  0,0514
+      frxGBPJPY  4h  x500 TP 0   SL 0    2v | 2003-2024:   674 ops medio -0,0023 IC -0,1069/ 0,1024 | control Duka   86 ops  0,0502 vs Deriv diseno   78 ops  0,1387
+      frxGBPUSD  4h  x500 TP 0,5 SL 1    6v | 2003-2024:   656 ops medio -0,1128 IC -0,1693/-0,0563 | control Duka   65 ops  0,0154 vs Deriv diseno   60 ops  0,0750
+      frxUSDCHF  4h  x200 TP 0,5 SL 1   24v | 2003-2024:   379 ops medio  0,0279 IC -0,0422/ 0,0979 | control Duka   44 ops  0,1591 vs Deriv diseno   39 ops  0,1154
+      frxUSDJPY  4h  x100 TP 0   SL 0    6v | 2003-2024:   337 ops medio -0,0380 IC -0,0951/ 0,0191 | control Duka   32 ops -0,0647 vs Deriv diseno   31 ops -0,0729
+      frxXAUUSD  4h  x100 TP 0,5 SL 0,5  6v | 2003-2024:   545 ops medio  0,0210 IC -0,0198/ 0,0618 | control Duka   52 ops  0,1198 vs Deriv diseno   66 ops -0,0209
+      frxXAGUSD  4h  x500 TP 0   SL 0    6v | 2003-2024:   648 ops medio -0,5918 IC -0,7512/-0,4324 | control Duka  122 ops  0,2402 vs Deriv diseno   96 ops  0,1075
+  comision 0,01 %:  19121 ops  acierto 42,8 %  medio -0,0768  IC -0,0895 / -0,0642  z -11,90  pf   0,8  mercados positivos 3/14 | control 2024-04 a 2026-04: 2048 ops medio  0,0130
+  comision 0,02 %:  19283 ops  acierto 39,6 %  medio -0,1219  IC -0,1343 / -0,1096  z -19,35  pf 0,699  mercados positivos 0/14 | control 2024-04 a 2026-04: 2057 ops medio -0,0304
+  comision 0,04 %:  19729 ops  acierto 33,2 %  medio -0,2128  IC -0,2243 / -0,2012  z -36,11  pf 0,526  mercados positivos 0/14 | control 2024-04 a 2026-04: 2102 ops medio -0,1177
+  => SIN VENTAJA DEMOSTRADA (media <= 0 incluso en bruto)
+
+CCIReversal_v2 (14 mercados con configuracion fija)
+  comision 0,00 %:  26768 ops  acierto 41,8 %  medio -0,0610  IC -0,0778 / -0,0441  z -7,10  pf 0,867  mercados positivos 1/14 | control 2024-04 a 2026-04: 2245 ops medio  0,0327
+      frxEURUSD  1h  x200 TP 0,5 SL 1   24v | 2003-2024:  2646 ops medio -0,0052 IC -0,0301/ 0,0197 | control Duka  222 ops  0,0688 vs Deriv diseno  213 ops  0,0631
+      frxGBPJPY  1h  x100 TP 0,5 SL 1   24v | 2003-2024:  1947 ops medio -0,0155 IC -0,0402/ 0,0093 | control Duka  166 ops  0,0826 vs Deriv diseno  157 ops  0,0666
+      frxGBPUSD  1h  x500 TP 2   SL 1    6v | 2003-2024:  3934 ops medio -0,0521 IC -0,0870/-0,0172 | control Duka  306 ops  0,0489 vs Deriv diseno  294 ops  0,0767
+      frxUSDCHF  1h  x100 TP 0,5 SL 1    6v | 2003-2024:  2762 ops medio -0,0081 IC -0,0209/ 0,0046 | control Duka  216 ops -0,0167 vs Deriv diseno  208 ops -0,0098
+      frxUSDJPY  1h  x100 TP 0,5 SL 1   24v | 2003-2024:  1856 ops medio -0,0177 IC -0,0414/ 0,0060 | control Duka  160 ops -0,0418 vs Deriv diseno  157 ops  0,0130
+      frxXAUUSD  1h  x500 TP 0   SL 0    2v | 2003-2024:  4528 ops medio -0,0202 IC -0,0643/ 0,0239 | control Duka  327 ops -0,0164 vs Deriv diseno  327 ops  0,0822
+      frxXAGUSD  1h  x500 TP 0   SL 0    2v | 2003-2024:  4228 ops medio -0,1241 IC -0,1956/-0,0526 | control Duka  408 ops  0,0157 vs Deriv diseno  405 ops  0,0682
+      frxEURUSD  4h  x200 TP 2   SL 1    6v | 2003-2024:   495 ops medio -0,1068 IC -0,1870/-0,0265 | control Duka   52 ops  0,1781 vs Deriv diseno   48 ops  0,1985
+      frxGBPJPY  4h  x100 TP 0,5 SL 0,5 24v | 2003-2024:   620 ops medio -0,0182 IC -0,0575/ 0,0212 | control Duka   44 ops -0,0682 vs Deriv diseno   40 ops  0,0000
+      frxGBPUSD  4h  x200 TP 1   SL 1   24v | 2003-2024:   447 ops medio  0,0179 IC -0,0747/ 0,1104 | control Duka   35 ops  0,0857 vs Deriv diseno   32 ops  0,1250
+      frxUSDCHF  4h  x200 TP 0,5 SL 0,5  2v | 2003-2024:   802 ops medio -0,0449 IC -0,0728/-0,0169 | control Duka   89 ops -0,0639 vs Deriv diseno   83 ops -0,0145
+      frxUSDJPY  4h  x100 TP 0,5 SL 1    2v | 2003-2024:   714 ops medio -0,0127 IC -0,0409/ 0,0154 | control Duka   61 ops  0,0081 vs Deriv diseno   56 ops  0,0127
+      frxXAUUSD  4h  x500 TP 0   SL 0    6v | 2003-2024:   853 ops medio -0,3472 IC -0,4947/-0,1998 | control Duka   77 ops  0,5989 vs Deriv diseno   70 ops  0,9341
+      frxXAGUSD  4h  x500 TP 0   SL 0    2v | 2003-2024:   936 ops medio -0,3364 IC -0,4950/-0,1778 | control Duka   82 ops -0,1401 vs Deriv diseno   72 ops  0,1454
+  comision 0,01 %:  26904 ops  acierto 40,3 %  medio -0,0910  IC -0,1077 / -0,0744  z -10,71  pf 0,807  mercados positivos 1/14 | control 2024-04 a 2026-04: 2254 ops medio -0,0015
+  comision 0,02 %:  27045 ops  acierto 38,5 %  medio -0,1248  IC -0,1411 / -0,1085  z -15,01  pf 0,743  mercados positivos 0/14 | control 2024-04 a 2026-04: 2267 ops medio -0,0394
+  comision 0,04 %:  27397 ops  acierto 35,3 %  medio -0,1872  IC -0,2029 / -0,1714  z -23,30  pf 0,636  mercados positivos 0/14 | control 2024-04 a 2026-04: 2299 ops medio -0,0951
+  => SIN VENTAJA DEMOSTRADA (media <= 0 incluso en bruto)
+
+EmaRsiCruce_v4 (14 mercados con configuracion fija)
+  comision 0,00 %:  33870 ops  acierto 47,7 %  medio -0,0283  IC -0,0389 / -0,0177  z -5,23  pf 0,932  mercados positivos 8/14 | control 2024-04 a 2026-04: 3341 ops medio  0,0473
+      frxEURUSD  1h  x500 TP 0,5 SL 1    6v | 2003-2024:  4203 ops medio -0,0073 IC -0,0272/ 0,0127 | control Duka  367 ops  0,0082 vs Deriv diseno  339 ops  0,0353
+      frxGBPJPY  1h  x500 TP 0   SL 0    2v | 2003-2024:  4736 ops medio  0,0001 IC -0,0255/ 0,0256 | control Duka  459 ops -0,0056 vs Deriv diseno  441 ops  0,0220
+      frxGBPUSD  1h  x500 TP 3   SL 1    6v | 2003-2024:  3258 ops medio  0,0079 IC -0,0317/ 0,0475 | control Duka  302 ops  0,0489 vs Deriv diseno  294 ops  0,0574
+      frxUSDCHF  1h  x500 TP 1   SL 1   24v | 2003-2024:  3022 ops medio -0,0039 IC -0,0394/ 0,0315 | control Duka  289 ops -0,0216 vs Deriv diseno  284 ops -0,0171
+      frxUSDJPY  1h  x500 TP 3   SL 1    6v | 2003-2024:  3261 ops medio -0,0358 IC -0,0729/ 0,0014 | control Duka  351 ops  0,0575 vs Deriv diseno  342 ops  0,1066
+      frxXAUUSD  1h  x500 TP 3   SL 1    2v | 2003-2024:  5025 ops medio -0,0165 IC -0,0461/ 0,0130 | control Duka  460 ops  0,1504 vs Deriv diseno  451 ops  0,1094
+      frxXAGUSD  1h  x200 TP 0   SL 0    2v | 2003-2024:  3908 ops medio -0,1442 IC -0,1736/-0,1148 | control Duka  433 ops  0,1204 vs Deriv diseno  418 ops  0,0520
+      frxEURUSD  4h  x100 TP 0,5 SL 1    6v | 2003-2024:   729 ops medio  0,0294 IC -0,0053/ 0,0641 | control Duka   85 ops  0,0283 vs Deriv diseno   64 ops  0,0162
+      frxGBPJPY  4h  x500 TP 0   SL 0    2v | 2003-2024:  1249 ops medio  0,0639 IC -0,0244/ 0,1522 | control Duka  133 ops  0,0331 vs Deriv diseno  121 ops  0,0621
+      frxGBPUSD  4h  x200 TP 0,5 SL 1   24v | 2003-2024:   816 ops medio  0,0086 IC -0,0397/ 0,0569 | control Duka   71 ops  0,0352 vs Deriv diseno   61 ops  0,0082
+      frxUSDCHF  4h  x200 TP 1   SL 1   24v | 2003-2024:   618 ops medio  0,0206 IC -0,0579/ 0,0992 | control Duka   63 ops  0,0794 vs Deriv diseno   55 ops  0,1481
+      frxUSDJPY  4h  x100 TP 0,5 SL 1   24v | 2003-2024:   480 ops medio  0,0363 IC -0,0235/ 0,0962 | control Duka   41 ops  0,0146 vs Deriv diseno   43 ops  0,0814
+      frxXAUUSD  4h  x200 TP 2   SL 1    2v | 2003-2024:  1287 ops medio  0,0312 IC -0,0194/ 0,0818 | control Duka   99 ops  0,1824 vs Deriv diseno  106 ops -0,0066
+      frxXAGUSD  4h  x200 TP 3   SL 1    2v | 2003-2024:  1278 ops medio -0,2790 IC -0,3436/-0,2144 | control Duka  188 ops -0,1356 vs Deriv diseno  139 ops -0,0224
+  comision 0,01 %:  33894 ops  acierto 45,4 %  medio -0,0698  IC -0,0803 / -0,0593  z -13,03  pf  0,84  mercados positivos 4/14 | control 2024-04 a 2026-04: 3345 ops medio  0,0111
+  comision 0,02 %:  33997 ops  acierto 42,9 %  medio -0,1127  IC -0,1231 / -0,1023  z -21,24  pf 0,755  mercados positivos 2/14 | control 2024-04 a 2026-04: 3347 ops medio -0,0326
+  comision 0,04 %:  34294 ops  acierto 38,0 %  medio -0,1977  IC -0,2079 / -0,1876  z -38,18  pf 0,608  mercados positivos 0/14 | control 2024-04 a 2026-04: 3366 ops medio -0,1167
+  => SIN VENTAJA DEMOSTRADA (media <= 0 incluso en bruto)
+
+PRUEBA B: walk-forward dentro de Dukascopy (mejor de 63 combinaciones en 2003-05-01 a 2014-01-01, medida en 2014-01-01 a 2024-04-01, bruto)
+BollingerMomentum_v2    eleccion 2003-2013:   4230 ops medio  0,0695 | medicion 2014-2024:   4108 ops acierto 41,1 % medio -0,1461 IC -0,1781/-0,1140 z -8,93 pf 0,697 positivos 6/14 => SIN VENTAJA DEMOSTRADA
+      frxEURUSD  1h  x500 TP 2   SL 1   24v | eleccion   538 ops  0,0714 | medicion   506 ops medio -0,0623
+      frxGBPJPY  1h  x500 TP 0   SL 0    6v | eleccion   456 ops  0,0761 | medicion   481 ops medio -0,0114
+      frxGBPUSD  1h  x200 TP 0,5 SL 1   24v | eleccion   563 ops  0,0371 | medicion   562 ops medio -0,0297
+      frxUSDCHF  1h  x200 TP 0,5 SL 1   24v | eleccion   633 ops  0,0668 | medicion   526 ops medio  0,0093
+      frxUSDJPY  1h  x100 TP 1   SL 0,5  2v | eleccion   539 ops -0,0113 | medicion   555 ops medio  0,0055
+      frxXAUUSD  1h  x200 TP 2   SL 1   24v | eleccion   571 ops  0,0708 | medicion   265 ops medio -0,2163
+      frxXAGUSD  1h  x500 TP 0   SL 0   24v | eleccion   282 ops -0,0525 | medicion   521 ops medio -0,9538
+      frxEURUSD  4h  x200 TP 1   SL 1   24v | eleccion    80 ops  0,3250 | medicion    98 ops medio  0,0402
+      frxGBPJPY  4h  x500 TP 0   SL 0    6v | eleccion   106 ops  0,5266 | medicion   108 ops medio -0,1073
+      frxGBPUSD  4h  x500 TP 2   SL 1   24v | eleccion    90 ops  0,2000 | medicion   105 ops medio -0,0286
+      frxUSDCHF  4h  x200 TP 0   SL 0    6v | eleccion    72 ops  0,2290 | medicion    81 ops medio -0,0870
+      frxUSDJPY  4h  x100 TP 0,5 SL 1   24v | eleccion    79 ops  0,0943 | medicion    67 ops medio  0,2073
+      frxXAUUSD  4h  x200 TP 2   SL 1   24v | eleccion   128 ops  0,2188 | medicion    91 ops medio  0,0220
+      frxXAGUSD  4h  x100 TP 1   SL 0,5  2v | eleccion    93 ops -0,1477 | medicion   142 ops medio  0,0129
+IndicePullbackLong_v1   eleccion 2003-2013:   9091 ops medio  0,0351 | medicion 2014-2024:   8549 ops acierto 51,1 % medio  0,0015 IC -0,0143/ 0,0172 z  0,19 pf 1,006 positivos 7/14 => SIN VENTAJA DEMOSTRADA
+      frxEURUSD  1h  x200 TP 0,5 SL 1   24v | eleccion   679 ops  0,0191 | medicion   526 ops medio -0,0051
+      frxGBPJPY  1h  x100 TP 1   SL 0,5  2v | eleccion  1180 ops -0,0047 | medicion  1266 ops medio  0,0102
+      frxGBPUSD  1h  x500 TP 2   SL 1    2v | eleccion  1298 ops  0,0298 | medicion  1180 ops medio  0,0110
+      frxUSDCHF  1h  x500 TP 0   SL 0    2v | eleccion  1174 ops  0,0158 | medicion  1177 ops medio  0,0119
+      frxUSDJPY  1h  x200 TP 0,5 SL 1    6v | eleccion   802 ops  0,0069 | medicion   802 ops medio  0,0118
+      frxXAUUSD  1h  x200 TP 0,5 SL 1   24v | eleccion  1011 ops  0,0275 | medicion   592 ops medio -0,0093
+      frxXAGUSD  1h  x100 TP 1   SL 1    2v | eleccion   916 ops  0,1369 | medicion  1012 ops medio  0,0173
+      frxEURUSD  4h  x500 TP 0   SL 0    6v | eleccion   245 ops  0,2569 | medicion   194 ops medio -0,1289
+      frxGBPJPY  4h  x500 TP 0   SL 0    2v | eleccion   325 ops  0,0104 | medicion   349 ops medio -0,0141
+      frxGBPUSD  4h  x500 TP 3   SL 1   24v | eleccion   246 ops  0,1057 | medicion   203 ops medio -0,1306
+      frxUSDCHF  4h  x500 TP 0   SL 0    2v | eleccion   282 ops  0,0788 | medicion   256 ops medio  0,1036
+      frxUSDJPY  4h  x500 TP 3   SL 1    2v | eleccion   274 ops  0,0719 | medicion   314 ops medio -0,0346
+      frxXAUUSD  4h  x200 TP 0   SL 0    2v | eleccion   354 ops  0,1749 | medicion   341 ops medio  0,0019
+      frxXAGUSD  4h  x100 TP 1   SL 0,5  2v | eleccion   305 ops -0,3285 | medicion   337 ops medio -0,0175
+CCIReversal_v2          eleccion 2003-2013:  13214 ops medio  0,0044 | medicion 2014-2024:  11319 ops acierto 45,8 % medio -0,0229 IC -0,0382/-0,0076 z -2,93 pf  0,93 positivos 3/14 => SIN VENTAJA DEMOSTRADA
+      frxEURUSD  1h  x200 TP 2   SL 1   24v | eleccion  1142 ops  0,0366 | medicion  1063 ops medio -0,0346
+      frxGBPJPY  1h  x500 TP 0   SL 0    6v | eleccion  1763 ops  0,0425 | medicion  1727 ops medio -0,0505
+      frxGBPUSD  1h  x100 TP 0,5 SL 1   24v | eleccion  1085 ops  0,0255 | medicion  1055 ops medio -0,0136
+      frxUSDCHF  1h  x100 TP 1   SL 1   24v | eleccion  1069 ops  0,0086 | medicion   925 ops medio -0,0092
+      frxUSDJPY  1h  x500 TP 1   SL 0,5  6v | eleccion  2241 ops  0,0179 | medicion  1809 ops medio -0,0143
+      frxXAUUSD  1h  x100 TP 0   SL 0    2v | eleccion  2030 ops  0,0012 | medicion  1592 ops medio -0,0097
+      frxXAGUSD  1h  x100 TP 1   SL 1    6v | eleccion  1803 ops -0,0242 | medicion  1193 ops medio -0,0412
+      frxEURUSD  4h  x100 TP 0,5 SL 1   24v | eleccion   166 ops -0,0721 | medicion   150 ops medio  0,1285
+      frxGBPJPY  4h  x500 TP 2   SL 1    6v | eleccion   398 ops  0,0398 | medicion   417 ops medio -0,1054
+      frxGBPUSD  4h  x200 TP 2   SL 1    6v | eleccion   243 ops  0,0669 | medicion   265 ops medio -0,0370
+      frxUSDCHF  4h  x100 TP 0,5 SL 1   24v | eleccion   215 ops  0,0419 | medicion   175 ops medio  0,1362
+      frxUSDJPY  4h  x100 TP 0,5 SL 1   24v | eleccion   241 ops  0,0041 | medicion   188 ops medio  0,0290
+      frxXAUUSD  4h  x100 TP 0,5 SL 0,5  2v | eleccion   416 ops -0,0248 | medicion   374 ops medio -0,0118
+      frxXAGUSD  4h  x100 TP 2   SL 1    2v | eleccion   402 ops -0,2848 | medicion   386 ops medio -0,0328
+EmaRsiCruce_v4          eleccion 2003-2013:  18356 ops medio  0,0290 | medicion 2014-2024:  17432 ops acierto 50,0 % medio  0,0062 IC -0,0047/ 0,0171 z  1,11 pf 1,025 positivos 10/14 => SIN VENTAJA DEMOSTRADA
+      frxEURUSD  1h  x100 TP 0,5 SL 1   24v | eleccion  1016 ops  0,0175 | medicion   917 ops medio  0,0033
+      frxGBPJPY  1h  x200 TP 3   SL 1    2v | eleccion  2258 ops  0,0022 | medicion  2376 ops medio  0,0084
+      frxGBPUSD  1h  x500 TP 3   SL 1    2v | eleccion  2475 ops  0,0079 | medicion  2376 ops medio  0,0146
+      frxUSDCHF  1h  x500 TP 0   SL 0    2v | eleccion  2504 ops  0,0243 | medicion  2257 ops medio  0,0092
+      frxUSDJPY  1h  x200 TP 0,5 SL 1    6v | eleccion  1583 ops  0,0035 | medicion  1528 ops medio  0,0113
+      frxXAUUSD  1h  x200 TP 0,5 SL 1    2v | eleccion  2740 ops  0,0212 | medicion  2163 ops medio  0,0007
+      frxXAGUSD  1h  x100 TP 1   SL 1    2v | eleccion  1828 ops  0,0868 | medicion  2023 ops medio  0,0142
+      frxEURUSD  4h  x500 TP 0   SL 0    2v | eleccion   624 ops  0,1705 | medicion   599 ops medio -0,0267
+      frxGBPJPY  4h  x500 TP 0   SL 0    2v | eleccion   611 ops  0,1362 | medicion   638 ops medio -0,0054
+      frxGBPUSD  4h  x100 TP 0,5 SL 1   24v | eleccion   275 ops  0,0649 | medicion   238 ops medio  0,1099
+      frxUSDCHF  4h  x500 TP 3   SL 1    6v | eleccion   486 ops  0,0965 | medicion   423 ops medio -0,0625
+      frxUSDJPY  4h  x500 TP 3   SL 1    2v | eleccion   579 ops  0,0208 | medicion   606 ops medio -0,0335
+      frxXAUUSD  4h  x500 TP 0   SL 0    2v | eleccion   774 ops  0,0952 | medicion   657 ops medio  0,0296
+      frxXAGUSD  4h  x100 TP 1   SL 1    2v | eleccion   603 ops -0,2204 | medicion   631 ops medio  0,0045

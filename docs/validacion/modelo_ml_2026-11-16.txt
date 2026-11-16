@@ -1,0 +1,66 @@
+MODELO DE APRENDIZAJE AUTOMATICO - plan pre-registrado en docs/validacion/modelo_ml_plan.md
+Velas 1h, 7 mercados, 47 variables. Se opera el 10% mas seguro (umbral del entrenamiento), una posicion a la vez por mercado.
+Binarias: ventaja si reserva 1 acierto > 54,05% con z >= 2.24, acierto > 56,18% y reserva 2 > 54,05%.
+Multiplicadores: ventaja si reserva 1 (retorno a favor - 0,02%) con z >= 2.24 y reserva 2 positivo.
+
+== BINARIAS (cierre 2 velas despues). Referencia comprar siempre en reserva 1: 50.67% de subidas
+  logistica => SIN VENTAJA   (modelo guardado en D:\traiding_ml\modelos\logistica_binarias.joblib)
+    desarrollo 2009-2018     5%:  17387 ops  acierto  56.56%  z(85%)   6.63  retorno medio +0.0343%  z bruto 10.94  z com 0,02%   4.56
+    desarrollo 2009-2018    10%:  35196 ops  acierto  56.09%  z(85%)   7.66  retorno medio +0.0261%  z bruto 13.44  z com 0,02%   3.13
+    desarrollo 2009-2018    20%:  67790 ops  acierto  55.30%  z(85%)   6.52  retorno medio +0.0201%  z bruto 15.68  z com 0,02%   0.10
+    desarrollo 2009-2018   100%: 212108 ops  acierto  52.78%  z(85%) -11.76  retorno medio +0.0092%  z bruto 14.51  z com 0,02% -17.13
+    reserva 1 2019-2024      5%:  10104 ops  acierto  54.25%  z(85%)   0.39  retorno medio +0.0035%  z bruto  1.07  z com 0,02%  -4.98
+    reserva 1 2019-2024     10%:  19779 ops  acierto  53.96%  z(85%)  -0.28  retorno medio +0.0054%  z bruto  2.53  z com 0,02%  -6.82
+    reserva 1 2019-2024     20%:  37246 ops  acierto  53.48%  z(85%)  -2.21  retorno medio +0.0061%  z bruto  4.13  z com 0,02%  -9.49
+    reserva 1 2019-2024    100%: 109913 ops  acierto  51.54%  z(85%) -16.73  retorno medio +0.0025%  z bruto  3.23  z com 0,02% -22.24
+    reserva 2 Deriv          5%:   5021 ops  acierto  51.92%  z(85%)  -3.03  retorno medio -0.0051%  z bruto -0.73  z com 0,02%  -3.59
+    reserva 2 Deriv         10%:   9776 ops  acierto  52.28%  z(85%)  -3.52  retorno medio -0.0024%  z bruto -0.55  z com 0,02%  -5.08
+    reserva 2 Deriv         20%:  18058 ops  acierto  52.07%  z(85%)  -5.35  retorno medio +0.0015%  z bruto  0.51  z com 0,02%  -6.15
+    reserva 2 Deriv        100%:  52701 ops  acierto  51.21%  z(85%) -13.11  retorno medio +0.0019%  z bruto  1.24  z com 0,02% -11.60
+    por ano (10%): 2009 60.2%, 2010 57.6%, 2011 55.9%, 2012 54.2%, 2013 55.2%, 2014 56.5%, 2015 57.0%, 2016 55.4%, 2017 55.4%, 2018 53.7%, 2019 55.9%, 2020 53.4%, 2021 53.6%, 2022 52.6%, 2023 53.8%, 2024 56.4%
+  lightgbm => VENTAJA   (modelo guardado en D:\traiding_ml\modelos\lightgbm_binarias.txt)
+    desarrollo 2009-2018     5%:   5008 ops  acierto  67.39%  z(85%)  18.94  retorno medio +0.1849%  z bruto 18.36  z com 0,02%  16.37
+    desarrollo 2009-2018    10%:  19351 ops  acierto  62.63%  z(85%)  23.93  retorno medio +0.0873%  z bruto 24.27  z com 0,02%  18.71
+    desarrollo 2009-2018    20%:  50799 ops  acierto  59.18%  z(85%)  23.17  retorno medio +0.0424%  z bruto 25.39  z com 0,02%  13.41
+    desarrollo 2009-2018   100%: 212108 ops  acierto  53.34%  z(85%)  -6.63  retorno medio +0.0120%  z bruto 18.94  z com 0,02% -12.71
+    reserva 1 2019-2024      5%:   4110 ops  acierto  68.64%  z(85%)  18.76  retorno medio +0.0334%  z bruto  4.79  z com 0,02%   1.93
+    reserva 1 2019-2024     10%:  11569 ops  acierto  61.86%  z(85%)  16.86  retorno medio +0.0211%  z bruto  6.20  z com 0,02%   0.33
+    reserva 1 2019-2024     20%:  27746 ops  acierto  57.45%  z(85%)  11.34  retorno medio +0.0138%  z bruto  7.39  z com 0,02%  -3.36
+    reserva 1 2019-2024    100%: 109913 ops  acierto  52.32%  z(85%) -11.54  retorno medio +0.0044%  z bruto  5.65  z com 0,02% -19.82
+    reserva 2 Deriv          5%:   2975 ops  acierto  59.83%  z(85%)   6.32  retorno medio +0.0306%  z bruto  2.10  z com 0,02%   0.73
+    reserva 2 Deriv         10%:   7226 ops  acierto  55.47%  z(85%)   2.41  retorno medio +0.0164%  z bruto  2.18  z com 0,02%  -0.48
+    reserva 2 Deriv         20%:  14967 ops  acierto  53.97%  z(85%)  -0.22  retorno medio +0.0147%  z bruto  3.50  z com 0,02%  -1.26
+    reserva 2 Deriv        100%:  52701 ops  acierto  51.79%  z(85%) -10.43  retorno medio +0.0055%  z bruto  3.51  z com 0,02%  -9.34
+    por ano (10%): 2009 70.3%, 2010 66.0%, 2011 56.9%, 2012 59.2%, 2013 61.1%, 2014 63.9%, 2015 67.1%, 2016 58.7%, 2017 61.7%, 2018 59.2%, 2019 64.4%, 2020 60.3%, 2021 66.3%, 2022 60.0%, 2023 59.7%, 2024 59.7%
+
+== MULTIPLICADORES (cierre 6 velas despues). Referencia comprar siempre en reserva 1: 50.83% de subidas
+  logistica => SIN VENTAJA   (modelo guardado en D:\traiding_ml\modelos\logistica_multiplicadores.joblib)
+    desarrollo 2009-2018     5%:  11978 ops  acierto  53.75%  z(85%)  -0.67  retorno medio +0.0302%  z bruto  5.13  z com 0,02%   1.73
+    desarrollo 2009-2018    10%:  21886 ops  acierto  53.54%  z(85%)  -1.52  retorno medio +0.0288%  z bruto  7.28  z com 0,02%   2.23
+    desarrollo 2009-2018    20%:  36579 ops  acierto  52.99%  z(85%)  -4.08  retorno medio +0.0222%  z bruto  7.87  z com 0,02%   0.79
+    desarrollo 2009-2018   100%:  67223 ops  acierto  51.51%  z(85%) -13.22  retorno medio +0.0096%  z bruto  5.05  z com 0,02%  -5.46
+    reserva 1 2019-2024      5%:   6170 ops  acierto  52.51%  z(85%)  -2.43  retorno medio +0.0027%  z bruto  0.41  z com 0,02%  -2.56
+    reserva 1 2019-2024     10%:  11128 ops  acierto  52.50%  z(85%)  -3.29  retorno medio +0.0004%  z bruto  0.09  z com 0,02%  -4.11
+    reserva 1 2019-2024     20%:  18824 ops  acierto  52.83%  z(85%)  -3.37  retorno medio +0.0056%  z bruto  1.60  z com 0,02%  -4.09
+    reserva 1 2019-2024    100%:  34008 ops  acierto  51.07%  z(85%) -11.03  retorno medio +0.0016%  z bruto  0.66  z com 0,02%  -7.49
+    reserva 2 Deriv          5%:   3075 ops  acierto  51.22%  z(85%)  -3.15  retorno medio -0.0159%  z bruto -1.09  z com 0,02%  -2.46
+    reserva 2 Deriv         10%:   5515 ops  acierto  50.05%  z(85%)  -5.97  retorno medio -0.0217%  z bruto -2.22  z com 0,02%  -4.27
+    reserva 2 Deriv         20%:   9107 ops  acierto  51.00%  z(85%)  -5.84  retorno medio -0.0100%  z bruto -1.45  z com 0,02%  -4.36
+    reserva 2 Deriv        100%:  16456 ops  acierto  51.01%  z(85%)  -7.82  retorno medio +0.0006%  z bruto  0.12  z com 0,02%  -4.16
+    por ano (10%): 2009 55.9%, 2010 55.4%, 2011 55.3%, 2012 53.1%, 2013 53.5%, 2014 53.7%, 2015 53.4%, 2016 53.0%, 2017 51.0%, 2018 50.7%, 2019 53.1%, 2020 51.9%, 2021 52.2%, 2022 51.9%, 2023 52.9%, 2024 55.0%
+  lightgbm => SIN VENTAJA   (modelo guardado en D:\traiding_ml\modelos\lightgbm_multiplicadores.txt)
+    desarrollo 2009-2018     5%:   4498 ops  acierto  61.78%  z(85%)  10.40  retorno medio +0.1382%  z bruto 11.66  z com 0,02%   9.98
+    desarrollo 2009-2018    10%:  12408 ops  acierto  58.53%  z(85%)  10.02  retorno medio +0.0787%  z bruto 13.37  z com 0,02%   9.97
+    desarrollo 2009-2018    20%:  26545 ops  acierto  56.20%  z(85%)   7.01  retorno medio +0.0474%  z bruto 14.00  z com 0,02%   8.09
+    desarrollo 2009-2018   100%:  67223 ops  acierto  52.72%  z(85%)  -6.96  retorno medio +0.0176%  z bruto  9.24  z com 0,02%  -1.27
+    reserva 1 2019-2024      5%:   2800 ops  acierto  59.29%  z(85%)   5.55  retorno medio +0.0239%  z bruto  1.75  z com 0,02%   0.28
+    reserva 1 2019-2024     10%:   7058 ops  acierto  56.52%  z(85%)   4.15  retorno medio +0.0205%  z bruto  3.11  z com 0,02%   0.08
+    reserva 1 2019-2024     20%:  13904 ops  acierto  54.77%  z(85%)   1.69  retorno medio +0.0188%  z bruto  4.54  z com 0,02%  -0.28
+    reserva 1 2019-2024    100%:  34008 ops  acierto  51.66%  z(85%)  -8.88  retorno medio +0.0037%  z bruto  1.49  z com 0,02%  -6.67
+    reserva 2 Deriv          5%:   1810 ops  acierto  54.81%  z(85%)   0.64  retorno medio +0.0246%  z bruto  0.87  z com 0,02%   0.16
+    reserva 2 Deriv         10%:   3997 ops  acierto  54.02%  z(85%)  -0.05  retorno medio +0.0225%  z bruto  1.56  z com 0,02%   0.17
+    reserva 2 Deriv         20%:   7297 ops  acierto  52.58%  z(85%)  -2.52  retorno medio +0.0098%  z bruto  1.11  z com 0,02%  -1.16
+    reserva 2 Deriv        100%:  16456 ops  acierto  51.60%  z(85%)  -6.31  retorno medio +0.0109%  z bruto  2.33  z com 0,02%  -1.95
+    por ano (10%): 2009 63.1%, 2010 62.3%, 2011 58.4%, 2012 59.7%, 2013 56.9%, 2014 60.0%, 2015 61.6%, 2016 56.7%, 2017 54.6%, 2018 49.5%, 2019 57.5%, 2020 57.3%, 2021 58.3%, 2022 53.5%, 2023 56.0%, 2024 57.4%
+
+Tiempo total: 24 min
