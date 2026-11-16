@@ -1132,11 +1132,6 @@ Namespace WpfDerivClientVB.Backtesting
             End Try
         End Function
 
-        Private Shared Function CargarVelasAsync(symbol As String, timeframe As String) As Task(Of List(Of CandleModel))
-            Dim repo = New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
-            Return repo.GetCandlesRangoAsync("Deriv", symbol, timeframe, 0, DateTimeOffset.UtcNow.ToUnixTimeSeconds())
-        End Function
-
         ''' <summary>
         ''' body: {estrategia, symbol, timeframe, duracion, confianza, payout,
         '''        [dias_entrenamiento=365, dias_prueba=90, grilla=[50,55,60,65,70],
@@ -1358,9 +1353,15 @@ Namespace WpfDerivClientVB.Backtesting
         ''' solo con el periodo de diseno (minimo min_ops operaciones) y se mide esa misma en el
         ''' periodo ciego. TP y SL van en multiplos del stake (stake = 1: resultados por dolar).
         ''' body: {estrategia, confianza, corte, [ventana=100, min_ops=30],
-        '''        mercados:[[symbol, tf, comision_pct, [multiplicadores opcionales]], ...],
-        '''        multiplicadores:[...], tp_sl:[[tp, sl], ...], max_velas:[...]}
+        '''        mercados:[[symbol, tf, comision_pct, [multiplicadores], [[tp, sl], ...], [max_velas]], ...],
+        '''        multiplicadores:[...], tp_sl:[[tp, sl], ...], max_velas:[...],
+        '''        [fuente: Deriv | Dukascopy], [desde, hasta: "YYYY-MM-DD" -> solo velas en [desde, hasta)]}
+        ''' Los tres ultimos campos de cada mercado son opcionales y reemplazan a los globales: con un
+        ''' solo valor en cada uno la configuracion queda FIJA (sirve para medir en otro periodo una
+        ''' configuracion ya elegida).
         ''' </summary>
+        Private Shared ReadOnly _cacheSenalesMult As New System.Collections.Concurrent.ConcurrentDictionary(Of String, List(Of SenalMultiplicador))()
+
         Private Async Function MultiplicadoresValidarApi(body As JObject) As Task(Of JObject)
             If body Is Nothing OrElse Not TypeOf body("mercados") Is JArray Then
                 Return ErrJson("Body: {estrategia, confianza, corte, mercados:[[symbol, tf, comision_pct], ...], multiplicadores, tp_sl, max_velas}")
@@ -1379,16 +1380,33 @@ Namespace WpfDerivClientVB.Backtesting
             Dim minOps = If(body("min_ops") IsNot Nothing, CInt(body("min_ops")), 30)
             Dim multsGlobal = If(TypeOf body("multiplicadores") Is JArray,
                                  CType(body("multiplicadores"), JArray).Select(Function(t) CInt(t)).ToList(), New List(Of Integer) From {100})
-            Dim tpSl As New List(Of Decimal())()
+            Dim tpSlGlobal As New List(Of Decimal())()
             If TypeOf body("tp_sl") Is JArray Then
                 For Each par In CType(body("tp_sl"), JArray)
-                    tpSl.Add({CDec(par(0)), CDec(par(1))})
+                    tpSlGlobal.Add({CDec(par(0)), CDec(par(1))})
                 Next
             Else
-                tpSl.Add({0D, 0D})
+                tpSlGlobal.Add({0D, 0D})
             End If
-            Dim maxVelas = If(TypeOf body("max_velas") Is JArray,
-                              CType(body("max_velas"), JArray).Select(Function(t) CInt(t)).ToList(), New List(Of Integer) From {6})
+            Dim maxVelasGlobal = If(TypeOf body("max_velas") Is JArray,
+                                    CType(body("max_velas"), JArray).Select(Function(t) CInt(t)).ToList(), New List(Of Integer) From {6})
+            Dim fuente = FuentesVelas.Normalizar(body("fuente")?.ToString())
+            Dim desdeEpoch As Long = Long.MinValue, hastaEpoch As Long = Long.MaxValue
+            Dim fechaLimite As DateTime
+            If body("desde") IsNot Nothing Then
+                If Not DateTime.TryParse(body("desde").ToString(), Globalization.CultureInfo.InvariantCulture,
+                                         Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, fechaLimite) Then
+                    Return ErrJson("desde invalido (YYYY-MM-DD)")
+                End If
+                desdeEpoch = New DateTimeOffset(fechaLimite).ToUnixTimeSeconds()
+            End If
+            If body("hasta") IsNot Nothing Then
+                If Not DateTime.TryParse(body("hasta").ToString(), Globalization.CultureInfo.InvariantCulture,
+                                         Globalization.DateTimeStyles.AssumeUniversal Or Globalization.DateTimeStyles.AdjustToUniversal, fechaLimite) Then
+                    Return ErrJson("hasta invalido (YYYY-MM-DD)")
+                End If
+                hastaEpoch = New DateTimeOffset(fechaLimite).ToUnixTimeSeconds()
+            End If
 
             Dim filas As New JArray()
             Dim cieTodos As New List(Of OperacionMultiplicador)()
@@ -1401,14 +1419,30 @@ Namespace WpfDerivClientVB.Backtesting
                 Dim comision = If(mercado.Count > 2, CDbl(mercado(2)), 0.0)
                 Dim mults = If(mercado.Count > 3 AndAlso TypeOf mercado(3) Is JArray,
                                CType(mercado(3), JArray).Select(Function(t) CInt(t)).ToList(), multsGlobal)
-                Dim velas = Await CargarVelasAsync(sym, tf)
+                Dim tpSl = tpSlGlobal
+                If mercado.Count > 4 AndAlso TypeOf mercado(4) Is JArray Then
+                    tpSl = CType(mercado(4), JArray).Select(Function(par) New Decimal() {CDec(par(0)), CDec(par(1))}).ToList()
+                End If
+                Dim maxVelas = If(mercado.Count > 5 AndAlso TypeOf mercado(5) Is JArray,
+                                  CType(mercado(5), JArray).Select(Function(t) CInt(t)).ToList(), maxVelasGlobal)
+                Dim velas = (Await ValidacionCompleta.CargarVelasAsync(sym, tf, fuente)) _
+                    .Where(Function(v) v.Epoch >= desdeEpoch AndAlso v.Epoch < hastaEpoch).ToList()
                 If velas.Count < ventana + 200 Then
                     filas.Add(New JObject From {{"symbol", sym}, {"timeframe", tf}, {"error", "Velas insuficientes: " & velas.Count}})
                     Continue For
                 End If
                 Dim tfSeg As Long = BacktestMotor.SegundosTimeframe(tf)
+                ' Las senales solo dependen de estrategia, velas, ventana y confianza: se reutilizan
+                ' entre llamadas (p. ej. la misma prueba con varias comisiones).
+                Dim claveSenales = String.Join("|", est.Nombre, conf, ventana, fuente, sym, tf, velas.Count,
+                                               velas(0).Epoch, velas(velas.Count - 1).Epoch)
                 Dim r = Await Task.Run(Function()
-                    Dim senales = MultiplicadorMotor.CalcularSenales(velas, est, ventana, conf)
+                    Dim senales As List(Of SenalMultiplicador) = Nothing
+                    If Not _cacheSenalesMult.TryGetValue(claveSenales, senales) Then
+                        senales = MultiplicadorMotor.CalcularSenales(velas, est, ventana, conf)
+                        If _cacheSenalesMult.Count > 500 Then _cacheSenalesMult.Clear()
+                        _cacheSenalesMult(claveSenales) = senales
+                    End If
                     Dim mejorCfg As MultiplicadorConfig = Nothing
                     Dim mejorOps As List(Of OperacionMultiplicador) = Nothing
                     Dim mejorPnl As Double = Double.MinValue
@@ -1463,7 +1497,9 @@ Namespace WpfDerivClientVB.Backtesting
                 End If
             Next
             Return New JObject From {
-                {"ok", True}, {"estrategia", est.Nombre}, {"min_confianza", conf},
+                {"ok", True}, {"estrategia", est.Nombre}, {"min_confianza", conf}, {"fuente", fuente},
+                {"desde_utc", If(desdeEpoch = Long.MinValue, "", DateTimeOffset.FromUnixTimeSeconds(desdeEpoch).ToString("yyyy-MM-dd"))},
+                {"hasta_utc", If(hastaEpoch = Long.MaxValue, "", DateTimeOffset.FromUnixTimeSeconds(hastaEpoch).ToString("yyyy-MM-dd"))},
                 {"corte_utc", corte.ToString("yyyy-MM-dd")}, {"stake", 1},
                 {"total_diseno", MultiplicadorMotor.Resumen(disTodos)},
                 {"total_ciego", MultiplicadorMotor.Resumen(cieTodos)},
