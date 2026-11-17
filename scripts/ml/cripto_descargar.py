@@ -8,6 +8,7 @@ microsegundos: se normaliza. Los archivos descargados solo se leen como datos (C
 
 Uso: D:/traiding_ml/venv/Scripts/python.exe -I scripts/ml/cripto_descargar.py D:/traiding_ml
      ... D:/traiding_ml --deriv   (velas 1h de cryBTCUSD y cryETHUSD de Deriv por la app, API 8766)
+     ... D:/traiding_ml --funding (tasas de financiamiento de futuros perpetuos USDT-M, cada 8h)
 """
 import json
 import csv
@@ -123,8 +124,40 @@ def deriv(carpeta):
         print('%s: %d velas, %s a %s' % (sym, len(ep), dt.datetime.utcfromtimestamp(ep[0]), dt.datetime.utcfromtimestamp(ep[-1])), flush=True)
 
 
+def funding(carpeta):
+    """Tasas de financiamiento de futuros perpetuos (data.binance.vision/data/futures/um)."""
+    hoy = dt.date.today()
+    raiz = os.path.join(carpeta, 'cripto')
+    for sym in SIMBOLOS:
+        dz = os.path.join(raiz, 'binance_funding_zip', sym)
+        os.makedirs(dz, exist_ok=True)
+        filas = {}
+        a, m = 2019, 9
+        while (a, m) < (hoy.year, hoy.month):
+            n = '%s-fundingRate-%04d-%02d.zip' % (sym, a, m)
+            ruta = os.path.join(dz, n)
+            if bajar('https://data.binance.vision/data/futures/um/monthly/fundingRate/%s/%s' % (sym, n), ruta):
+                with zipfile.ZipFile(ruta) as z:
+                    for nombre in z.namelist():
+                        for f in csv.reader(io.TextIOWrapper(z.open(nombre), encoding='utf-8')):
+                            if f and f[0].isdigit():
+                                filas[int(f[0]) // 1000] = f[2]
+            a, m = (a + 1, 1) if m == 12 else (a, m + 1)
+        salida = os.path.join(raiz, 'datos', 'Binance_%s_funding.csv' % sym)
+        with open(salida, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(['epoch', 'tasa'])
+            for k in sorted(filas):
+                w.writerow([k, filas[k]])
+        ep = sorted(filas)
+        print('%s funding: %d registros, %s a %s' % (sym, len(ep), dt.datetime.utcfromtimestamp(ep[0]).date() if ep else '-',
+                                                     dt.datetime.utcfromtimestamp(ep[-1]).date() if ep else '-'), flush=True)
+
+
 if __name__ == '__main__':
-    if '--deriv' in sys.argv:
+    if '--funding' in sys.argv:
+        funding(sys.argv[1])
+    elif '--deriv' in sys.argv:
         deriv(sys.argv[1])
     else:
         main(sys.argv[1])
