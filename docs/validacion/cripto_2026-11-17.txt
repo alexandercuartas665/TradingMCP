@@ -1,0 +1,58 @@
+ESTUDIO DE VIABILIDAD EN CRIPTO - plan pre-registrado en docs/validacion/cripto_plan.md
+Binance spot 1h, 9 monedas. Costo principal 0.125% por lado. Ventaja: t/z >= 2.24.
+
+== H1-H3 reglas clasicas, cartera de igual peso, 2019-01-01 a 2026-11-17
+  [principal]
+    comprar y mantener     anual    67.26%  sharpe  1.058  caida max  78.67%  x57.33
+    H1_tendencia           anual    83.15%  sharpe  1.466  caida max  51.51%  x117.10 | alfa anual   32.41% t  2.97 beta  0.49  => VENTAJA
+    H2_momentum_serie      anual    49.96%  sharpe  0.962  caida max  58.42%  x24.27 | alfa anual   52.28% t  2.45 beta  0.09  => VENTAJA
+    H3_momentum_cruzado    anual    18.30%  sharpe  0.576  caida max  70.91%  x3.75 | alfa anual   31.80% t  1.72 beta  0.00  => sin ventaja
+  [costo 0.05%]
+    comprar y mantener     anual    67.26%  sharpe  1.058  caida max  78.67%  x57.33
+    H1_tendencia           anual    86.19%  sharpe  1.499  caida max  49.64%  x133.32 | alfa anual   34.06% t  3.13 beta  0.49
+    H2_momentum_serie      anual    52.55%  sharpe  0.990  caida max  58.36%  x27.77 | alfa anual   53.98% t  2.53 beta  0.09
+    H3_momentum_cruzado    anual    24.41%  sharpe  0.667  caida max  68.58%  x5.58 | alfa anual   36.83% t  1.99 beta  0.00
+  [costo 0.20%]
+    comprar y mantener     anual    67.26%  sharpe  1.058  caida max  78.67%  x57.33
+    H1_tendencia           anual    80.15%  sharpe  1.433  caida max  53.31%  x102.86 | alfa anual   30.77% t  2.82 beta  0.49
+    H2_momentum_serie      anual    47.41%  sharpe  0.935  caida max  58.48%  x21.20 | alfa anual   50.58% t  2.37 beta  0.09
+    H3_momentum_cruzado    anual    12.49%  sharpe  0.485  caida max  77.16%  x2.52 | alfa anual   26.78% t  1.44 beta  0.00
+  [2019-2021]
+    comprar y mantener     anual   320.34%  sharpe  2.019  caida max  64.70%  x73.40
+    H1_tendencia           anual   321.39%  sharpe  2.504  caida max  39.70%  x73.95 | alfa anual   56.02% t  2.66 beta  0.58
+    H2_momentum_serie      anual   146.69%  sharpe  1.565  caida max  58.42%  x14.90 | alfa anual   65.61% t  1.52 beta  0.28
+    H3_momentum_cruzado    anual    74.03%  sharpe  1.122  caida max  60.13%  x5.25 | alfa anual   66.14% t  1.75 beta  0.07
+  [2022-2026]
+    comprar y mantener     anual    -4.94%  sharpe  0.245  caida max  69.44%  x0.78
+    H1_tendencia           anual     9.88%  sharpe  0.443  caida max  42.33%  x1.58 | alfa anual    9.71% t  0.80 beta  0.38
+    H2_momentum_serie      anual    10.51%  sharpe  0.451  caida max  49.79%  x1.63 | alfa anual   25.64% t  1.16 beta -0.17
+    H3_momentum_cruzado    anual    -6.63%  sharpe  0.052  caida max  54.48%  x0.72 | alfa anual    3.76% t  0.21 beta -0.10
+
+== H4 LightGBM, prediccion a 24h cada 4h, 34 variables, costo 0,25% ida y vuelta
+  H4 => SIN VENTAJA
+    reserva 1 2021-2025/05      5%:  1916 ops  acierto  58.46%  bruto +0.859%  neto +0.609%  z neto  4.29  neto total  +1167.3%
+    reserva 1 2021-2025/05     10%:  3672 ops  acierto  57.38%  bruto +0.647%  neto +0.397%  z neto  4.11  neto total  +1458.8%
+    reserva 1 2021-2025/05     20%:  6531 ops  acierto  56.62%  bruto +0.443%  neto +0.193%  z neto  2.58  neto total  +1263.3%
+    reserva 2 ciega 2025/06+    5%:   579 ops  acierto  53.71%  bruto +0.115%  neto -0.135%  z neto -0.83  neto total    -77.9%
+    reserva 2 ciega 2025/06+   10%:  1148 ops  acierto  52.87%  bruto +0.139%  neto -0.111%  z neto -1.03  neto total   -127.5%
+    reserva 2 ciega 2025/06+   20%:  2070 ops  acierto  53.24%  bruto +0.175%  neto -0.074%  z neto -0.93  neto total   -154.2%
+    por tramo (10%): 2021-01 59.7% neto 1.4231%, 2022-01 53.6% neto -0.3769%, 2023-01 60.1% neto -0.0579%, 2024-01 55.7% neto 0.3158%, 2025-01 60.1% neto 0.9095%
+  secundarias (informativas):
+    reserva 2 10% con costo 0.05% por lado: neto +0.039% z 0.36
+    reserva 2 10% con costo 0.20% por lado: neto -0.261% z -2.42
+    reserva 2 10% solo largos: 749 ops acierto 0.5247 neto -0.158%
+    BTCUSDT   reserva1  391 ops neto +0.197% | reserva2  140 ops neto -0.330%
+    ETHUSDT   reserva1  412 ops neto +0.122% | reserva2  142 ops neto -0.444%
+    BNBUSDT   reserva1  384 ops neto +0.362% | reserva2  117 ops neto -0.533%
+    LTCUSDT   reserva1  389 ops neto +0.671% | reserva2  135 ops neto +0.329%
+    XRPUSDT   reserva1  445 ops neto -0.048% | reserva2  140 ops neto +0.112%
+    ADAUSDT   reserva1  422 ops neto +0.926% | reserva2  120 ops neto -0.207%
+    LINKUSDT  reserva1  383 ops neto +0.525% | reserva2  116 ops neto +0.050%
+    DOGEUSDT  reserva1  414 ops neto +0.520% | reserva2  132 ops neto +0.172%
+    SOLUSDT   reserva1  432 ops neto +0.337% | reserva2  106 ops neto -0.185%
+    Deriv multiplicador x100 cryBTCUSD: {'operaciones': 92, 'liquidadas': 46, 'pnl_medio_por_dolar': -0.0228, 'pnl_total_por_dolar': -2.1}
+    Deriv multiplicador x100 cryETHUSD: {'operaciones': 95, 'liquidadas': 62, 'pnl_medio_por_dolar': -0.0566, 'pnl_total_por_dolar': -5.38}
+    control fuente cryBTCUSD: {'velas': 8746, 'misma_direccion': 0.9863, 'diferencia_media_pct': 0.0471}
+    control fuente cryETHUSD: {'velas': 8736, 'misma_direccion': 0.9906, 'diferencia_media_pct': 0.0483}
+
+Tiempo total: 2.9 min
