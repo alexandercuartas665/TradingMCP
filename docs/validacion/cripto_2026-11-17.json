@@ -1,0 +1,588 @@
+{
+ "cobertura": {
+  "BTCUSDT": [
+   "2017-08-17",
+   80965
+  ],
+  "ETHUSDT": [
+   "2017-08-17",
+   80965
+  ],
+  "BNBUSDT": [
+   "2017-11-06",
+   79029
+  ],
+  "LTCUSDT": [
+   "2017-12-13",
+   78141
+  ],
+  "XRPUSDT": [
+   "2018-05-04",
+   74761
+  ],
+  "ADAUSDT": [
+   "2018-04-17",
+   75173
+  ],
+  "LINKUSDT": [
+   "2019-01-16",
+   68619
+  ],
+  "DOGEUSDT": [
+   "2019-07-05",
+   64553
+  ],
+  "SOLUSDT": [
+   "2020-08-11",
+   54911
+  ]
+ },
+ "reglas": {
+  "principal": {
+   "comprar_mantener": {
+    "dias": 2873,
+    "retorno_anual_pct": 67.26,
+    "sharpe": 1.058,
+    "caida_max_pct": 78.67,
+    "multiplica_x": 57.327
+   },
+   "H1_tendencia": {
+    "dias": 2873,
+    "retorno_anual_pct": 83.15,
+    "sharpe": 1.466,
+    "caida_max_pct": 51.51,
+    "multiplica_x": 117.104,
+    "alfa_anual_pct": 32.41,
+    "t_alfa": 2.974,
+    "beta": 0.495
+   },
+   "H2_momentum_serie": {
+    "dias": 2873,
+    "retorno_anual_pct": 49.96,
+    "sharpe": 0.962,
+    "caida_max_pct": 58.42,
+    "multiplica_x": 24.268,
+    "alfa_anual_pct": 52.28,
+    "t_alfa": 2.45,
+    "beta": 0.086
+   },
+   "H3_momentum_cruzado": {
+    "dias": 2873,
+    "retorno_anual_pct": 18.3,
+    "sharpe": 0.576,
+    "caida_max_pct": 70.91,
+    "multiplica_x": 3.755,
+    "alfa_anual_pct": 31.8,
+    "t_alfa": 1.715,
+    "beta": 0.0
+   }
+  },
+  "veredicto_H1_tendencia": "VENTAJA",
+  "veredicto_H2_momentum_serie": "VENTAJA",
+  "veredicto_H3_momentum_cruzado": "SIN VENTAJA",
+  "costo 0.05%": {
+   "comprar_mantener": {
+    "dias": 2873,
+    "retorno_anual_pct": 67.26,
+    "sharpe": 1.058,
+    "caida_max_pct": 78.67,
+    "multiplica_x": 57.327
+   },
+   "H1_tendencia": {
+    "dias": 2873,
+    "retorno_anual_pct": 86.19,
+    "sharpe": 1.499,
+    "caida_max_pct": 49.64,
+    "multiplica_x": 133.324,
+    "alfa_anual_pct": 34.06,
+    "t_alfa": 3.132,
+    "beta": 0.495
+   },
+   "H2_momentum_serie": {
+    "dias": 2873,
+    "retorno_anual_pct": 52.55,
+    "sharpe": 0.99,
+    "caida_max_pct": 58.36,
+    "multiplica_x": 27.772,
+    "alfa_anual_pct": 53.98,
+    "t_alfa": 2.531,
+    "beta": 0.086
+   },
+   "H3_momentum_cruzado": {
+    "dias": 2873,
+    "retorno_anual_pct": 24.41,
+    "sharpe": 0.667,
+    "caida_max_pct": 68.58,
+    "multiplica_x": 5.58,
+    "alfa_anual_pct": 36.83,
+    "t_alfa": 1.989,
+    "beta": 0.0
+   }
+  },
+  "costo 0.20%": {
+   "comprar_mantener": {
+    "dias": 2873,
+    "retorno_anual_pct": 67.26,
+    "sharpe": 1.058,
+    "caida_max_pct": 78.67,
+    "multiplica_x": 57.327
+   },
+   "H1_tendencia": {
+    "dias": 2873,
+    "retorno_anual_pct": 80.15,
+    "sharpe": 1.433,
+    "caida_max_pct": 53.31,
+    "multiplica_x": 102.855,
+    "alfa_anual_pct": 30.77,
+    "t_alfa": 2.816,
+    "beta": 0.495
+   },
+   "H2_momentum_serie": {
+    "dias": 2873,
+    "retorno_anual_pct": 47.41,
+    "sharpe": 0.935,
+    "caida_max_pct": 58.48,
+    "multiplica_x": 21.204,
+    "alfa_anual_pct": 50.58,
+    "t_alfa": 2.369,
+    "beta": 0.086
+   },
+   "H3_momentum_cruzado": {
+    "dias": 2873,
+    "retorno_anual_pct": 12.49,
+    "sharpe": 0.485,
+    "caida_max_pct": 77.16,
+    "multiplica_x": 2.525,
+    "alfa_anual_pct": 26.78,
+    "t_alfa": 1.442,
+    "beta": 0.0
+   }
+  },
+  "2019-2021": {
+   "comprar_mantener": {
+    "dias": 1092,
+    "retorno_anual_pct": 320.34,
+    "sharpe": 2.019,
+    "caida_max_pct": 64.7,
+    "multiplica_x": 73.396
+   },
+   "H1_tendencia": {
+    "dias": 1092,
+    "retorno_anual_pct": 321.39,
+    "sharpe": 2.504,
+    "caida_max_pct": 39.7,
+    "multiplica_x": 73.947,
+    "alfa_anual_pct": 56.02,
+    "t_alfa": 2.656,
+    "beta": 0.582
+   },
+   "H2_momentum_serie": {
+    "dias": 1092,
+    "retorno_anual_pct": 146.69,
+    "sharpe": 1.565,
+    "caida_max_pct": 58.42,
+    "multiplica_x": 14.902,
+    "alfa_anual_pct": 65.61,
+    "t_alfa": 1.524,
+    "beta": 0.281
+   },
+   "H3_momentum_cruzado": {
+    "dias": 1092,
+    "retorno_anual_pct": 74.03,
+    "sharpe": 1.122,
+    "caida_max_pct": 60.13,
+    "multiplica_x": 5.247,
+    "alfa_anual_pct": 66.14,
+    "t_alfa": 1.752,
+    "beta": 0.075
+   }
+  },
+  "2022-2026": {
+   "comprar_mantener": {
+    "dias": 1781,
+    "retorno_anual_pct": -4.94,
+    "sharpe": 0.245,
+    "caida_max_pct": 69.44,
+    "multiplica_x": 0.781
+   },
+   "H1_tendencia": {
+    "dias": 1781,
+    "retorno_anual_pct": 9.88,
+    "sharpe": 0.443,
+    "caida_max_pct": 42.33,
+    "multiplica_x": 1.584,
+    "alfa_anual_pct": 9.71,
+    "t_alfa": 0.8,
+    "beta": 0.381
+   },
+   "H2_momentum_serie": {
+    "dias": 1781,
+    "retorno_anual_pct": 10.51,
+    "sharpe": 0.451,
+    "caida_max_pct": 49.79,
+    "multiplica_x": 1.629,
+    "alfa_anual_pct": 25.64,
+    "t_alfa": 1.161,
+    "beta": -0.167
+   },
+   "H3_momentum_cruzado": {
+    "dias": 1781,
+    "retorno_anual_pct": -6.63,
+    "sharpe": 0.052,
+    "caida_max_pct": 54.48,
+    "multiplica_x": 0.716,
+    "alfa_anual_pct": 3.76,
+    "t_alfa": 0.211,
+    "beta": -0.097
+   }
+  }
+ },
+ "H4": {
+  "variables": [
+   "r1",
+   "r4",
+   "r12",
+   "r24",
+   "r72",
+   "r168",
+   "vol24",
+   "vol_razon",
+   "rango",
+   "cuerpo",
+   "rsi14",
+   "bb20",
+   "dist_max168",
+   "dist_min168",
+   "vol_rel",
+   "compra_ag_1h",
+   "compra_ag_24h",
+   "oper_rel",
+   "hora_sin",
+   "hora_cos",
+   "dia",
+   "x_BTC_r4",
+   "x_BTC_r24",
+   "x_ETH_r4",
+   "x_ETH_r24",
+   "m_BTC",
+   "m_ETH",
+   "m_BNB",
+   "m_LTC",
+   "m_XRP",
+   "m_ADA",
+   "m_LINK",
+   "m_DOGE",
+   "m_SOL"
+  ],
+  "reserva1": {
+   "5%": {
+    "operaciones": 1916,
+    "acierto": 0.5846,
+    "bruto_medio_pct": 0.8593,
+    "neto_medio_pct": 0.6093,
+    "z_neto": 4.288,
+    "neto_total_pct": 1167.33
+   },
+   "10%": {
+    "operaciones": 3672,
+    "acierto": 0.5738,
+    "bruto_medio_pct": 0.6473,
+    "neto_medio_pct": 0.3973,
+    "z_neto": 4.109,
+    "neto_total_pct": 1458.77
+   },
+   "20%": {
+    "operaciones": 6531,
+    "acierto": 0.5662,
+    "bruto_medio_pct": 0.4434,
+    "neto_medio_pct": 0.1934,
+    "z_neto": 2.584,
+    "neto_total_pct": 1263.32
+   }
+  },
+  "reserva2": {
+   "5%": {
+    "operaciones": 579,
+    "acierto": 0.5371,
+    "bruto_medio_pct": 0.1154,
+    "neto_medio_pct": -0.1346,
+    "z_neto": -0.831,
+    "neto_total_pct": -77.94
+   },
+   "10%": {
+    "operaciones": 1148,
+    "acierto": 0.5287,
+    "bruto_medio_pct": 0.139,
+    "neto_medio_pct": -0.111,
+    "z_neto": -1.031,
+    "neto_total_pct": -127.48
+   },
+   "20%": {
+    "operaciones": 2070,
+    "acierto": 0.5324,
+    "bruto_medio_pct": 0.1755,
+    "neto_medio_pct": -0.0745,
+    "z_neto": -0.928,
+    "neto_total_pct": -154.23
+   }
+  },
+  "por_tramo": [
+   {
+    "desde": "2021-01-01",
+    "entrenamiento": 47166,
+    "operaciones": 870,
+    "acierto": 0.5966,
+    "bruto_medio_pct": 1.6731,
+    "neto_medio_pct": 1.4231,
+    "z_neto": 5.828,
+    "neto_total_pct": 1238.08
+   },
+   {
+    "desde": "2022-01-01",
+    "entrenamiento": 66495,
+    "operaciones": 918,
+    "acierto": 0.5359,
+    "bruto_medio_pct": -0.1269,
+    "neto_medio_pct": -0.3769,
+    "z_neto": -1.876,
+    "neto_total_pct": -346.03
+   },
+   {
+    "desde": "2023-01-01",
+    "entrenamiento": 86128,
+    "operaciones": 681,
+    "acierto": 0.6006,
+    "bruto_medio_pct": 0.1921,
+    "neto_medio_pct": -0.0579,
+    "z_neto": -0.311,
+    "neto_total_pct": -39.44
+   },
+   {
+    "desde": "2024-01-01",
+    "entrenamiento": 105698,
+    "operaciones": 822,
+    "acierto": 0.5572,
+    "bruto_medio_pct": 0.5658,
+    "neto_medio_pct": 0.3158,
+    "z_neto": 1.811,
+    "neto_total_pct": 259.62
+   },
+   {
+    "desde": "2025-01-01",
+    "entrenamiento": 125433,
+    "operaciones": 381,
+    "acierto": 0.601,
+    "bruto_medio_pct": 1.1595,
+    "neto_medio_pct": 0.9095,
+    "z_neto": 3.729,
+    "neto_total_pct": 346.53
+   }
+  ],
+  "umbrales": {
+   "5%": 0.15990450978505938,
+   "10%": 0.13152320877603974,
+   "20%": 0.10170450540918917
+  },
+  "veredicto": "SIN VENTAJA"
+ },
+ "secundarias": {
+  "reserva2_10_costo_0.05": {
+   "operaciones": 1148,
+   "acierto": 0.5287,
+   "bruto_medio_pct": 0.139,
+   "neto_medio_pct": 0.039,
+   "z_neto": 0.362,
+   "neto_total_pct": 44.72
+  },
+  "reserva2_10_costo_0.20": {
+   "operaciones": 1148,
+   "acierto": 0.5287,
+   "bruto_medio_pct": 0.139,
+   "neto_medio_pct": -0.261,
+   "z_neto": -2.424,
+   "neto_total_pct": -299.68
+  },
+  "reserva2_10_solo_largos": {
+   "operaciones": 749,
+   "acierto": 0.5247,
+   "bruto_medio_pct": 0.0924,
+   "neto_medio_pct": -0.1576,
+   "z_neto": -1.13,
+   "neto_total_pct": -118.06
+  },
+  "reserva2_10_por_moneda": {
+   "BTCUSDT": {
+    "operaciones": 140,
+    "acierto": 0.5429,
+    "bruto_medio_pct": -0.0802,
+    "neto_medio_pct": -0.3302,
+    "z_neto": -1.64,
+    "neto_total_pct": -46.23
+   },
+   "ETHUSDT": {
+    "operaciones": 142,
+    "acierto": 0.4859,
+    "bruto_medio_pct": -0.1935,
+    "neto_medio_pct": -0.4435,
+    "z_neto": -1.565,
+    "neto_total_pct": -62.97
+   },
+   "BNBUSDT": {
+    "operaciones": 117,
+    "acierto": 0.5299,
+    "bruto_medio_pct": -0.2831,
+    "neto_medio_pct": -0.5331,
+    "z_neto": -1.642,
+    "neto_total_pct": -62.37
+   },
+   "LTCUSDT": {
+    "operaciones": 135,
+    "acierto": 0.5556,
+    "bruto_medio_pct": 0.5789,
+    "neto_medio_pct": 0.3289,
+    "z_neto": 1.214,
+    "neto_total_pct": 44.4
+   },
+   "XRPUSDT": {
+    "operaciones": 140,
+    "acierto": 0.5214,
+    "bruto_medio_pct": 0.3617,
+    "neto_medio_pct": 0.1117,
+    "z_neto": 0.328,
+    "neto_total_pct": 15.64
+   },
+   "ADAUSDT": {
+    "operaciones": 120,
+    "acierto": 0.525,
+    "bruto_medio_pct": 0.0425,
+    "neto_medio_pct": -0.2075,
+    "z_neto": -0.505,
+    "neto_total_pct": -24.91
+   },
+   "LINKUSDT": {
+    "operaciones": 116,
+    "acierto": 0.5172,
+    "bruto_medio_pct": 0.3003,
+    "neto_medio_pct": 0.0503,
+    "z_neto": 0.136,
+    "neto_total_pct": 5.83
+   },
+   "DOGEUSDT": {
+    "operaciones": 132,
+    "acierto": 0.5758,
+    "bruto_medio_pct": 0.4223,
+    "neto_medio_pct": 0.1723,
+    "z_neto": 0.51,
+    "neto_total_pct": 22.75
+   },
+   "SOLUSDT": {
+    "operaciones": 106,
+    "acierto": 0.5,
+    "bruto_medio_pct": 0.0649,
+    "neto_medio_pct": -0.1851,
+    "z_neto": -0.493,
+    "neto_total_pct": -19.62
+   }
+  },
+  "reserva1_10_por_moneda": {
+   "BTCUSDT": {
+    "operaciones": 391,
+    "acierto": 0.5882,
+    "bruto_medio_pct": 0.4465,
+    "neto_medio_pct": 0.1965,
+    "z_neto": 1.14,
+    "neto_total_pct": 76.85
+   },
+   "ETHUSDT": {
+    "operaciones": 412,
+    "acierto": 0.5631,
+    "bruto_medio_pct": 0.3723,
+    "neto_medio_pct": 0.1223,
+    "z_neto": 0.514,
+    "neto_total_pct": 50.4
+   },
+   "BNBUSDT": {
+    "operaciones": 384,
+    "acierto": 0.5807,
+    "bruto_medio_pct": 0.6123,
+    "neto_medio_pct": 0.3623,
+    "z_neto": 1.686,
+    "neto_total_pct": 139.11
+   },
+   "LTCUSDT": {
+    "operaciones": 389,
+    "acierto": 0.6015,
+    "bruto_medio_pct": 0.9207,
+    "neto_medio_pct": 0.6707,
+    "z_neto": 2.472,
+    "neto_total_pct": 260.9
+   },
+   "XRPUSDT": {
+    "operaciones": 445,
+    "acierto": 0.5551,
+    "bruto_medio_pct": 0.2024,
+    "neto_medio_pct": -0.0476,
+    "z_neto": -0.154,
+    "neto_total_pct": -21.19
+   },
+   "ADAUSDT": {
+    "operaciones": 422,
+    "acierto": 0.5829,
+    "bruto_medio_pct": 1.176,
+    "neto_medio_pct": 0.926,
+    "z_neto": 3.075,
+    "neto_total_pct": 390.76
+   },
+   "LINKUSDT": {
+    "operaciones": 383,
+    "acierto": 0.5666,
+    "bruto_medio_pct": 0.7749,
+    "neto_medio_pct": 0.5249,
+    "z_neto": 1.742,
+    "neto_total_pct": 201.02
+   },
+   "DOGEUSDT": {
+    "operaciones": 414,
+    "acierto": 0.5725,
+    "bruto_medio_pct": 0.77,
+    "neto_medio_pct": 0.52,
+    "z_neto": 1.458,
+    "neto_total_pct": 215.26
+   },
+   "SOLUSDT": {
+    "operaciones": 432,
+    "acierto": 0.5579,
+    "bruto_medio_pct": 0.5871,
+    "neto_medio_pct": 0.3371,
+    "z_neto": 0.943,
+    "neto_total_pct": 145.65
+   }
+  },
+  "deriv_multiplicadores_x100": {
+   "cryBTCUSD": {
+    "operaciones": 92,
+    "liquidadas": 46,
+    "pnl_medio_por_dolar": -0.0228,
+    "pnl_total_por_dolar": -2.1
+   },
+   "cryETHUSD": {
+    "operaciones": 95,
+    "liquidadas": 62,
+    "pnl_medio_por_dolar": -0.0566,
+    "pnl_total_por_dolar": -5.38
+   }
+  },
+  "control_fuente_deriv_binance": {
+   "cryBTCUSD": {
+    "velas": 8746,
+    "misma_direccion": 0.9863,
+    "diferencia_media_pct": 0.0471
+   },
+   "cryETHUSD": {
+    "velas": 8736,
+    "misma_direccion": 0.9906,
+    "diferencia_media_pct": 0.0483
+   }
+  }
+ }
+}
