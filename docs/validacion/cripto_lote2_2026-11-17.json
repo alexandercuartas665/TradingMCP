@@ -1,0 +1,218 @@
+{
+ "estrategias": {
+  "H1_referencia": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 108.68,
+    "sharpe": 1.656,
+    "caida_max_pct": 51.51,
+    "multiplica_x": 111.501,
+    "alfa_anual_pct": 33.36,
+    "t_alfa": 2.637,
+    "beta": 0.51,
+    "exposicion": 0.494
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": 3.41,
+    "sharpe": 0.263,
+    "caida_max_pct": 39.3,
+    "multiplica_x": 1.05,
+    "alfa_anual_pct": 18.38,
+    "t_alfa": 0.922,
+    "beta": 0.374,
+    "exposicion": 0.422
+   }
+  },
+  "E1_canal_20_10": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 86.61,
+    "sharpe": 1.727,
+    "caida_max_pct": 39.9,
+    "multiplica_x": 54.475,
+    "alfa_anual_pct": 34.45,
+    "t_alfa": 2.856,
+    "beta": 0.345,
+    "exposicion": 0.37
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": -4.78,
+    "sharpe": -0.097,
+    "caida_max_pct": 35.83,
+    "multiplica_x": 0.931,
+    "alfa_anual_pct": 4.42,
+    "t_alfa": 0.284,
+    "beta": 0.249,
+    "exposicion": 0.301
+   },
+   "veredicto": "CONFIRMADA y mejora a H1"
+  },
+  "E2_tendencia_vol": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 53.11,
+    "sharpe": 1.643,
+    "caida_max_pct": 34.89,
+    "multiplica_x": 15.329,
+    "alfa_anual_pct": 19.67,
+    "t_alfa": 2.494,
+    "beta": 0.256,
+    "exposicion": 0.494
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": 7.3,
+    "sharpe": 0.405,
+    "caida_max_pct": 31.43,
+    "multiplica_x": 1.109,
+    "alfa_anual_pct": 18.0,
+    "t_alfa": 1.086,
+    "beta": 0.293,
+    "exposicion": 0.422
+   },
+   "veredicto": "CONFIRMADA y mejora a H1"
+  },
+  "E3_filtro_btc": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 112.65,
+    "sharpe": 1.768,
+    "caida_max_pct": 46.57,
+    "multiplica_x": 125.811,
+    "alfa_anual_pct": 43.14,
+    "t_alfa": 3.022,
+    "beta": 0.418,
+    "exposicion": 0.429
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": 2.32,
+    "sharpe": 0.225,
+    "caida_max_pct": 39.58,
+    "multiplica_x": 1.034,
+    "alfa_anual_pct": 15.27,
+    "t_alfa": 0.716,
+    "beta": 0.317,
+    "exposicion": 0.373
+   },
+   "veredicto": "CONFIRMADA, no mejora a H1"
+  },
+  "E4_canal_volumen": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 72.5,
+    "sharpe": 1.764,
+    "caida_max_pct": 28.13,
+    "multiplica_x": 32.91,
+    "alfa_anual_pct": 32.13,
+    "t_alfa": 3.006,
+    "beta": 0.268,
+    "exposicion": 0.257
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": -10.83,
+    "sharpe": -0.588,
+    "caida_max_pct": 31.07,
+    "multiplica_x": 0.846,
+    "alfa_anual_pct": -5.42,
+    "t_alfa": -0.51,
+    "beta": 0.172,
+    "exposicion": 0.2
+   },
+   "veredicto": "VENTAJA EN DISENO, falla en reserva"
+  },
+  "E5_rebote_panico": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": -1.71,
+    "sharpe": -0.013,
+    "caida_max_pct": 38.1,
+    "multiplica_x": 0.895,
+    "alfa_anual_pct": -6.96,
+    "t_alfa": -1.47,
+    "beta": 0.064,
+    "exposicion": 0.022
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": 11.96,
+    "sharpe": 0.851,
+    "caida_max_pct": 7.34,
+    "multiplica_x": 1.18,
+    "alfa_anual_pct": 14.35,
+    "t_alfa": 1.246,
+    "beta": 0.078,
+    "exposicion": 0.029
+   },
+   "veredicto": "SIN VENTAJA"
+  },
+  "E6_financiamiento": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": -6.5,
+    "sharpe": -0.184,
+    "caida_max_pct": 50.04,
+    "multiplica_x": 0.65,
+    "alfa_anual_pct": -7.89,
+    "t_alfa": -1.001,
+    "beta": 0.035,
+    "exposicion": 0.124
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": -3.35,
+    "sharpe": -0.108,
+    "caida_max_pct": 15.37,
+    "multiplica_x": 0.951,
+    "alfa_anual_pct": 0.78,
+    "t_alfa": 0.073,
+    "beta": 0.1,
+    "exposicion": 0.135
+   },
+   "veredicto": "SIN VENTAJA"
+  },
+  "E1b_canal_55_20": {
+   "diseno": {
+    "dias": 2339,
+    "retorno_anual_pct": 80.95,
+    "sharpe": 1.655,
+    "caida_max_pct": 47.06,
+    "multiplica_x": 44.716,
+    "alfa_anual_pct": 31.43,
+    "t_alfa": 2.651,
+    "beta": 0.345,
+    "exposicion": 0.324
+   },
+   "reserva": {
+    "dias": 534,
+    "retorno_anual_pct": -8.96,
+    "sharpe": -0.306,
+    "caida_max_pct": 28.93,
+    "multiplica_x": 0.872,
+    "alfa_anual_pct": -0.7,
+    "t_alfa": -0.05,
+    "beta": 0.231,
+    "exposicion": 0.238
+   }
+  }
+ },
+ "comprar_mantener": {
+  "diseno": {
+   "dias": 2339,
+   "retorno_anual_pct": 107.79,
+   "sharpe": 1.317,
+   "caida_max_pct": 78.67,
+   "multiplica_x": 108.487
+  },
+  "reserva": {
+   "dias": 534,
+   "retorno_anual_pct": -35.34,
+   "sharpe": -0.461,
+   "caida_max_pct": 66.92,
+   "multiplica_x": 0.528
+  }
+ }
+}
