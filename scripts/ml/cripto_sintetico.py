@@ -278,7 +278,7 @@ def informe(carpeta, salida):
 
     # ---- A
     s0 = A['S0']
-    L_.append('== PARTE A: LightGBM H4 con datos sinteticos (nivel 10%%, costo 0,25%% ida y vuelta)')
+    L_.append('== PARTE A: LightGBM H4 con datos sinteticos (nivel 10%, costo 0,25% ida y vuelta)')
     L_.append('  S0 solo reales:  reserva1 %s ops acierto %.2f%% neto %+.3f%% z %.2f | reserva2 %s ops acierto %.2f%% neto %+.3f%% z %.2f' % (
         s0['reserva1']['operaciones'], s0['reserva1']['acierto'] * 100, s0['reserva1']['neto_medio_pct'], s0['reserva1']['z_neto'],
         s0['reserva2']['operaciones'], s0['reserva2']['acierto'] * 100, s0['reserva2']['neto_medio_pct'], s0['reserva2']['z_neto']))

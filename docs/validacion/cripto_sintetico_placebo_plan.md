@@ -91,3 +91,59 @@ alrededor de 5% de los placebos con z bruto >= 1,645.
 
 `scripts/ml/cripto_sintetico.py` (entorno de D:). Resultado en
 `docs/validacion/cripto_sintetico_<fecha>.txt` / `.json`.
+
+## Resultado (2026-11-18)
+
+Detalle en `cripto_sintetico_2026-11-18.txt` / `.json`. S0 reproduce H4 exactamente (3.672 operaciones,
+z 4,11 en la reserva 1; -0,111% neto en la reserva ciega).
+
+**Parte A, sinteticos: SIN VENTAJA y peor que solo reales.**
+
+| | Reserva 1: acierto | Reserva 1: z neto | Reserva ciega: acierto | Reserva ciega: neto por operacion | Cumplen |
+|---|---|---|---|---|---|
+| S0 solo reales | 57,4% | 4,11 | 52,9% | -0,11% | - |
+| S1 reales + 1x sinteticos (5 semillas) | 56,6-58,3% | 2,5-4,2 | 51,2-53,7% | -0,27% promedio | 0 de 5 |
+| S2 reales + 3x sinteticos (5 semillas) | 56,5-58,8% | 2,9-4,4 | 50,2-53,4% | -0,30% promedio | 0 de 5 |
+
+Con sinteticos el modelo sigue brillando en el pasado y falla igual (o peor) en datos nuevos: los
+sinteticos salen de las mismas semanas reales y no traen informacion nueva.
+
+**Parte B1, placebo del modelo: z INFLADO, pero la reserva 1 era real.**
+- En 30 mercados sin direccion predecible, el z bruto tiene desviacion 1,91 (deberia ser ~1) y 5 de
+  30 llegan a 1,645 (deberia ser ~1,5). Los z de las operaciones del modelo estan inflados cerca
+  del doble, porque las monedas operadas a la misma hora se mueven juntas.
+- Aun asi, el z bruto real de la reserva 1 (6,70) supera al mayor de los placebos (2,79). Corregido
+  por la inflacion queda alrededor de 3,5: el modelo si encontro patrones verdaderos en 2021-2025.
+- En la reserva ciega, el z bruto real (1,29) cae dentro del ruido de los placebos (desviacion
+  2,21): esos patrones dejaron de existir. Es un cambio del mercado, no memoria por falta de datos.
+- Ningun placebo paso el criterio completo de H4 (0 de 30).
+
+**Parte B2, placebo de las reglas diarias.**
+- El t del placebo esta bien calibrado (desviacion ~1,0). Solo 9 de 1.000 placebos (0,9%) tienen
+  alguna estrategia del lote 2 "confirmada": el criterio del lote es honesto.
+- Las reglas de tendencia y momentum reales (H1 t 2,97, H2 2,45, E1-E4 2,5-3,0) quedan en el
+  percentil 99,7-100 de sus placebos. Su resultado en diseno **no es azar**. E5 y E6 no se distinguen
+  del azar.
+- Caida maxima mediana en los placebos (sin ninguna ventaja de direccion), diseno / reserva:
+
+  | | Diseno | Reserva |
+  |---|---|---|
+  | Comprar y mantener | 83,7% | 53,3% |
+  | H1 | 68,9% | 38,4% |
+  | E2 | 48,0% | 30,9% |
+
+  Buena parte de la proteccion de E2 viene solo de estar invertido una parte del tiempo y de
+  reducir tamano cuando sube la volatilidad. Eso funciona aunque no se prediga nada, porque la
+  volatilidad si es predecible.
+- En los datos reales la caida de E2 en diseno fue 34,9%, menor que la de sus placebos: la
+  tendencia agrega algo encima.
+
+**Advertencias:** el placebo quita la deriva alcista; descarta que la tendencia sea suerte en datos
+sin direccion, pero no corrige el sesgo de supervivencia en la eleccion de monedas.
+
+**Conclusion:**
+- Los datos sinteticos no arreglan el modelo de IA, que queda descartado.
+- El placebo confirma dos cosas:
+  - el z de las operaciones del modelo esta inflado; los z de ese tipo se leen como optimistas;
+  - la familia de tendencia no es azar y el criterio del lote 2 es honesto.
+- Se mantiene el forward en papel de E2 con H1 (`forward_cripto_plan.md`).

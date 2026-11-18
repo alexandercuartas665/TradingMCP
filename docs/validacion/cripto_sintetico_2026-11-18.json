@@ -1,0 +1,598 @@
+{
+ "A": {
+  "S0": {
+   "reserva1": {
+    "operaciones": 3672,
+    "acierto": 0.5738,
+    "bruto_medio_pct": 0.6473,
+    "neto_medio_pct": 0.3973,
+    "z_neto": 4.109,
+    "neto_total_pct": 1458.77,
+    "z_bruto": 6.695
+   },
+   "reserva2": {
+    "operaciones": 1148,
+    "acierto": 0.5287,
+    "bruto_medio_pct": 0.139,
+    "neto_medio_pct": -0.111,
+    "z_neto": -1.031,
+    "neto_total_pct": -127.48,
+    "z_bruto": 1.29
+   },
+   "filas_entrenamiento": [
+    47166,
+    66495,
+    86128,
+    105698,
+    125433,
+    133577
+   ]
+  },
+  "S1": {
+   "semillas": [
+    {
+     "reserva1": {
+      "operaciones": 3782,
+      "acierto": 0.583,
+      "bruto_medio_pct": 0.5933,
+      "neto_medio_pct": 0.3433,
+      "z_neto": 3.563,
+      "neto_total_pct": 1298.32,
+      "z_bruto": 6.158
+     },
+     "reserva2": {
+      "operaciones": 1211,
+      "acierto": 0.5169,
+      "bruto_medio_pct": 0.0052,
+      "neto_medio_pct": -0.2448,
+      "z_neto": -2.186,
+      "neto_total_pct": -296.51,
+      "z_bruto": 0.046
+     },
+     "filas_entrenamiento": [
+      91947,
+      131224,
+      169666,
+      208944,
+      248804,
+      263537
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3754,
+      "acierto": 0.5738,
+      "bruto_medio_pct": 0.5136,
+      "neto_medio_pct": 0.2636,
+      "z_neto": 2.84,
+      "neto_total_pct": 989.46,
+      "z_bruto": 5.534
+     },
+     "reserva2": {
+      "operaciones": 1149,
+      "acierto": 0.5248,
+      "bruto_medio_pct": -0.0899,
+      "neto_medio_pct": -0.3399,
+      "z_neto": -3.11,
+      "neto_total_pct": -390.6,
+      "z_bruto": -0.823
+     },
+     "filas_entrenamiento": [
+      92723,
+      132298,
+      170324,
+      211700,
+      250189,
+      269012
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3613,
+      "acierto": 0.5715,
+      "bruto_medio_pct": 0.6966,
+      "neto_medio_pct": 0.4466,
+      "z_neto": 4.178,
+      "neto_total_pct": 1613.45,
+      "z_bruto": 6.518
+     },
+     "reserva2": {
+      "operaciones": 1137,
+      "acierto": 0.5365,
+      "bruto_medio_pct": 0.2134,
+      "neto_medio_pct": -0.0366,
+      "z_neto": -0.347,
+      "neto_total_pct": -41.65,
+      "z_bruto": 2.024
+     },
+     "filas_entrenamiento": [
+      95165,
+      131449,
+      169237,
+      206748,
+      250342,
+      264786
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3598,
+      "acierto": 0.5664,
+      "bruto_medio_pct": 0.5007,
+      "neto_medio_pct": 0.2507,
+      "z_neto": 2.521,
+      "neto_total_pct": 902.19,
+      "z_bruto": 5.034
+     },
+     "reserva2": {
+      "operaciones": 1158,
+      "acierto": 0.5302,
+      "bruto_medio_pct": -0.0293,
+      "neto_medio_pct": -0.2793,
+      "z_neto": -2.567,
+      "neto_total_pct": -323.37,
+      "z_bruto": -0.269
+     },
+     "filas_entrenamiento": [
+      92620,
+      132391,
+      170634,
+      207871,
+      247161,
+      265817
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3628,
+      "acierto": 0.5752,
+      "bruto_medio_pct": 0.5709,
+      "neto_medio_pct": 0.3209,
+      "z_neto": 3.271,
+      "neto_total_pct": 1164.37,
+      "z_bruto": 5.819
+     },
+     "reserva2": {
+      "operaciones": 1212,
+      "acierto": 0.5124,
+      "bruto_medio_pct": -0.1992,
+      "neto_medio_pct": -0.4492,
+      "z_neto": -4.505,
+      "neto_total_pct": -544.41,
+      "z_bruto": -1.998
+     },
+     "filas_entrenamiento": [
+      94729,
+      132373,
+      171015,
+      207945,
+      249529,
+      267534
+     ]
+    }
+   ],
+   "cumplen": 0,
+   "reserva2_neto_medio_promedio": -0.26996,
+   "veredicto": "SIN VENTAJA"
+  },
+  "S2": {
+   "semillas": [
+    {
+     "reserva1": {
+      "operaciones": 3528,
+      "acierto": 0.5777,
+      "bruto_medio_pct": 0.6575,
+      "neto_medio_pct": 0.4075,
+      "z_neto": 3.914,
+      "neto_total_pct": 1437.82,
+      "z_bruto": 6.315
+     },
+     "reserva2": {
+      "operaciones": 1141,
+      "acierto": 0.5083,
+      "bruto_medio_pct": 0.0511,
+      "neto_medio_pct": -0.1989,
+      "z_neto": -1.753,
+      "neto_total_pct": -226.93,
+      "z_bruto": 0.451
+     },
+     "filas_entrenamiento": [
+      182684,
+      259333,
+      335374,
+      418751,
+      500090,
+      524354
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3465,
+      "acierto": 0.5651,
+      "bruto_medio_pct": 0.5995,
+      "neto_medio_pct": 0.3495,
+      "z_neto": 3.539,
+      "neto_total_pct": 1211.12,
+      "z_bruto": 6.07
+     },
+     "reserva2": {
+      "operaciones": 1182,
+      "acierto": 0.5338,
+      "bruto_medio_pct": 0.0746,
+      "neto_medio_pct": -0.1754,
+      "z_neto": -1.697,
+      "neto_total_pct": -207.31,
+      "z_bruto": 0.722
+     },
+     "filas_entrenamiento": [
+      184997,
+      264434,
+      342451,
+      422165,
+      497872,
+      533516
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3434,
+      "acierto": 0.5879,
+      "bruto_medio_pct": 0.706,
+      "neto_medio_pct": 0.456,
+      "z_neto": 4.379,
+      "neto_total_pct": 1565.73,
+      "z_bruto": 6.78
+     },
+     "reserva2": {
+      "operaciones": 1196,
+      "acierto": 0.5151,
+      "bruto_medio_pct": 0.0285,
+      "neto_medio_pct": -0.2215,
+      "z_neto": -2.111,
+      "neto_total_pct": -264.9,
+      "z_bruto": 0.272
+     },
+     "filas_entrenamiento": [
+      188467,
+      265234,
+      338591,
+      410451,
+      499863,
+      525329
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3503,
+      "acierto": 0.5795,
+      "bruto_medio_pct": 0.5553,
+      "neto_medio_pct": 0.3053,
+      "z_neto": 2.92,
+      "neto_total_pct": 1069.57,
+      "z_bruto": 5.311
+     },
+     "reserva2": {
+      "operaciones": 1152,
+      "acierto": 0.5017,
+      "bruto_medio_pct": -0.2624,
+      "neto_medio_pct": -0.5124,
+      "z_neto": -4.611,
+      "neto_total_pct": -590.32,
+      "z_bruto": -2.362
+     },
+     "filas_entrenamiento": [
+      184182,
+      259701,
+      339488,
+      413445,
+      495207,
+      526947
+     ]
+    },
+    {
+     "reserva1": {
+      "operaciones": 3622,
+      "acierto": 0.5732,
+      "bruto_medio_pct": 0.5799,
+      "neto_medio_pct": 0.3299,
+      "z_neto": 3.193,
+      "neto_total_pct": 1194.73,
+      "z_bruto": 5.613
+     },
+     "reserva2": {
+      "operaciones": 1232,
+      "acierto": 0.5049,
+      "bruto_medio_pct": -0.1297,
+      "neto_medio_pct": -0.3797,
+      "z_neto": -3.494,
+      "neto_total_pct": -467.85,
+      "z_bruto": -1.194
+     },
+     "filas_entrenamiento": [
+      188771,
+      260878,
+      341043,
+      413628,
+      495146,
+      529840
+     ]
+    }
+   ],
+   "cumplen": 0,
+   "reserva2_neto_medio_promedio": -0.29758,
+   "veredicto": "SIN VENTAJA"
+  }
+ },
+ "B1": {
+  "n": 30,
+  "pasan_criterio_H4": 0,
+  "z1_bruto": [
+   -2.675,
+   -4.524,
+   -1.388,
+   1.681,
+   2.226,
+   -1.507,
+   -0.178,
+   2.79,
+   -2.699,
+   -0.793,
+   0.708,
+   -2.964,
+   -0.382,
+   -1.035,
+   1.348,
+   0.352,
+   1.927,
+   -4.11,
+   1.41,
+   1.876,
+   0.973,
+   -0.333,
+   0.274,
+   1.195,
+   -1.069,
+   -2.565,
+   0.86,
+   -2.038,
+   0.082,
+   0.566
+  ],
+  "z2_bruto": [
+   -2.161,
+   1.342,
+   1.893,
+   0.736,
+   1.86,
+   -1.601,
+   -2.239,
+   -2.561,
+   0.381,
+   3.979,
+   -2.976,
+   2.237,
+   -1.613,
+   -0.267,
+   0.022,
+   5.838,
+   -0.309,
+   2.581,
+   0.86,
+   2.592,
+   -1.842,
+   0.624,
+   3.0,
+   0.673,
+   1.253,
+   2.324,
+   1.618,
+   -2.084,
+   -2.566,
+   -1.944
+  ],
+  "z1_neto": [
+   -5.435,
+   -7.253,
+   -4.028,
+   -0.997,
+   -0.836,
+   -4.007,
+   -2.626,
+   0.112,
+   -5.378,
+   -3.814,
+   -1.484,
+   -5.868,
+   -3.196,
+   -3.739,
+   -1.358,
+   -2.502,
+   -0.419,
+   -6.993,
+   -0.869,
+   -1.036,
+   -1.988,
+   -3.312,
+   -2.826,
+   -1.281,
+   -3.916,
+   -5.255,
+   -1.728,
+   -4.085,
+   -2.48,
+   -1.864
+  ],
+  "acierto1": [
+   0.4947,
+   0.4665,
+   0.4788,
+   0.4992,
+   0.5096,
+   0.492,
+   0.5083,
+   0.5192,
+   0.4814,
+   0.5035,
+   0.4944,
+   0.4802,
+   0.4862,
+   0.5003,
+   0.5198,
+   0.5072,
+   0.5005,
+   0.4796,
+   0.5077,
+   0.4985,
+   0.4993,
+   0.4968,
+   0.5093,
+   0.5155,
+   0.4979,
+   0.5027,
+   0.5252,
+   0.4836,
+   0.4978,
+   0.5029
+  ],
+  "acierto2": [
+   0.4782,
+   0.5207,
+   0.5308,
+   0.5114,
+   0.513,
+   0.4533,
+   0.4635,
+   0.4781,
+   0.525,
+   0.5165,
+   0.4833,
+   0.536,
+   0.4748,
+   0.4794,
+   0.4936,
+   0.5789,
+   0.5142,
+   0.5296,
+   0.4978,
+   0.5203,
+   0.4715,
+   0.5083,
+   0.5152,
+   0.5127,
+   0.5357,
+   0.5317,
+   0.5017,
+   0.4609,
+   0.4739,
+   0.4894
+  ],
+  "desv_z1_bruto": 1.912412394808215,
+  "desv_z2_bruto": 2.2128664096882207,
+  "z_real_bruto_reserva1": 6.695,
+  "percentil_z_real": 100.0,
+  "inflado": true
+ },
+ "B2": {
+  "n": 1000,
+  "alguna_confirmada_pct": 0.8999999999999999,
+  "estrategias": {
+   "H1_tendencia": {
+    "t_real": 2.974,
+    "t_p95": 1.22925,
+    "t_media": -0.45809,
+    "t_desv": 1.0325871828519808,
+    "percentil_real": 99.9,
+    "supera_p95": true
+   },
+   "H2_momentum_serie": {
+    "t_real": 2.45,
+    "t_p95": 1.3707499999999995,
+    "t_media": -0.26077300000000003,
+    "t_desv": 1.0291187292192432,
+    "percentil_real": 99.7,
+    "supera_p95": true
+   },
+   "H1_referencia": {
+    "t_real": 2.637,
+    "t_p95": 1.3037999999999985,
+    "t_media": -0.449178,
+    "t_desv": 1.0302226269001167,
+    "percentil_real": 99.9,
+    "supera_p95": true,
+    "caida_mediana": 68.92500000000001,
+    "caida_res_mediana": 38.355000000000004,
+    "confirmada_pct": null
+   },
+   "E1_canal_20_10": {
+    "t_real": 2.856,
+    "t_p95": 1.4553999999999998,
+    "t_media": -0.25884,
+    "t_desv": 1.0062142493105113,
+    "percentil_real": 99.9,
+    "supera_p95": true,
+    "caida_mediana": 61.875,
+    "caida_res_mediana": 32.22,
+    "confirmada_pct": 0.4
+   },
+   "E2_tendencia_vol": {
+    "t_real": 2.494,
+    "t_p95": 1.0491999999999997,
+    "t_media": -0.652787,
+    "t_desv": 1.0215657581522735,
+    "percentil_real": 99.9,
+    "supera_p95": true,
+    "caida_mediana": 48.025,
+    "caida_res_mediana": 30.915,
+    "confirmada_pct": 0.1
+   },
+   "E3_filtro_btc": {
+    "t_real": 3.022,
+    "t_p95": 1.2293499999999997,
+    "t_media": -0.442282,
+    "t_desv": 1.0598434245493815,
+    "percentil_real": 100.0,
+    "supera_p95": true,
+    "caida_mediana": 69.03,
+    "caida_res_mediana": 36.58,
+    "confirmada_pct": 0.1
+   },
+   "E4_canal_volumen": {
+    "t_real": 3.006,
+    "t_p95": 1.5311499999999998,
+    "t_media": -0.16978100000000002,
+    "t_desv": 1.0217749111267158,
+    "percentil_real": 99.8,
+    "supera_p95": true,
+    "caida_mediana": 48.04,
+    "caida_res_mediana": 22.96,
+    "confirmada_pct": 0.3
+   },
+   "E5_rebote_panico": {
+    "t_real": -1.47,
+    "t_p95": 1.5612999999999997,
+    "t_media": -0.023679000000000002,
+    "t_desv": 0.9751874673905297,
+    "percentil_real": 6.5,
+    "supera_p95": false,
+    "caida_mediana": 30.26,
+    "caida_res_mediana": 11.524999999999999,
+    "confirmada_pct": 0.2
+   },
+   "E6_financiamiento": {
+    "t_real": -1.001,
+    "t_p95": 1.4372999999999998,
+    "t_media": -0.318025,
+    "t_desv": 1.0029943150242533,
+    "percentil_real": 24.5,
+    "supera_p95": false,
+    "caida_mediana": 50.945,
+    "caida_res_mediana": 19.775,
+    "confirmada_pct": 0.0
+   }
+  },
+  "BH_caida_mediana": [
+   83.745,
+   53.34
+  ]
+ }
+}

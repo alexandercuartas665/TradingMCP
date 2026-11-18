@@ -1,0 +1,36 @@
+CRIPTO: DATOS SINTETICOS Y PLACEBO - plan pre-registrado en docs/validacion/cripto_sintetico_placebo_plan.md
+
+== PARTE A: LightGBM H4 con datos sinteticos (nivel 10%, costo 0,25% ida y vuelta)
+  S0 solo reales:  reserva1 3672 ops acierto 57.38% neto +0.397% z 4.11 | reserva2 1148 ops acierto 52.87% neto -0.111% z -1.03
+  S1 semilla 1:   reserva1 3782 ops acierto 58.30% neto +0.343% z 3.56 | reserva2 1211 ops acierto 51.69% neto -0.245% z -2.19
+  S1 semilla 2:   reserva1 3754 ops acierto 57.38% neto +0.264% z 2.84 | reserva2 1149 ops acierto 52.48% neto -0.340% z -3.11
+  S1 semilla 3:   reserva1 3613 ops acierto 57.15% neto +0.447% z 4.18 | reserva2 1137 ops acierto 53.65% neto -0.037% z -0.35
+  S1 semilla 4:   reserva1 3598 ops acierto 56.64% neto +0.251% z 2.52 | reserva2 1158 ops acierto 53.02% neto -0.279% z -2.57
+  S1 semilla 5:   reserva1 3628 ops acierto 57.52% neto +0.321% z 3.27 | reserva2 1212 ops acierto 51.24% neto -0.449% z -4.50
+  => S1 (1x sinteticos): 0 de 5 semillas cumplen; reserva2 neto promedio -0.270% (S0 -0.111%) -> SIN VENTAJA
+  S2 semilla 1:   reserva1 3528 ops acierto 57.77% neto +0.407% z 3.91 | reserva2 1141 ops acierto 50.83% neto -0.199% z -1.75
+  S2 semilla 2:   reserva1 3465 ops acierto 56.51% neto +0.349% z 3.54 | reserva2 1182 ops acierto 53.38% neto -0.175% z -1.70
+  S2 semilla 3:   reserva1 3434 ops acierto 58.79% neto +0.456% z 4.38 | reserva2 1196 ops acierto 51.51% neto -0.222% z -2.11
+  S2 semilla 4:   reserva1 3503 ops acierto 57.95% neto +0.305% z 2.92 | reserva2 1152 ops acierto 50.17% neto -0.512% z -4.61
+  S2 semilla 5:   reserva1 3622 ops acierto 57.32% neto +0.330% z 3.19 | reserva2 1232 ops acierto 50.49% neto -0.380% z -3.49
+  => S2 (3x sinteticos): 0 de 5 semillas cumplen; reserva2 neto promedio -0.298% (S0 -0.111%) -> SIN VENTAJA
+
+== PARTE B1: placebo del modelo, 30 mercados con signo al azar hora a hora (H4 completo, nivel 10%)
+  reserva 1: acierto medio 49.86% (min 46.65%, max 52.52%); z bruto media -0.33 desv 1.91 (min -4.52, max 2.79); z neto media -3.02
+  reserva 2: acierto medio 50.33% (min 45.33%, max 57.89%); z bruto media 0.39 desv 2.21
+  placebos que pasan el criterio de H4: 0 de 30; con z bruto >= 1,645 en reserva 1: 5
+  real (S0): acierto reserva 1 57.38%, z bruto 6.70 -> mayor que el 100% de los placebos
+  => z del modelo INFLADO
+
+== PARTE B2: placebo de las reglas diarias, 1000 mercados con signo al azar dia a dia
+  placebos con al menos una estrategia del lote 2 "confirmada": 9 (0.9%)
+  H1_tendencia         t real  2.97 | placebo: media -0.46 desv 1.03 p95  1.23 -> real en percentil  99.9  SUPERA p95
+  H2_momentum_serie    t real  2.45 | placebo: media -0.26 desv 1.03 p95  1.37 -> real en percentil  99.7  SUPERA p95
+  H1_referencia        t real  2.64 | placebo: media -0.45 desv 1.03 p95  1.30 -> real en percentil  99.9  SUPERA p95  | caida mediana diseno 68.9% reserva 38.4%
+  E1_canal_20_10       t real  2.86 | placebo: media -0.26 desv 1.01 p95  1.46 -> real en percentil  99.9  SUPERA p95  | caida mediana diseno 61.9% reserva 32.2%
+  E2_tendencia_vol     t real  2.49 | placebo: media -0.65 desv 1.02 p95  1.05 -> real en percentil  99.9  SUPERA p95  | caida mediana diseno 48.0% reserva 30.9%
+  E3_filtro_btc        t real  3.02 | placebo: media -0.44 desv 1.06 p95  1.23 -> real en percentil 100.0  SUPERA p95  | caida mediana diseno 69.0% reserva 36.6%
+  E4_canal_volumen     t real  3.01 | placebo: media -0.17 desv 1.02 p95  1.53 -> real en percentil  99.8  SUPERA p95  | caida mediana diseno 48.0% reserva 23.0%
+  E5_rebote_panico     t real -1.47 | placebo: media -0.02 desv 0.98 p95  1.56 -> real en percentil   6.5  no se distingue del azar  | caida mediana diseno 30.3% reserva 11.5%
+  E6_financiamiento    t real -1.00 | placebo: media -0.32 desv 1.00 p95  1.44 -> real en percentil  24.5  no se distingue del azar  | caida mediana diseno 50.9% reserva 19.8%
+  comprar y mantener   caida mediana diseno 83.7% reserva 53.3%
