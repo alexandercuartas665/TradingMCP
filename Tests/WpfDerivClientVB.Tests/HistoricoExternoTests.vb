@@ -146,7 +146,9 @@ Public Class HistoricoExternoTests
         Assert.AreEqual(FuentesVelas.DERIV, FuentesVelas.Normalizar(Nothing))
         Assert.AreEqual(FuentesVelas.DERIV, FuentesVelas.Normalizar("deriv"))
         Assert.AreEqual(FuentesVelas.DUKASCOPY, FuentesVelas.Normalizar(" DUKASCOPY "))
-        Assert.ThrowsException(Of ArgumentException)(Function() FuentesVelas.Normalizar("yahoo"))
+        Assert.AreEqual(FuentesVelas.YAHOO, FuentesVelas.Normalizar("yahoo"))
+        Assert.AreEqual(FuentesVelas.BITSTAMP, FuentesVelas.Normalizar("BitStamp"))
+        Assert.ThrowsException(Of ArgumentException)(Function() FuentesVelas.Normalizar("kraken"))
     End Sub
 
     <TestMethod>

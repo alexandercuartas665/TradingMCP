@@ -18,6 +18,8 @@
 . (Join-Path $PSScriptRoot '..\agent_auth.ps1')
 
 $SERVER = "http://localhost:8765"
+# API pesado (historico externo, pruebas largas): la app con --heavy-api
+$HEAVY  = "http://localhost:8766"
 
 # ── Forzar stdout en UTF-8 sin BOM ─────────────────────────
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -44,6 +46,23 @@ function Send-Error($id, $code, $message) {
 function Invoke-Api($path) {
     try {
         return Invoke-RestMethod -Uri "$SERVER$path" -Method GET -TimeoutSec 30
+    } catch {
+        return $null
+    }
+}
+
+function Invoke-Heavy($path, $timeout = 30) {
+    try {
+        return Invoke-RestMethod -Uri "$HEAVY$path" -Method GET -TimeoutSec $timeout
+    } catch {
+        return $null
+    }
+}
+
+function Invoke-HeavyPost($path, $body) {
+    try {
+        $json = $body | ConvertTo-Json -Depth 10 -Compress
+        return Invoke-RestMethod -Uri "$HEAVY$path" -Method POST -Body $json -ContentType "application/json; charset=utf-8" -TimeoutSec 60
     } catch {
         return $null
     }
@@ -140,6 +159,7 @@ $TOOLS = @(
                 symbol    = @{ type = "string";  description = "Simbolo del activo (ej: R_100). Default: R_100" }
                 timeframe = @{ type = "string";  description = "Temporalidad (ej: 1h). Default: 1h" }
                 limit     = @{ type = "integer"; description = "Maximo de velas a devolver (Default: 100, max: 1000)" }
+                fuente    = @{ type = "string"; description = "Fuente de velas: Deriv (default), Dukascopy, Bitstamp, Binance o Yahoo" }
             }
             required = @()
         }
@@ -152,6 +172,7 @@ $TOOLS = @(
             properties = @{
                 symbol    = @{ type = "string"; description = "Simbolo del activo (ej: R_100). Default: R_100" }
                 timeframe = @{ type = "string"; description = "Temporalidad (ej: 1h). Default: 1h" }
+                fuente    = @{ type = "string"; description = "Fuente de velas: Deriv (default), Dukascopy, Bitstamp, Binance o Yahoo" }
             }
             required = @()
         }
@@ -234,6 +255,7 @@ $TOOLS = @(
                 min_confianza  = @{ type = "integer"; description = "Confianza minima 0-100 (default: 55)" }
                 monto          = @{ type = "number";  description = "Monto simulado por operacion (default: 10)" }
                 ventana        = @{ type = "integer"; description = "Velas de historia que recibe la estrategia en cada paso (default: 100)" }
+                fuente         = @{ type = "string";  description = "Fuente de velas: Deriv (default), Dukascopy, Bitstamp, Binance o Yahoo. Las externas dan mas historia pero no son precios de Deriv: confirmar en Deriv lo que salga bien." }
             }
             required = @("nombre")
         }
@@ -322,6 +344,37 @@ $TOOLS = @(
         name        = "dinamicas_live_estado"
         description = "Estado del live test: activo, buffer de velas, trades pendientes, operaciones ganadas/perdidas y PnL acumulado."
         inputSchema = @{ type = "object"; properties = @{}; required = @() }
+    },
+    @{
+        name        = "historico_externo_descargar"
+        description = "Descarga historico externo (fuera de Deriv) a la BD, en segundo plano. Fuentes: Dukascopy (divisas, metales e indices OTC desde 2003; 1m a 1d), Bitstamp (cripto USD desde 2011: cryBTCUSD; 1h/4h/1d), Binance (cripto USDT desde 2017; 1h/4h/1d), Yahoo (indices de contado OTC_NDX, OTC_GDAXI... desde 2002; solo 1d). Lo ya guardado no se repite. Ver avance con historico_externo_estado."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                fuente         = @{ type = "string"; description = "Dukascopy, Bitstamp, Binance o Yahoo" }
+                simbolos       = @{ type = "array"; items = @{ type = "string" }; description = "Simbolos con nombre de Deriv (ej: [cryBTCUSD] o [OTC_NDX, OTC_GDAXI])" }
+                temporalidades = @{ type = "array"; items = @{ type = "string" }; description = "Ej: [1h, 4h, 1d]. Default: las que da la fuente (Yahoo solo 1d)" }
+                desde          = @{ type = "string"; description = "YYYY-MM-DD. Default: el inicio de la fuente" }
+                hasta          = @{ type = "string"; description = "YYYY-MM-DD. Default: ayer" }
+            }
+            required = @("fuente", "simbolos")
+        }
+    },
+    @{
+        name        = "historico_externo_estado"
+        description = "Estado de las descargas de historico externo (velas guardadas, peticiones fallidas, mensaje). Sin fuente devuelve todas."
+        inputSchema = @{
+            type       = "object"
+            properties = @{
+                fuente = @{ type = "string"; description = "Dukascopy, Bitstamp, Binance o Yahoo (opcional)" }
+            }
+            required = @()
+        }
+    },
+    @{
+        name        = "historico_externo_cobertura"
+        description = "Que velas hay en la BD por fuente, simbolo y temporalidad (cantidad, desde, hasta). Util antes de un backtest con fuente externa."
+        inputSchema = @{ type = "object"; properties = @{}; required = @() }
     }
 )
 
@@ -406,6 +459,7 @@ function Invoke-Tool($name, $p) {
             $limit     = if ($p.limit)     { $p.limit }     else { 100 }
 
             $url  = "/api/historico/datos?symbol=$symbol&timeframe=$([uri]::EscapeDataString($timeframe))&limit=$limit"
+            if ($p.fuente) { $url += "&fuente=$([uri]::EscapeDataString($p.fuente))" }
             $data = Invoke-Api $url
             if ($data -eq $null) {
                 return @{ error = "No se pudo conectar al servidor en $SERVER. Asegurate de que la app este corriendo." }
@@ -417,7 +471,9 @@ function Invoke-Tool($name, $p) {
             $symbol    = if ($p.symbol)    { $p.symbol }    else { "R_100" }
             $timeframe = if ($p.timeframe) { $p.timeframe } else { "1h" }
 
-            $data = Invoke-Api "/api/historico/contar?symbol=$symbol&timeframe=$([uri]::EscapeDataString($timeframe))"
+            $url  = "/api/historico/contar?symbol=$symbol&timeframe=$([uri]::EscapeDataString($timeframe))"
+            if ($p.fuente) { $url += "&fuente=$([uri]::EscapeDataString($p.fuente))" }
+            $data = Invoke-Api $url
             if ($data -eq $null) {
                 return @{ error = "No se pudo conectar al servidor en $SERVER. Asegurate de que la app este corriendo." }
             }
@@ -498,9 +554,36 @@ function Invoke-Tool($name, $p) {
             if ($p.desde_epoch) { $url += "&desde_epoch=$($p.desde_epoch)" }
             if ($p.hasta_epoch) { $url += "&hasta_epoch=$($p.hasta_epoch)" }
             if ($p.ventana)     { $url += "&ventana=$($p.ventana)" }
+            if ($p.fuente)      { $url += "&fuente=$([uri]::EscapeDataString($p.fuente))" }
 
             $data = Invoke-Api $url
             if ($data -eq $null) { return @{ error = "No se pudo conectar al servidor en $SERVER." } }
+            return $data
+        }
+
+        "historico_externo_descargar" {
+            if (-not $p.fuente)   { return @{ error = "Parametro 'fuente' requerido (Dukascopy, Bitstamp, Binance o Yahoo)." } }
+            if (-not $p.simbolos) { return @{ error = "Parametro 'simbolos' requerido (ej: [cryBTCUSD])." } }
+            $body = @{ fuente = $p.fuente; simbolos = @($p.simbolos) }
+            if ($p.temporalidades) { $body.temporalidades = @($p.temporalidades) }
+            if ($p.desde)          { $body.desde = $p.desde }
+            if ($p.hasta)          { $body.hasta = $p.hasta }
+            $data = Invoke-HeavyPost "/api/heavy/historico-externo/descargar" $body
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al API pesado en $HEAVY (la app debe correr con --heavy-api)." } }
+            return $data
+        }
+
+        "historico_externo_estado" {
+            $url = "/api/heavy/historico-externo/estado"
+            if ($p.fuente) { $url += "?fuente=$([uri]::EscapeDataString($p.fuente))" }
+            $data = Invoke-Heavy $url
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al API pesado en $HEAVY." } }
+            return $data
+        }
+
+        "historico_externo_cobertura" {
+            $data = Invoke-Heavy "/api/heavy/historico-externo/cobertura" 120
+            if ($data -eq $null) { return @{ error = "No se pudo conectar al API pesado en $HEAVY." } }
             return $data
         }
 

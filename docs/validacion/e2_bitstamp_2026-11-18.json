@@ -1,0 +1,157 @@
+{
+ "plan": "docs/validacion/e2_bitstamp_2012_2016_plan.md",
+ "datos_desde": "2011-08-18",
+ "tramo": [
+  "2012-01-01",
+  "2016-12-31"
+ ],
+ "dias_con_operaciones": 1824,
+ "resultado": {
+  "E2": {
+   "dias": 1827,
+   "retorno_anual_pct": 144.97,
+   "sharpe": 2.355,
+   "caida_max_pct": 31.74,
+   "multiplica_x": 88.648,
+   "alfa_anual_pct": 49.71,
+   "t_alfa": 3.373,
+   "beta": 0.326,
+   "exposicion": 0.628
+  },
+  "H1": {
+   "dias": 1827,
+   "retorno_anual_pct": 151.18,
+   "sharpe": 1.627,
+   "caida_max_pct": 70.17,
+   "multiplica_x": 100.491,
+   "alfa_anual_pct": 21.29,
+   "t_alfa": 0.996,
+   "beta": 0.668,
+   "exposicion": 0.628
+  }
+ },
+ "comprar_mantener": {
+  "dias": 1827,
+  "retorno_anual_pct": 191.3,
+  "sharpe": 1.642,
+  "caida_max_pct": 84.86,
+  "multiplica_x": 210.983
+ },
+ "veredicto": "FUNCIONA fuera de muestra",
+ "por_ano": {
+  "2012": {
+   "E2": [
+    1.754,
+    31.74
+   ],
+   "H1": [
+    1.482,
+    54.38
+   ],
+   "BH": [
+    2.891,
+    40.84
+   ]
+  },
+  "2013": {
+   "E2": [
+    15.315,
+    24.6
+   ],
+   "H1": [
+    22.844,
+    67.73
+   ],
+   "BH": [
+    55.287,
+    71.03
+   ]
+  },
+  "2014": {
+   "E2": [
+    1.059,
+    14.91
+   ],
+   "H1": [
+    0.934,
+    31.78
+   ],
+   "BH": [
+    0.439,
+    66.16
+   ]
+  },
+  "2015": {
+   "E2": [
+    1.569,
+    23.62
+   ],
+   "H1": [
+    1.625,
+    25.03
+   ],
+   "BH": [
+    1.342,
+    45.66
+   ]
+  },
+  "2016": {
+   "E2": [
+    1.986,
+    24.03
+   ],
+   "H1": [
+    1.956,
+    24.18
+   ],
+   "BH": [
+    2.243,
+    29.56
+   ]
+  }
+ },
+ "costos": {
+  "0.0005": {
+   "dias": 1827,
+   "retorno_anual_pct": 147.65,
+   "sharpe": 2.381,
+   "caida_max_pct": 31.66,
+   "multiplica_x": 93.612,
+   "alfa_anual_pct": 50.79,
+   "t_alfa": 3.455,
+   "beta": 0.326,
+   "exposicion": 0.628
+  },
+  "0.002": {
+   "dias": 1827,
+   "retorno_anual_pct": 142.31,
+   "sharpe": 2.328,
+   "caida_max_pct": 31.82,
+   "multiplica_x": 83.945,
+   "alfa_anual_pct": 48.63,
+   "t_alfa": 3.291,
+   "beta": 0.326,
+   "exposicion": 0.628
+  }
+ },
+ "control_fuente": {
+  "desde": "2017-11-01",
+  "hasta": "2026-11-17",
+  "dias": 3304,
+  "correlacion": 0.9967,
+  "bitstamp": {
+   "dias": 3304,
+   "retorno_anual_pct": 44.9,
+   "sharpe": 1.237,
+   "caida_max_pct": 54.37,
+   "multiplica_x": 28.701
+  },
+  "binance": {
+   "dias": 3304,
+   "retorno_anual_pct": 44.78,
+   "sharpe": 1.239,
+   "caida_max_pct": 53.61,
+   "multiplica_x": 28.487
+  }
+ }
+}

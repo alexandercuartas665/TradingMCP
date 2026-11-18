@@ -1,0 +1,21 @@
+E2 EN BTC CON BITSTAMP 2012-2016 (fuera de muestra) - plan pre-registrado en docs/validacion/e2_bitstamp_2012_2016_plan.md
+Datos Bitstamp desde 2011-08-18; tramo 2012-01-01 a 2016-12-31; dias con operaciones 1824 de 1827.
+Costo 0,125% por lado. Funciona si alfa anual > 0 y t >= 1.645 (una cola 5%).
+
+== 2012-2016
+  E2                 anual    144.97%  sharpe  2.355  caida  31.74%  expuesto   63% | alfa    49.71% t  3.37 beta  0.33
+  H1                 anual    151.18%  sharpe  1.627  caida  70.17%  expuesto   63% | alfa    21.29% t  1.00 beta  0.67
+  comprar y mantener anual    191.30%  sharpe  1.642  caida  84.86%
+
+== VEREDICTO (criterio principal): E2 FUNCIONA fuera de muestra
+
+== SECUNDARIAS (informativas)
+  por ano (retorno | caida maxima):
+    2012  E2    +75.4% |  31.7%   H1    +48.2% |  54.4%   BH   +189.1% |  40.8%
+    2013  E2  +1431.5% |  24.6%   H1  +2184.4% |  67.7%   BH  +5428.7% |  71.0%
+    2014  E2     +5.9% |  14.9%   H1     -6.6% |  31.8%   BH    -56.1% |  66.2%
+    2015  E2    +56.9% |  23.6%   H1    +62.5% |  25.0%   BH    +34.2% |  45.7%
+    2016  E2    +98.6% |  24.0%   H1    +95.6% |  24.2%   BH   +124.3% |  29.6%
+  costo 0.05% por lado: E2 alfa 50.79% t 3.46 sharpe 2.381
+  costo 0.20% por lado: E2 alfa 48.63% t 3.29 sharpe 2.328
+  control de fuente 2017-11-01 a 2026-11-17 (3304 dias): correlacion diaria E2 Bitstamp/Binance 0.9967; anual 44.90% vs 44.78%; sharpe 1.237 vs 1.239
