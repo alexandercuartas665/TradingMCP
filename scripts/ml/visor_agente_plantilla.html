@@ -1,0 +1,584 @@
+<title>Visor del agente cripto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: mesa de instrumentos. Fila de control arriba, grafico grande a la izquierda y la "mente" del agente a la derecha; abajo lo que aprendio. */
+:root {
+  --bg: #eef1f5; --surface: #ffffff; --surface2: #f6f8fb; --fg: #151d29; --muted: #5b6676; --line: #d5dbe4; --grid: #e7ebf1;
+  --accent: #2c55c9; --accent-soft: #e3e9fa;
+  --up: #0f8a6a; --up-soft: #dcf2ea; --down: #c23a35; --down-soft: #f8e1df; --hold: #b07612; --hold-soft: #f7ecd6; --idle: #8a94a3;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e131a; --surface: #151c26; --surface2: #1a2330; --fg: #e3e8ef; --muted: #93a0b1; --line: #2a3443; --grid: #1f2834;
+  --accent: #7d9cff; --accent-soft: #1f2a45;
+  --up: #3fc79c; --up-soft: #12302a; --down: #f0716b; --down-soft: #3a1c1c; --hold: #e2a73e; --hold-soft: #3a2c13; --idle: #6b7686;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e131a; --surface: #151c26; --surface2: #1a2330; --fg: #e3e8ef; --muted: #93a0b1; --line: #2a3443; --grid: #1f2834;
+  --accent: #7d9cff; --accent-soft: #1f2a45;
+  --up: #3fc79c; --up-soft: #12302a; --down: #f0716b; --down-soft: #3a1c1c; --hold: #e2a73e; --hold-soft: #3a2c13; --idle: #6b7686;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: 26px; font-weight: 700; }
+h2 { font-size: 19px; font-weight: 600; }
+h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+p { margin: 0; }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+header.top .sub { color: var(--muted); max-width: 70ch; margin-top: 4px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 500 13px var(--f-body); border: 0; background: transparent; color: var(--muted); padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { color: #0e131a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color: #0e131a; } }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+@media (max-width: 980px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.charts { display: flex; flex-direction: column; }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 14px 0; flex-wrap: wrap; }
+.chart-head .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+#cPrecio { height: 380px; }
+#cAbajo { height: 150px; border-top: 1px solid var(--line); }
+#cCartera { height: 150px; border-top: 1px solid var(--line); }
+.replay { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--surface2); border-radius: 0 0 10px 10px; }
+.replay .btn { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 7px; padding: 6px 10px; cursor: pointer; min-width: 36px; }
+.replay .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 88px; }
+.replay input[type=range] { flex: 1 1 200px; min-width: 0; accent-color: var(--accent); }
+.replay .when { font-family: var(--f-mono); font-size: 12px; color: var(--muted); min-width: 16ch; }
+.mind { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.mind .clock { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mind .clock .t { font-family: var(--f-mono); font-size: 13px; }
+.mind .clock .px { font-family: var(--f-mono); font-size: 18px; font-weight: 500; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-top: 1px dashed var(--line); counter-increment: s; }
+.steps li::before { content: counter(s); font: 600 11px var(--f-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 50%; width: 20px; height: 20px; display: grid; place-items: center; }
+.steps li.on::before { background: var(--accent); border-color: var(--accent); color: #fff; }
+.steps .k { font-size: 12px; color: var(--muted); }
+.steps .v { font-family: var(--f-mono); font-size: 13px; }
+.verdict { border-radius: 8px; padding: 10px 12px; font-weight: 600; font-family: var(--f-display); font-size: 17px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.verdict small { font: 400 12px var(--f-body); }
+.v-up { background: var(--up-soft); color: var(--up); }
+.v-down { background: var(--down-soft); color: var(--down); }
+.v-hold { background: var(--hold-soft); color: var(--hold); }
+.v-idle { background: var(--surface2); color: var(--muted); }
+.gauge { position: relative; height: 34px; }
+.gauge .bar { position: absolute; left: 0; right: 0; top: 10px; height: 10px; border-radius: 5px; background: var(--surface2); border: 1px solid var(--line); overflow: hidden; }
+.gauge .zone { position: absolute; top: 0; bottom: 0; }
+.gauge .needle { position: absolute; top: 4px; width: 3px; height: 22px; margin-left: -1px; background: var(--fg); border-radius: 2px; transition: left 0.15s; }
+.gauge .lab { position: absolute; top: 22px; font: 400 10px var(--f-mono); color: var(--muted); transform: translateX(-50%); }
+.bars { display: flex; flex-direction: column; gap: 5px; }
+.brow { display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 12px; }
+.brow .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track { position: relative; height: 14px; background: var(--surface2); border-radius: 3px; }
+.track .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line); }
+.track .fill { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.vars { display: flex; flex-direction: column; gap: 8px; }
+.var { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; font-size: 12.5px; padding-bottom: 7px; border-bottom: 1px dashed var(--line); }
+.var .read { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+.push { font: 600 11px var(--f-mono); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.push.up { background: var(--up-soft); color: var(--up); }
+.push.down { background: var(--down-soft); color: var(--down); }
+.outcome { font-size: 13px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface2); border-radius: 8px; padding: 8px 10px; }
+.stat .n { font-family: var(--f-mono); font-size: 17px; font-weight: 500; }
+.stat .l { font-size: 11px; color: var(--muted); }
+.learn { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.learn .intro { color: var(--muted); max-width: 80ch; }
+.multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.mult { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--surface2); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mult .ttl { font-weight: 600; font-size: 13px; }
+.mult .cap { font-size: 12px; color: var(--muted); }
+.mult svg { width: 100%; height: auto; display: block; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.how .card { padding: 12px 14px; }
+.how .card p { color: var(--muted); font-size: 13px; margin-top: 6px; }
+.note { font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--hold); padding: 6px 10px; background: var(--hold-soft); border-radius: 0 6px 6px 0; }
+.note b { color: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .gauge .needle { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Visor del agente cripto</h1>
+      <p class="sub" id="sub">Repite el mercado vela a vela y muestra, en cada momento, qu&#233; vio el agente, qu&#233; pens&#243; y qu&#233; decidi&#243;.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Agente">
+        <button id="bIA" aria-pressed="true">Modelo IA (LightGBM 24h)</button>
+        <button id="bE2" aria-pressed="false">Regla E2 (tendencia)</button>
+      </div>
+      <div class="seg" role="group" aria-label="Moneda" id="monedas"></div>
+    </div>
+  </header>
+
+  <p class="note" id="nota"></p>
+
+  <div class="grid">
+    <section class="panel charts" aria-label="Gr&#225;ficos">
+      <div class="chart-head"><h3 id="tPrecio">Precio</h3><div class="legend" id="leg1"></div></div>
+      <div id="cPrecio"></div>
+      <div class="chart-head" style="padding-top:8px"><h3 id="tAbajo">Probabilidad de subir en 24h</h3><div class="legend" id="leg2"></div></div>
+      <div id="cAbajo"></div>
+      <div id="bloqueCartera" hidden>
+        <div class="chart-head" style="padding-top:8px"><h3>Cartera de 9 monedas (escala logar&#237;tmica, 1 = capital inicial)</h3><div class="legend" id="leg3"></div></div>
+        <div id="cCartera"></div>
+      </div>
+      <div class="replay">
+        <button class="btn" id="bAtras" title="Paso atr&#225;s" aria-label="Paso atr&#225;s">&#9664;</button>
+        <button class="btn primary" id="bPlay">Reproducir</button>
+        <button class="btn" id="bAdel" title="Paso adelante" aria-label="Paso adelante">&#9654;</button>
+        <button class="btn" id="bSig" title="Saltar a la siguiente decisi&#243;n de operar">Siguiente operaci&#243;n</button>
+        <div class="seg" role="group" aria-label="Velocidad" id="vel">
+          <button data-v="1" aria-pressed="true">1&#215;</button><button data-v="4" aria-pressed="false">4&#215;</button><button data-v="16" aria-pressed="false">16&#215;</button>
+        </div>
+        <input type="range" id="slider" min="0" max="10" value="0" aria-label="Momento del mercado">
+        <span class="when" id="when"></span>
+      </div>
+    </section>
+
+    <aside class="panel mind" aria-label="Lo que piensa el agente" id="mente"></aside>
+  </div>
+
+  <section class="panel learn" id="aprendio"></section>
+
+  <section class="how" id="como"></section>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+const D = /*__DATOS__*/null;
+const M = D.meta;
+const DIAS = ['lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado', 'domingo'];
+const st = { agente: 'ia', moneda: 'BTC', i: 0, play: false, vel: 1, timer: null };
+const $ = (id) => document.getElementById(id);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------- formato
+function fecha(t, conHora) {
+  const d = new Date(t * 1000);
+  const p = (n) => String(n).padStart(2, '0');
+  const s = d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate());
+  return conHora ? s + ' ' + p(d.getUTCHours()) + ':00 UTC' : s;
+}
+function horaCol(t) { const d = new Date((t - 5 * 3600) * 1000); let h = d.getUTCHours(); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':00 ' + ap + ' Colombia'; }
+function precio(v) { if (v == null) return '\u2013'; const a = Math.abs(v); const d = a >= 1000 ? 0 : a >= 10 ? 2 : a >= 1 ? 3 : 5; return v.toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function pct(v, d = 1) { return (v >= 0 ? '+' : '\u2212') + Math.abs(v * 100).toFixed(d) + '%'; }
+function sg(v) { return (v >= 0 ? '+' : '\u2212') + Math.abs(v).toFixed(1) + '\u03c3'; }
+const sigm = (x) => 1 / (1 + Math.exp(-x));
+
+function valorTxt(k, v, t) {
+  if (v == null) return 'sin dato';
+  const u = M.unidad[k];
+  if (u === 'sigma') return sg(v);
+  if (u === 'pct') return (v * 100).toFixed(2) + '% por hora';
+  if (u === 'x') return v.toFixed(2) + '\u00d7';
+  if (u === 'frac') return (v >= 0 ? '+' : '\u2212') + Math.abs(v).toFixed(2);
+  if (u === 'num') return v.toFixed(0);
+  if (u === 'pct01') return (v * 100).toFixed(0) + '%';
+  if (u === 'hora') return new Date(t * 1000).getUTCHours() + ':00 UTC';
+  if (u === 'dia') return DIAS[v] || v;
+  return String(v);
+}
+function lectura(k, v, t) {
+  if (v == null) return 'Sin dato en esta vela.';
+  const mov = (x, quien) => x > 1.5 ? quien + ' subi\u00f3 fuerte' : x > 0.5 ? quien + ' subi\u00f3' : x < -1.5 ? quien + ' cay\u00f3 fuerte' : x < -0.5 ? quien + ' cay\u00f3' : quien + ' casi no se movi\u00f3';
+  const plazo = { r1: 'en la \u00faltima hora', r4: 'en 4 horas', r12: 'en 12 horas', r24: 'en 24 horas', r72: 'en 3 d\u00edas', r168: 'en 7 d\u00edas' };
+  if (plazo[k]) return mov(v, 'El precio') + ' ' + plazo[k] + ' (medido en desviaciones de su volatilidad).';
+  if (k.startsWith('x_')) return mov(v, k.slice(2, 5)) + (k.endsWith('r4') ? ' en 4 horas.' : ' en 24 horas.');
+  switch (k) {
+    case 'rsi14': return v > 70 ? 'Sobrecomprado: subi\u00f3 mucho seguido.' : v < 30 ? 'Sobrevendido: cay\u00f3 mucho seguido.' : 'RSI en zona neutra.';
+    case 'bb20': return v > 2 ? 'Por encima de la banda alta de Bollinger.' : v < -2 ? 'Por debajo de la banda baja de Bollinger.' : v > 0 ? 'En la mitad alta de las bandas.' : 'En la mitad baja de las bandas.';
+    case 'dist_max168': return v > -1 ? 'Muy cerca del m\u00e1ximo de la semana.' : v > -3 ? 'Algo por debajo del m\u00e1ximo de la semana.' : 'Lejos del m\u00e1ximo de la semana.';
+    case 'dist_min168': return v < 1 ? 'Muy cerca del m\u00ednimo de la semana.' : v < 3 ? 'Algo por encima del m\u00ednimo de la semana.' : 'Lejos del m\u00ednimo de la semana.';
+    case 'vol_rel': return v > 1.5 ? 'Se negocia mucho m\u00e1s volumen que lo normal.' : v < 0.7 ? 'Se negocia menos volumen que lo normal.' : 'Volumen normal.';
+    case 'oper_rel': return v > 1.5 ? 'Muchas m\u00e1s operaciones que lo normal.' : v < 0.7 ? 'Menos operaciones que lo normal.' : 'N\u00famero de operaciones normal.';
+    case 'compra_ag_1h': case 'compra_ag_24h': return v > 0.55 ? 'Dominan los compradores agresivos.' : v < 0.45 ? 'Dominan los vendedores agresivos.' : 'Compradores y vendedores parejos.';
+    case 'vol_razon': return v > 1.3 ? 'M\u00e1s agitado hoy que en la semana.' : v < 0.8 ? 'M\u00e1s calmado hoy que en la semana.' : 'Agitaci\u00f3n normal.';
+    case 'vol24': return 'Cu\u00e1nto se mueve el precio por hora en el \u00faltimo d\u00eda.';
+    case 'rango': return v > 2 ? 'Vela muy amplia para lo normal.' : 'Amplitud de la \u00faltima vela de 1h.';
+    case 'cuerpo': return v > 0.5 ? 'La \u00faltima vela cerr\u00f3 cerca de su m\u00e1ximo.' : v < -0.5 ? 'La \u00faltima vela cerr\u00f3 cerca de su m\u00ednimo.' : 'Vela indecisa.';
+    case 'hora_sin': case 'hora_cos': return 'La hora del d\u00eda en que decide.';
+    case 'dia': return 'El d\u00eda de la semana en que decide.';
+  }
+  return '';
+}
+const TILDES = [['Posicion', 'Posici\u00f3n'], ['ultimas', '\u00faltimas'], ['Que moneda', 'Qu\u00e9 moneda'], [' dias', ' d\u00edas'], ['maximo', 'm\u00e1ximo'], ['minimo', 'm\u00ednimo'], ['Dia de', 'D\u00eda de'], ['Hora y dia', 'Hora y d\u00eda'], ['Hora del dia', 'Hora del d\u00eda']];
+function tilde(s) { return TILDES.reduce((x, [a, b]) => x.split(a).join(b), s); }
+M.familias = M.familias.map(tilde);
+function nombreVar(k) { return tilde(M.nombres[k] || k); }
+
+// ---------- graficos
+const LW = LightweightCharts;
+let chP, chA, chC, sVelas, sMedia, sProb, sPeso, sE2, sH1, sBH, lineas = [];
+function opcionesTema() {
+  return {
+    layout: { background: { type: 'solid', color: css('--surface') }, textColor: css('--muted'), fontFamily: 'IBM Plex Mono, monospace', fontSize: 11 },
+    grid: { vertLines: { color: css('--grid') }, horzLines: { color: css('--grid') } },
+    rightPriceScale: { borderColor: css('--line') }, timeScale: { borderColor: css('--line'), timeVisible: true, secondsVisible: false },
+    crosshair: { mode: 0 },
+  };
+}
+function crear() {
+  [chP, chA, chC].forEach((c) => c && c.remove());
+  chP = LW.createChart($('cPrecio'), Object.assign({ autoSize: true }, opcionesTema()));
+  chA = LW.createChart($('cAbajo'), Object.assign({ autoSize: true }, opcionesTema()));
+  chC = null;
+  const ult = (st.agente === 'ia' ? serieIA().velas : serieE2()).slice(-1)[0][4];
+  const dec = ult >= 1000 ? 0 : ult >= 10 ? 2 : ult >= 1 ? 3 : 5;
+  sVelas = chP.addCandlestickSeries({ upColor: css('--up'), downColor: css('--down'), wickUpColor: css('--up'), wickDownColor: css('--down'), borderVisible: false,
+    priceFormat: { type: 'price', precision: dec, minMove: Math.pow(10, -dec) } });
+  sMedia = null; sProb = null; sPeso = null;
+  if (st.agente === 'ia') {
+    sProb = chA.addBaselineSeries({ baseValue: { type: 'price', price: 50 }, topLineColor: css('--up'), bottomLineColor: css('--down'),
+      topFillColor1: css('--up-soft'), topFillColor2: css('--up-soft'), bottomFillColor1: css('--down-soft'), bottomFillColor2: css('--down-soft'),
+      lineWidth: 2, priceFormat: { type: 'custom', formatter: (v) => v.toFixed(0) + '%' } });
+    const u = M.umbral * 100;
+    sProb.createPriceLine({ price: 50 + u, color: css('--up'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'umbral compra' });
+    sProb.createPriceLine({ price: 50 - u, color: css('--down'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'umbral venta' });
+  } else {
+    sMedia = chP.addLineSeries({ color: css('--accent'), lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+    sPeso = chA.addAreaSeries({ lineColor: css('--accent'), topColor: css('--accent-soft'), bottomColor: css('--accent-soft'), lineWidth: 2,
+      priceFormat: { type: 'custom', formatter: (v) => v.toFixed(1) + '%' } });
+    chC = LW.createChart($('cCartera'), Object.assign({ autoSize: true }, opcionesTema()));
+    chC.priceScale('right').applyOptions({ mode: 1 });
+    const f = { type: 'custom', formatter: (v) => v.toFixed(2) + '\u00d7' };
+    sBH = chC.addLineSeries({ color: css('--idle'), lineWidth: 1, priceFormat: f, lastValueVisible: false, priceLineVisible: false });
+    sH1 = chC.addLineSeries({ color: css('--hold'), lineWidth: 1, priceFormat: f, lastValueVisible: false, priceLineVisible: false });
+    sE2 = chC.addLineSeries({ color: css('--accent'), lineWidth: 2, priceFormat: f, lastValueVisible: false, priceLineVisible: false });
+  }
+  const todos = [chP, chA, chC].filter(Boolean);
+  let sync = false;
+  [chA, chC].filter(Boolean).forEach((c) => c.applyOptions({ handleScroll: false, handleScale: false }));
+  chP.timeScale().subscribeVisibleLogicalRangeChange((r) => {
+    if (!r) return;
+    chA.timeScale().setVisibleLogicalRange(r);
+    alinearCartera();
+  });
+  todos.forEach((c) => c.subscribeClick((p) => { if (p && p.time != null) irATiempo(p.time); }));
+  ancho = st.agente === 'ia' ? 160 : 260;
+}
+let ancho = 160;
+function alinearCartera() {
+  if (!chC || st.agente !== 'e2') return;
+  const r = chP.timeScale().getVisibleLogicalRange(); const S = serieE2(); if (!r) return;
+  const tA = S[Math.max(0, Math.min(S.length - 1, Math.round(r.from)))][0], tB = S[Math.max(0, Math.min(S.length - 1, Math.round(r.to)))][0];
+  const C = D.e2.cartera; const ix = (tt) => { const k = C.findIndex((c) => c[0] >= tt); return k < 0 ? C.length - 1 : k; };
+  const extra = (r.to - Math.min(S.length - 1, Math.round(r.to)));
+  chC.timeScale().setVisibleLogicalRange({ from: ix(tA) + (r.from < 0 ? r.from : 0), to: ix(tB) + extra });
+}
+
+// ---------- datos de la vista actual
+function serieIA() { return D.ia[st.moneda]; }
+function serieE2() { return D.e2.monedas[st.moneda]; }
+function largo() { return st.agente === 'ia' ? serieIA().dec.length : serieE2().length; }
+function buscarVela(velas, t) { let lo = 0, hi = velas.length - 1; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (velas[m][0] <= t) lo = m; else hi = m - 1; } return lo; }
+function irATiempo(t) {
+  if (st.agente === 'ia') { const dec = serieIA().dec; let k = dec.findIndex((d) => d[0] - 14400 >= t); st.i = k < 0 ? dec.length - 1 : k; }
+  else { const s = serieE2(); let k = s.findIndex((d) => d[0] >= t); st.i = k < 0 ? s.length - 1 : k; }
+  pintar(true);
+}
+
+// ---------- pintar
+function pintar(saltar) {
+  st.i = Math.max(0, Math.min(st.i, largo() - 1));
+  $('slider').max = largo() - 1; $('slider').value = st.i;
+  if (st.agente === 'ia') pintarIA(); else pintarE2();
+  const total = st.agente === 'ia' ? buscarVela(serieIA().velas, serieIA().dec[st.i][0] - 14400) + 1 : st.i + 1;
+  const r = chP.timeScale().getVisibleLogicalRange();
+  if (r && !saltar) ancho = Math.max(30, r.to - r.from);
+  const rango = { from: total - ancho + 4, to: total + 4 };
+  chP.timeScale().setVisibleLogicalRange(rango);
+  chA.timeScale().setVisibleLogicalRange(rango);
+  alinearCartera();
+}
+
+function pintarIA() {
+  const S = serieIA(); const dec = S.dec; const d = dec[st.i]; const t = d[0];
+  const kv = buscarVela(S.velas, t - 14400);
+  sVelas.setData(S.velas.slice(0, kv + 1).map((v) => ({ time: v[0], open: v[1], high: v[2], low: v[3], close: v[4] })));
+  sProb.setData(dec.slice(0, st.i + 1).map((x) => ({ time: x[0] - 14400, value: x[1] * 100 })));
+  const marcas = [];
+  let ops = 0, acert = 0, neto = 0;
+  for (let j = 0; j <= st.i; j++) {
+    const x = dec[j];
+    if (x[2] === 1 || x[2] === -1) {
+      const sube = x[2] === 1;
+      marcas.push({ time: x[0] - 14400, position: sube ? 'belowBar' : 'aboveBar', color: sube ? css('--up') : css('--down'), shape: sube ? 'arrowUp' : 'arrowDown', text: (sube ? 'Compra ' : 'Venta ') + Math.round(x[1] * 100) + '%' });
+      const fin = x[0] + M.horizonte_h * 3600;
+      if (fin <= t && x[3] != null) {
+        const r = x[2] * x[3] - M.costo_ida_vuelta; ops++; if (x[2] * x[3] > 0) acert++; neto += r;
+        marcas.push({ time: fin - 14400, position: 'inBar', color: r >= 0 ? css('--up') : css('--down'), shape: 'circle', size: 0.6 });
+      }
+    } else if (x[2] === 2) {
+      marcas.push({ time: x[0] - 14400, position: x[1] > 0.5 ? 'belowBar' : 'aboveBar', color: css('--hold'), shape: 'circle', size: 0.4 });
+    }
+  }
+  marcas.sort((a, b) => a.time - b.time);
+  sVelas.setMarkers(marcas);
+  $('when').textContent = fecha(t, true);
+  mentIA(d, kv, { ops, acert, neto });
+}
+
+function mentIA(d, kv, est) {
+  const S = serieIA(); const [t, p, estado, ret, fam, top] = d; const u = M.umbral;
+  const conf = Math.abs(p - 0.5);
+  const abierta = estado === 2;
+  const v = S.velas[kv];
+  let ver;
+  if (estado === 1) ver = ['v-up', 'COMPRA', 'Apuesta a que sube en 24h'];
+  else if (estado === -1) ver = ['v-down', 'VENTA', 'Apuesta a que baja en 24h (corto)'];
+  else if (estado === 2) ver = ['v-hold', 'SE\u00d1AL IGNORADA', 'Ya tiene una operaci\u00f3n abierta en esta moneda'];
+  else ver = ['v-idle', 'NO OPERA', 'No est\u00e1 suficientemente seguro'];
+  let res = '';
+  if (ret == null) res = '<div class="outcome muted">Sin precio 24h despu\u00e9s para esta vela.</div>';
+  else {
+    const dir = ret >= 0 ? 'subi\u00f3' : 'baj\u00f3';
+    if (estado === 1 || estado === -1) {
+      const r = estado * ret - M.costo_ida_vuelta;
+      res = `<div class="outcome"><b>${estado * ret > 0 ? 'Acert\u00f3' : 'Fall\u00f3'}.</b> 24 horas despu\u00e9s el precio ${dir} ${pct(ret, 2)}. Resultado tras costos: <span class="num" style="color:var(${r >= 0 ? '--up' : '--down'})">${pct(r, 2)}</span>.</div>`;
+    } else {
+      res = `<div class="outcome muted">24 horas despu\u00e9s el precio ${dir} ${pct(ret, 2)}${conf > 0 ? (p > 0.5 === ret > 0 ? ': la inclinaci\u00f3n del modelo era correcta.' : ': la inclinaci\u00f3n del modelo era la contraria.') : '.'}</div>`;
+    }
+  }
+  // barras por familia
+  const maxF = Math.max(0.25, ...fam.map(Math.abs));
+  const ordenF = fam.map((x, k) => [k, x]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const barras = ordenF.map(([k, x]) => {
+    const w = Math.abs(x) / maxF * 50;
+    return `<div class="brow"><span class="name" title="${M.familias[k]}">${M.familias[k]}</span><div class="track"><div class="mid"></div><div class="fill" style="background:var(${x >= 0 ? '--up' : '--down'});${x >= 0 ? 'left:50%' : 'right:50%'};width:${w}%"></div></div></div>`;
+  }).join('');
+  const vars = top.map(([k, val, c]) => `<div class="var"><span><b>${nombreVar(k)}</b> <span class="num muted">${valorTxt(k, val, t)}</span></span><span class="push ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '\u25b2 sube' : '\u25bc baja'} ${Math.abs(c).toFixed(2)}</span><span class="read">${lectura(k, val, t)}</span></div>`).join('');
+  const zonaV = (0.5 - u) * 100, zonaC = (0.5 + u) * 100;
+  $('mente').innerHTML = `
+    <div class="clock"><span class="t">${fecha(t, true)} \u00b7 ${horaCol(t)}</span><span class="px">${st.moneda} ${precio(v[4])}</span></div>
+    <div class="verdict ${ver[0]}"><span>${ver[1]}</span><small>${ver[2]}</small></div>
+    <div>
+      <h3 style="margin-bottom:6px">C\u00f3mo lleg\u00f3 a la decisi\u00f3n</h3>
+      <ol class="steps">
+        <li class="on"><div><div class="k">Mira las \u00faltimas velas de 1h de ${['BTC', 'ETH'].includes(st.moneda) ? 'BTC y ETH' : st.moneda + ', BTC y ETH'}</div><div class="v">34 variables calculadas</div></div></li>
+        <li class="on"><div><div class="k">300 \u00e1rboles de decisi\u00f3n votan</div><div class="v">Probabilidad de que suba en 24h: ${(p * 100).toFixed(1)}%</div></div></li>
+        <li class="${conf >= u ? 'on' : ''}"><div><div class="k">\u00bfEst\u00e1 suficientemente seguro? (solo opera el 10% de casos m\u00e1s claros)</div><div class="v">Distancia a 50%: ${(conf * 100).toFixed(1)} puntos ${conf >= u ? '\u2265' : '<'} umbral ${(u * 100).toFixed(1)}</div></div></li>
+        <li class="${conf >= u ? 'on' : ''}"><div><div class="k">\u00bfTiene ya una operaci\u00f3n abierta en ${st.moneda}?</div><div class="v">${conf < u ? 'No hace falta revisar' : abierta ? 'S\u00ed: ignora la se\u00f1al' : 'No: puede operar'}</div></div></li>
+        <li class="${estado === 1 || estado === -1 ? 'on' : ''}"><div><div class="k">Orden</div><div class="v">${estado === 1 ? 'Compra y cierra en 24h' : estado === -1 ? 'Vende (corto) y cierra en 24h' : 'Ninguna'}</div></div></li>
+      </ol>
+    </div>
+    <div>
+      <div class="gauge" aria-label="Probabilidad ${(p * 100).toFixed(0)}%">
+        <div class="bar"><div class="zone" style="left:0;width:${zonaV}%;background:var(--down-soft)"></div><div class="zone" style="left:${zonaC}%;right:0;background:var(--up-soft)"></div></div>
+        <div class="needle" style="left:${p * 100}%"></div>
+        <span class="lab" style="left:${zonaV / 2}%">zona venta</span><span class="lab" style="left:50%">50%</span><span class="lab" style="left:${(100 + zonaC) / 2}%">zona compra</span>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Qu\u00e9 lo empuj\u00f3, por grupo de variables</h3>
+      <div class="bars">${barras}</div>
+      <p class="muted" style="font-size:11.5px;margin-top:6px">Verde empuja hacia "sube", rojo hacia "baja". Parte de ${(M.base_prob * 100).toFixed(1)}% (su punto de partida promedio) y la suma de empujes da la probabilidad final.</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Las 6 variables que m\u00e1s pesaron</h3>
+      <div class="vars">${vars}</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Qu\u00e9 pas\u00f3 en las 24 horas siguientes</h3>
+      ${res}
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Marcador hasta este momento</h3>
+      <div class="stats">
+        <div class="stat"><div class="n">${est.ops}</div><div class="l">operaciones cerradas</div></div>
+        <div class="stat"><div class="n">${est.ops ? (est.acert / est.ops * 100).toFixed(1) + '%' : '\u2013'}</div><div class="l">acierto</div></div>
+        <div class="stat"><div class="n" style="color:var(${est.neto >= 0 ? '--up' : '--down'})">${est.ops ? pct(est.neto, 1) : '\u2013'}</div><div class="l">suma neta tras costos</div></div>
+      </div>
+    </div>`;
+}
+
+function pintarE2() {
+  const S = serieE2(); const d = S[st.i]; const t = d[0];
+  sVelas.setData(S.slice(0, st.i + 1).map((v) => ({ time: v[0], open: v[1], high: v[2], low: v[3], close: v[4] })));
+  sMedia.setData(S.slice(0, st.i + 1).map((v) => ({ time: v[0], value: v[5] })));
+  sPeso.setData(S.slice(0, st.i + 1).map((v) => ({ time: v[0], value: v[8] * 100 })));
+  const marcas = [];
+  for (let j = 1; j <= st.i; j++) {
+    if (S[j][7] !== S[j - 1][7]) marcas.push(S[j][7] ? { time: S[j][0], position: 'belowBar', color: css('--up'), shape: 'arrowUp', text: 'Entra' } : { time: S[j][0], position: 'aboveBar', color: css('--down'), shape: 'arrowDown', text: 'Sale' });
+  }
+  sVelas.setMarkers(marcas);
+  const cart = D.e2.cartera; const kc = cart.findIndex((c) => c[0] > t); const hasta = kc < 0 ? cart.length : kc;
+  const cs = cart.slice(0, hasta);
+  sE2.setData(cs.map((c) => ({ time: c[0], value: c[1] })));
+  sH1.setData(cs.map((c) => ({ time: c[0], value: c[2] })));
+  sBH.setData(cs.map((c) => ({ time: c[0], value: c[3] })));
+  $('when').textContent = fecha(t, false);
+  mentE2(d, cs[cs.length - 1]);
+}
+
+function mentE2(d, c) {
+  const [t, o, h, l, cierre, sma, vol, senal, peso, n] = d;
+  const dist = cierre / sma - 1;
+  const tam = Math.min(1, 0.5 / vol);
+  const ver = senal ? (tam < 1 ? ['v-up', 'COMPRADO, TAMA\u00d1O REDUCIDO', 'Tendencia alcista pero mercado agitado'] : ['v-up', 'COMPRADO', 'Tendencia alcista y volatilidad tolerable']) : ['v-idle', 'FUERA (EN USDT)', 'El precio est\u00e1 bajo su media de 50 d\u00edas'];
+  const pa = (v) => (v * 100).toFixed(1) + '%';
+  $('mente').innerHTML = `
+    <div class="clock"><span class="t">Cierre del ${fecha(t, false)} \u00b7 decide para ma\u00f1ana</span><span class="px">${st.moneda} ${precio(cierre)}</span></div>
+    <div class="verdict ${ver[0]}"><span>${ver[1]}</span><small>${ver[2]}</small></div>
+    <div>
+      <h3 style="margin-bottom:6px">La regla, paso a paso</h3>
+      <ol class="steps">
+        <li class="on"><div><div class="k">Compara el cierre con su media de 50 d\u00edas</div><div class="v">${precio(cierre)} vs ${precio(sma)}: ${pct(dist)} ${dist >= 0 ? 'por encima' : 'por debajo'}</div></div></li>
+        <li class="${senal ? 'on' : ''}"><div><div class="k">Se\u00f1al de tendencia</div><div class="v">${senal ? 'S\u00ed: tendencia alcista, quiere estar comprado' : 'No: se queda fuera'}</div></div></li>
+        <li class="on"><div><div class="k">Volatilidad anual de los \u00faltimos 30 d\u00edas</div><div class="v">${pa(vol)} \u2192 tama\u00f1o = m\u00edn(1; 50% \u00f7 ${pa(vol)}) = ${pa(tam)}</div></div></li>
+        <li class="${senal ? 'on' : ''}"><div><div class="k">Peso en la cartera = se\u00f1al \u00d7 tama\u00f1o \u00f7 ${n} monedas</div><div class="v">${senal ? '1' : '0'} \u00d7 ${pa(tam)} \u00f7 ${n} = ${(peso * 100).toFixed(2)}% del capital</div></div></li>
+        <li class="on"><div><div class="k">Toda la cartera (9 monedas) queda invertida</div><div class="v">${c ? pa(c[4]) : '\u2013'} \u00b7 el resto en USDT</div></div></li>
+      </ol>
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Por qu\u00e9 as\u00ed</h3>
+      <p class="muted" style="font-size:13px">No predice el precio. Sigue la tendencia: est\u00e1 dentro mientras el precio va por encima de su promedio y sale cuando cae por debajo. Cuando el mercado se agita, invierte menos. Eso es lo que redujo las ca\u00eddas en las pruebas.</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Capital acumulado desde 2019 (1 = inicio)</h3>
+      <div class="stats">
+        <div class="stat"><div class="n" style="color:var(--accent)">${c ? c[1].toFixed(2) + '\u00d7' : '\u2013'}</div><div class="l">E2</div></div>
+        <div class="stat"><div class="n" style="color:var(--hold)">${c ? c[2].toFixed(2) + '\u00d7' : '\u2013'}</div><div class="l">Tendencia simple</div></div>
+        <div class="stat"><div class="n" style="color:var(--idle)">${c ? c[3].toFixed(2) + '\u00d7' : '\u2013'}</div><div class="l">Comprar y mantener</div></div>
+      </div>
+      <p class="muted" style="font-size:11.5px;margin-top:6px">Backtest con costos de 0,125% por cambio de posici\u00f3n. E2 gana menos en los auges y cae mucho menos en las crisis.</p>
+    </div>`;
+}
+
+// ---------- lo que aprendio (curvas de dependencia)
+function curva(k, pts) {
+  const W = 260, H = 120, P = { l: 30, r: 8, t: 8, b: 22 };
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const yA = Math.max(0.05, ...ys.map(Math.abs));
+  const X = (x) => P.l + (x1 === x0 ? 0.5 : (x - x0) / (x1 - x0)) * (W - P.l - P.r);
+  const Y = (y) => P.t + (1 - (y + yA) / (2 * yA)) * (H - P.t - P.b);
+  const path = pts.map((p, j) => (j ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ');
+  const area = path + ` L ${X(x1).toFixed(1)} ${Y(0).toFixed(1)} L ${X(x0).toFixed(1)} ${Y(0).toFixed(1)} Z`;
+  const fmt = (x) => k === 'dia' ? DIAS[x].slice(0, 3) : k === 'hora' ? x + 'h' : M.unidad[k] === 'pct01' ? (x * 100).toFixed(0) + '%' : M.unidad[k] === 'pct' ? (x * 100).toFixed(2) + '%' : Math.abs(x) >= 10 ? x.toFixed(0) : x.toFixed(1);
+  const dots = pts.map((p) => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="2.2" fill="var(${p[1] >= 0 ? '--up' : '--down'})"></circle>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Efecto de ${k}">
+    <line x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)" stroke-width="1"></line>
+    <path d="${area}" fill="var(--accent-soft)" opacity="0.7"></path>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.8"></path>${dots}
+    <text x="${P.l - 4}" y="${Y(yA) + 4}" text-anchor="end" font-size="9" fill="var(--up)" font-family="IBM Plex Mono, monospace">sube</text>
+    <text x="${P.l - 4}" y="${Y(-yA)}" text-anchor="end" font-size="9" fill="var(--down)" font-family="IBM Plex Mono, monospace">baja</text>
+    <text x="${P.l}" y="${H - 6}" font-size="9" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${fmt(x0)}</text>
+    <text x="${W - P.r}" y="${H - 6}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${fmt(x1)}</text>
+  </svg>`;
+}
+function leyendaCurva(k, pts) {
+  if (k === 'dia' || k === 'hora') {
+    const mx = pts.reduce((a, b) => (b[1] > a[1] ? b : a)), mn = pts.reduce((a, b) => (b[1] < a[1] ? b : a));
+    const f = (x) => k === 'dia' ? DIAS[x] : x + ':00 UTC';
+    return `M\u00e1s alcista el ${f(mx[0])}, m\u00e1s bajista el ${f(mn[0])}.`;
+  }
+  const n = pts.length, a = pts.slice(0, Math.max(1, Math.floor(n / 4))), b = pts.slice(n - Math.max(1, Math.floor(n / 4)));
+  const ma = a.reduce((s, p) => s + p[1], 0) / a.length, mb = b.reduce((s, p) => s + p[1], 0) / b.length;
+  if (Math.abs(mb - ma) < 0.03) return 'Efecto peque\u00f1o o mixto.';
+  return mb < ma ? 'Valores altos empujan a "baja" y bajos a "sube": apuesta a que el movimiento se devuelva.' : 'Valores altos empujan a "sube": apuesta a que el movimiento contin\u00fae.';
+}
+function pintarAprendio() {
+  const imp = Object.entries(M.importancia).sort((a, b) => b[1] - a[1]);
+  const maxI = imp[0][1];
+  const fam = M.familias.map((f, k) => [f, M.importancia_familia[k]]).sort((a, b) => b[1] - a[1]);
+  const maxF = fam[0][1];
+  const top = imp.slice(0, 9).map(([k]) => k);
+  const nom = (k) => k === 'hora' ? 'Hora del d\u00eda' : nombreVar(k);
+  $('aprendio').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px"><h2>Lo que aprendi\u00f3 el modelo</h2>
+    <p class="intro">El modelo no elige entre estrategias como un humano. Aprendi\u00f3, a partir de 2017-2025, cu\u00e1nto debe empujar cada variable seg\u00fan su valor, y en cada vela suma esos empujes. Las curvas muestran ese empuje medio (todas las monedas, 2023 en adelante): encima de la l\u00ednea empuja a "sube", debajo a "baja".</p></div>
+    <div class="how">
+      <div><h3 style="margin-bottom:8px">Peso por grupo</h3><div class="bars">${fam.map(([f, v]) => `<div class="brow"><span class="name">${f}</span><div class="track"><div class="fill" style="left:0;width:${v / maxF * 100}%;background:var(--accent)"></div></div></div>`).join('')}</div></div>
+      <div><h3 style="margin-bottom:8px">Las variables que m\u00e1s usa</h3><div class="bars">${imp.slice(0, 8).map(([k, v]) => `<div class="brow"><span class="name">${nom(k)}</span><div class="track"><div class="fill" style="left:0;width:${v / maxI * 100}%;background:var(--accent)"></div></div></div>`).join('')}</div></div>
+    </div>
+    <div class="multiples">${top.map((k) => `<div class="mult"><span class="ttl">${nom(k)}</span>${curva(k, M.dependencia[k])}<span class="cap">${leyendaCurva(k, M.dependencia[k])}</span></div>`).join('')}</div>`;
+}
+
+function pintarComo() {
+  const ia = [
+    ['Qu\u00e9 mira', 'Cada 4 horas toma las velas de 1h de la moneda y de BTC y ETH y calcula 34 variables: impulso del precio, posici\u00f3n en su rango, volatilidad, volumen y flujo de compradores, hora y d\u00eda.'],
+    ['C\u00f3mo decide', '300 \u00e1rboles de decisi\u00f3n, entrenados con datos de 2017 a mayo 2025, convierten esas variables en una probabilidad de que el precio suba en 24 horas.'],
+    ['Cu\u00e1ndo opera', 'Solo cuando la probabilidad se aleja de 50% m\u00e1s que el umbral (el 10% de casos m\u00e1s claros). Compra si cree que sube, vende en corto si cree que baja, una operaci\u00f3n a la vez por moneda, y cierra a las 24 horas.'],
+    ['C\u00f3mo le fue', 'Este periodo (junio 2025 a noviembre 2026) el modelo nunca lo vio. Acert\u00f3 cerca de 53% y perdi\u00f3 tras costos: por eso qued\u00f3 descartado. El visor muestra su l\u00f3gica, no una estrategia recomendada.'],
+  ];
+  const e2 = [
+    ['Qu\u00e9 mira', 'Una vez al d\u00eda, al cierre UTC, el precio de cierre de cada una de las 9 monedas, su media de 50 d\u00edas y su volatilidad de 30 d\u00edas.'],
+    ['C\u00f3mo decide', 'Compra la moneda si cierra por encima de su media de 50 d\u00edas; si no, se queda fuera en USDT. No intenta adivinar el siguiente movimiento.'],
+    ['Cu\u00e1nto pone', 'Reparte el capital entre las 9 monedas y reduce el tama\u00f1o cuando la volatilidad pasa de 50% anual. As\u00ed invierte menos cuando el mercado est\u00e1 m\u00e1s peligroso.'],
+    ['C\u00f3mo le fue', 'En las pruebas perdi\u00f3 mucho menos que comprar y mantener en las ca\u00eddas (31% frente a 67% en la reserva ciega). Hoy corre en papel, sin dinero. No es asesor\u00eda financiera.'],
+  ];
+  $('como').innerHTML = (st.agente === 'ia' ? ia : e2).map(([a, b]) => `<div class="panel card"><h3>${a}</h3><p>${b}</p></div>`).join('');
+}
+
+// ---------- controles
+function vista() {
+  $('bIA').setAttribute('aria-pressed', st.agente === 'ia'); $('bE2').setAttribute('aria-pressed', st.agente === 'e2');
+  $('monedas').innerHTML = Object.keys(D.ia).map((m) => `<button data-m="${m}" aria-pressed="${m === st.moneda}">${m}</button>`).join('');
+  $('monedas').querySelectorAll('button').forEach((b) => b.onclick = () => { st.moneda = b.dataset.m; parar(); vista(); });
+  const ia = st.agente === 'ia';
+  $('tPrecio').textContent = ia ? `${st.moneda}/USDT \u00b7 velas de 4 horas` : `${st.moneda}/USDT \u00b7 velas diarias y media de 50 d\u00edas`;
+  $('tAbajo').textContent = ia ? 'Probabilidad de subir en 24h seg\u00fan el modelo' : `Peso de ${st.moneda} en la cartera (% del capital)`;
+  $('leg1').innerHTML = ia
+    ? `<span><i class="dot" style="background:var(--up)"></i>compra</span><span><i class="dot" style="background:var(--down)"></i>venta</span><span><i class="dot" style="background:var(--hold)"></i>se\u00f1al ignorada</span><span>c\u00edrculo = cierre a 24h (verde gana, rojo pierde)</span>`
+    : `<span><i class="dot" style="background:var(--accent)"></i>media de 50 d\u00edas</span><span><i class="dot" style="background:var(--up)"></i>entra</span><span><i class="dot" style="background:var(--down)"></i>sale</span>`;
+  $('leg2').innerHTML = ia ? '<span>l\u00edneas punteadas = umbrales para operar</span>' : '';
+  $('leg3').innerHTML = `<span><i class="dot" style="background:var(--accent)"></i>E2</span><span><i class="dot" style="background:var(--hold)"></i>tendencia simple</span><span><i class="dot" style="background:var(--idle)"></i>comprar y mantener</span>`;
+  $('bloqueCartera').hidden = ia;
+  $('cAbajo').style.height = ia ? '150px' : '110px';
+  $('bSig').textContent = ia ? 'Siguiente operaci\u00f3n' : 'Siguiente cambio';
+  $('nota').innerHTML = ia
+    ? '<b>Modelo descartado.</b> Lo que ves es el periodo que el modelo nunca vio en su entrenamiento (junio 2025 a noviembre 2026), donde acert\u00f3 cerca de 53% y perdi\u00f3 tras costos. Sirve para entender c\u00f3mo razona, no para operar.'
+    : '<b>Regla en forward test en papel.</b> Datos diarios de Binance desde 2019 (backtest). Desde el 18 de noviembre de 2026 la misma regla se registra a diario sin dinero.';
+  $('aprendio').hidden = !ia;
+  crear();
+  if (st.agente === 'ia') { const dec = serieIA().dec; const ops = dec.map((d, k) => [d, k]).filter(([d]) => d[2] === 1 || d[2] === -1); st.i = ops.length > 12 ? ops[12][1] : 200; }
+  else { st.i = Math.min(largo() - 1, Math.max(0, serieE2().findIndex((d) => d[0] >= Date.UTC(2021, 3, 20) / 1000))); }
+  pintarComo();
+  pintar(true);
+}
+function parar() { st.play = false; clearInterval(st.timer); $('bPlay').textContent = 'Reproducir'; }
+function jugar() {
+  if (st.play) return parar();
+  st.play = true; $('bPlay').textContent = 'Pausa';
+  st.timer = setInterval(() => { if (st.i >= largo() - 1) return parar(); st.i += st.vel; pintar(); }, 140);
+}
+function siguiente() {
+  parar();
+  if (st.agente === 'ia') { const dec = serieIA().dec; for (let j = st.i + 1; j < dec.length; j++) if (dec[j][2] === 1 || dec[j][2] === -1) { st.i = j; break; } }
+  else { const s = serieE2(); for (let j = st.i + 1; j < s.length; j++) if (s[j][7] !== s[j - 1][7]) { st.i = j; break; } }
+  pintar();
+}
+$('bIA').onclick = () => { parar(); st.agente = 'ia'; vista(); };
+$('bE2').onclick = () => { parar(); st.agente = 'e2'; vista(); };
+$('bPlay').onclick = jugar;
+$('bAdel').onclick = () => { parar(); st.i++; pintar(); };
+$('bAtras').onclick = () => { parar(); st.i--; pintar(); };
+$('bSig').onclick = siguiente;
+$('slider').oninput = (e) => { parar(); st.i = +e.target.value; pintar(); };
+$('vel').querySelectorAll('button').forEach((b) => b.onclick = () => { st.vel = +b.dataset.v; $('vel').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); });
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+  if (e.key === 'ArrowRight') { parar(); st.i++; pintar(); } else if (e.key === 'ArrowLeft') { parar(); st.i--; pintar(); } else if (e.key === ' ') { e.preventDefault(); jugar(); }
+});
+const retema = () => { const i = st.i; vista(); st.i = i; pintar(true); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retema);
+new MutationObserver(retema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+pintarAprendio();
+vista();
+</script>
