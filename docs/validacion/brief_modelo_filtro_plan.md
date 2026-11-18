@@ -97,3 +97,24 @@ Veredicto por activo: **EVIDENCIA DE VENTAJA** solo si pasa los 7 (y el percenti
   estructura de costo: lo que salga bien se confirma ahi en forward.
 - Precios bid/ask de Dukascopy en 2003-2008 tienen spreads amplios; se usan tal cual (costo real
   de esa epoca).
+
+## Enmienda 1 (2026-11-18, antes de calcular cualquier resultado): primero en H1
+
+Al bajar los datos, Dukascopy empezo a responder 429 (demasiadas peticiones): ~50 s por archivo
+de minuto; los ~39.000 archivos del plan tomarian dias. Decision del usuario: correr ya el mismo
+experimento en **H1** y dejar la version M15 (el plan de arriba, sin cambios) para cuando los datos
+de minuto esten completos.
+
+Cambios para la version H1 (todo lo demas igual: estrategias, horas de sesion, triple barrera,
+costos, 20 variables, modelo, caminata, 7 criterios y percentil 98,3):
+
+- Velas: H1 bid de Dukascopy ya guardadas en la base (`candles`, platform Dukascopy, frxXAUUSD,
+  frxUSDJPY y OTC_NDX, 1h). D1 se arma con ellas (dias con al menos 5 horas).
+- Las senales se calculan en H1: "M15" del plan pasa a H1 (EMA21, EMA12/26, RSI, ADX, ATR,
+  Bollinger, SAR y canal de 10 velas en H1). El contexto H1 es la propia vela H1 cerrada.
+- Salida por tiempo: 4 velas H1 (las mismas 4 horas que 16 velas M15). Stop 1,5 x ATR14 H1.
+- Spread: fijo por activo y ano = mediana de (cierre ask - cierre bid) de las velas H1 de **junio**
+  de ese ano (o del primer mes con datos), con el archivo horario ask de Dukascopy contra el bid de
+  la base. El ask de cada vela = bid + ese spread. Deslizamiento 0,5 x spread por lado, igual.
+- Percentiles "de 100 dias" = 2.400 velas H1; volatilidad realizada de 1 dia = 24 velas H1.
+- Una entrada solo si la vela siguiente llega dentro de 2 horas.
