@@ -241,9 +241,15 @@
                         <CheckBox x:Name="chkPayoutReal" IsChecked="True" Foreground="#e7ecf5" FontSize="11" Margin="0,-6,0,12"
                                   Content="Usar payout real medido en Deriv (si existe)"
                                   ToolTip="Cada job toma el payout medido con POST /api/heavy/payouts para su activo y duracion. Si no hay medicion usa el primer valor del rango y la columna Pay no dice 'real'."/>
-                        <CheckBox x:Name="chkHistoricoLargo" IsChecked="False" Foreground="#e7ecf5" FontSize="11" Margin="0,-6,0,12"
-                                  Content="Usar historico largo (Dukascopy, desde 2003)"
-                                  ToolTip="Las velas salen del historico externo de Dukascopy (divisas, metales e indices) en vez de las de Deriv. Mucha mas muestra, pero los precios no son identicos a los de Deriv: lo que salga bien hay que confirmarlo con forward test en Deriv. La sesion guardada lleva la nota 'fuente: Dukascopy'."/>
+                        <!-- Fuente de velas -->
+                        <TextBlock Text="FUENTE DE VELAS"
+                                   Style="{StaticResource LabelHdr}"
+                                   ToolTip="De donde salen las velas de la prueba. Deriv = precios reales de la plataforma. Las externas (Dukascopy, Bitstamp, Binance, Yahoo) dan mucha mas historia, pero sus precios no son identicos a los de Deriv: lo que salga bien hay que confirmarlo con forward test en Deriv. La sesion guardada lleva la nota 'fuente: X'."/>
+                        <ComboBox x:Name="cmbFuente" Margin="0,0,0,4" Height="26"
+                                  Background="#121723" Foreground="#e7ecf5" BorderBrush="#1f2638"
+                                  SelectionChanged="cmbFuente_SelectionChanged"/>
+                        <TextBlock x:Name="lblCoberturaFuente" Foreground="#8b95a7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"
+                                   Text="Deriv: las velas de la plataforma donde se opera."/>
 
                         <!-- Periodo ciego -->
                         <TextBlock Text="INICIO DEL PERIODO CIEGO · AAAA-MM-DD"

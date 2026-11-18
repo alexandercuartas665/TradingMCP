@@ -438,18 +438,17 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
 
-                ' -- Historico largo externo (Dukascopy -> Postgres, platform = "Dukascopy") --
+                ' -- Historico largo externo (Dukascopy, Bitstamp, Binance, Yahoo -> Postgres, platform = fuente) --
                 If path = "/api/heavy/historico-externo/descargar" AndAlso method = "POST" Then
                     Await WriteJson(res, 200, HistoricoExternoDescargar(body))
                     Return
                 End If
                 If path = "/api/heavy/historico-externo/estado" Then
-                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"estado", DukascopyDescarga.Instancia.Estado()}})
+                    Await WriteJson(res, 200, HistoricoExternoEstado(qs("fuente")))
                     Return
                 End If
                 If path = "/api/heavy/historico-externo/detener" AndAlso method = "POST" Then
-                    DukascopyDescarga.Instancia.Detener()
-                    Await WriteJson(res, 200, New JObject From {{"ok", True}, {"mensaje", "Detencion solicitada."}})
+                    Await WriteJson(res, 200, HistoricoExternoDetener(If(qs("fuente"), body?("fuente")?.ToString())))
                     Return
                 End If
                 If path = "/api/heavy/historico-externo/cobertura" Then
@@ -457,8 +456,18 @@ Namespace WpfDerivClientVB.Backtesting
                     Return
                 End If
                 If path = "/api/heavy/historico-externo/comparar" Then
+                    Dim fuenteCmp As String
+                    Try
+                        fuenteCmp = FuentesVelas.Normalizar(If(qs("fuente"), FuentesVelas.DUKASCOPY))
+                    Catch ex As ArgumentException
+                        fuenteCmp = Nothing
+                    End Try
+                    If fuenteCmp Is Nothing Then
+                        Await WriteJson(res, 200, ErrJson("Fuente desconocida: " & qs("fuente")))
+                        Return
+                    End If
                     Await WriteJson(res, 200, Await DukascopyDescarga.CompararAsync(
-                        If(qs("symbol"), "frxEURUSD"), If(qs("timeframe"), "1h")))
+                        If(qs("symbol"), "frxEURUSD"), If(qs("timeframe"), "1h"), fuenteCmp))
                     Return
                 End If
 
@@ -556,10 +565,10 @@ Namespace WpfDerivClientVB.Backtesting
                 "POST /api/heavy/historico/descargar (body: {symbol, timeframe, desde:YYYY-MM-DD, hasta:YYYY-MM-DD})",
                 "GET  /api/heavy/historico/estado",
                 "POST /api/heavy/historico/detener",
-                "POST /api/heavy/historico-externo/descargar (body: {simbolos:[frxEURUSD,...], temporalidades:[1h,4h,1d], desde:YYYY-MM-DD, [hasta]})",
-                "GET  /api/heavy/historico-externo/estado | POST .../detener | GET .../cobertura",
-                "GET  /api/heavy/historico-externo/comparar?symbol=frxEURUSD&timeframe=1h",
-                "(validar, robustez, multimercado, validar-completo, hipotesis, jobs/agregar aceptan fuente: Deriv | Dukascopy)",
+                "POST /api/heavy/historico-externo/descargar (body: {[fuente: Dukascopy | Bitstamp | Binance | Yahoo], simbolos:[frxEURUSD,...], temporalidades:[1h,4h,1d], [desde:YYYY-MM-DD], [hasta]})",
+                "GET  /api/heavy/historico-externo/estado[?fuente=] | POST .../detener[?fuente=] | GET .../cobertura",
+                "GET  /api/heavy/historico-externo/comparar?symbol=frxEURUSD&timeframe=1h[&fuente=Dukascopy] (contra Deriv)",
+                "(validar, robustez, multimercado, validar-completo, hipotesis, jobs/agregar aceptan fuente: Deriv | Dukascopy | Bitstamp | Binance | Yahoo)",
                 "(todas requieren header X-Agent-Token)"
             }
             Return New JObject From {
@@ -1089,21 +1098,68 @@ Namespace WpfDerivClientVB.Backtesting
             If TypeOf body("temporalidades") Is JArray Then tfs.AddRange(CType(body("temporalidades"), JArray).Select(Function(t) t.ToString()))
             Dim inv = Globalization.CultureInfo.InvariantCulture
             Dim desde, hasta As DateTime
-            If Not DateTime.TryParseExact(If(body("desde")?.ToString(), "2003-05-05"), "yyyy-MM-dd", inv, Globalization.DateTimeStyles.None, desde) Then
+            Dim descarga As IDescargaHistorica
+            Try
+                descarga = DescargasHistoricas.Para(If(body("fuente")?.ToString(), FuentesVelas.DUKASCOPY))
+            Catch ex As ArgumentException
+                Return ErrJson(ex.Message)
+            End Try
+            If descarga Is Nothing Then Return ErrJson("Deriv no es una fuente externa: sus velas se bajan con /api/historico/descargar (8765) o descargar_historico.")
+            If Not DateTime.TryParseExact(If(body("desde")?.ToString(), descarga.DesdePorDefecto.ToString("yyyy-MM-dd")), "yyyy-MM-dd", inv, Globalization.DateTimeStyles.None, desde) Then
                 Return ErrJson("'desde' no valido (YYYY-MM-DD)")
             End If
             If Not DateTime.TryParseExact(If(body("hasta")?.ToString(), DateTime.UtcNow.ToString("yyyy-MM-dd")), "yyyy-MM-dd", inv, Globalization.DateTimeStyles.None, hasta) Then
                 Return ErrJson("'hasta' no valido (YYYY-MM-DD)")
             End If
-            Return DukascopyDescarga.Instancia.Iniciar(simbolos, tfs, desde, hasta)
+            Return descarga.Iniciar(simbolos, tfs, desde, hasta)
         End Function
 
-        ''' <summary>Cobertura de las dos fuentes por serie (velas, desde, hasta).</summary>
+        ''' <summary>Sin fuente: {estado: Dukascopy (compatibilidad), estados: {fuente: estado}}. Con fuente: {estado}.</summary>
+        Private Function HistoricoExternoEstado(fuente As String) As JObject
+            If Not String.IsNullOrWhiteSpace(fuente) Then
+                Dim d As IDescargaHistorica
+                Try
+                    d = DescargasHistoricas.Para(fuente)
+                Catch ex As ArgumentException
+                    Return ErrJson(ex.Message)
+                End Try
+                If d Is Nothing Then Return ErrJson("Deriv no es una fuente externa (su descarga es /api/historico/estado en 8765).")
+                Return New JObject From {{"ok", True}, {"fuente", d.Fuente}, {"estado", d.Estado()}}
+            End If
+            Dim estados As New JObject()
+            For Each d In DescargasHistoricas.Todas()
+                estados(d.Fuente) = d.Estado()
+            Next
+            Return New JObject From {{"ok", True}, {"estado", DukascopyDescarga.Instancia.Estado()}, {"estados", estados}}
+        End Function
+
+        ''' <summary>Detiene la descarga de una fuente o, sin fuente, todas.</summary>
+        Private Function HistoricoExternoDetener(fuente As String) As JObject
+            Dim lista As List(Of IDescargaHistorica)
+            If String.IsNullOrWhiteSpace(fuente) Then
+                lista = DescargasHistoricas.Todas()
+            Else
+                Dim d As IDescargaHistorica
+                Try
+                    d = DescargasHistoricas.Para(fuente)
+                Catch ex As ArgumentException
+                    Return ErrJson(ex.Message)
+                End Try
+                If d Is Nothing Then Return ErrJson("Deriv no es una fuente externa.")
+                lista = New List(Of IDescargaHistorica) From {d}
+            End If
+            For Each d In lista
+                d.Detener()
+            Next
+            Return New JObject From {{"ok", True}, {"mensaje", "Detencion solicitada: " & String.Join(", ", lista.Select(Function(x) x.Fuente))}}
+        End Function
+
+        ''' <summary>Cobertura de cada fuente por serie (velas, desde, hasta).</summary>
         Private Async Function HistoricoCoberturaApi() As Task(Of JObject)
             Dim repo As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
             Dim fecha = Function(ep As Long) DateTimeOffset.FromUnixTimeSeconds(ep).UtcDateTime.ToString("yyyy-MM-dd")
             Dim res As New JObject From {{"ok", True}}
-            For Each f In {FuentesVelas.DERIV, FuentesVelas.DUKASCOPY}
+            For Each f In FuentesVelas.Todas
                 Dim arr As New JArray()
                 For Each c In Await repo.CoberturaAsync(f)
                     arr.Add(New JObject From {{"symbol", c.Item1}, {"timeframe", c.Item2}, {"velas", c.Item3}, {"desde", fecha(c.Item4)}, {"hasta", fecha(c.Item5)}})
@@ -1377,7 +1433,7 @@ Namespace WpfDerivClientVB.Backtesting
         ''' body: {estrategia, confianza, corte, [ventana=100, min_ops=30],
         '''        mercados:[[symbol, tf, comision_pct, [multiplicadores], [[tp, sl], ...], [max_velas]], ...],
         '''        multiplicadores:[...], tp_sl:[[tp, sl], ...], max_velas:[...],
-        '''        [fuente: Deriv | Dukascopy], [desde, hasta: "YYYY-MM-DD" -> solo velas en [desde, hasta)]}
+        '''        [fuente: Deriv | Dukascopy | Bitstamp | Binance | Yahoo], [desde, hasta: "YYYY-MM-DD" -> solo velas en [desde, hasta)]}
         ''' Los tres ultimos campos de cada mercado son opcionales y reemplazan a los globales: con un
         ''' solo valor en cada uno la configuracion queda FIJA (sirve para medir en otro periodo una
         ''' configuracion ya elegida).

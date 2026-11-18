@@ -22,6 +22,7 @@ Namespace WpfDerivClientVB
     '''   esperas crecientes y lo que falle queda listado para volver a intentarlo.
     ''' </summary>
     Public Class DukascopyDescarga
+        Implements IDescargaHistorica
 
         Public Shared ReadOnly Property Instancia As New DukascopyDescarga()
         Public Shared ReadOnly TF_POR_DEFECTO As String() = {"1h", "4h", "1d"}
@@ -45,19 +46,41 @@ Namespace WpfDerivClientVB
             Return h
         End Function
 
-        Public ReadOnly Property EstaDescargando As Boolean
+        Public ReadOnly Property Fuente As String Implements IDescargaHistorica.Fuente
+            Get
+                Return FuentesVelas.DUKASCOPY
+            End Get
+        End Property
+
+        Public ReadOnly Property Temporalidades As String() Implements IDescargaHistorica.Temporalidades
+            Get
+                Return {"1m", "5m", "15m", "30m", "1h", "4h", "1d"}
+            End Get
+        End Property
+
+        Public ReadOnly Property DesdePorDefecto As Date Implements IDescargaHistorica.DesdePorDefecto
+            Get
+                Return New Date(2003, 5, 5)
+            End Get
+        End Property
+
+        Public Function Soporta(simbolo As String) As Boolean Implements IDescargaHistorica.Soporta
+            Return DukascopyFormato.SimboloDukascopy(simbolo) IsNot Nothing
+        End Function
+
+        Public ReadOnly Property EstaDescargando As Boolean Implements IDescargaHistorica.EstaDescargando
             Get
                 Return Volatile.Read(_activo) = 1
             End Get
         End Property
 
-        Public Function Estado() As JObject
+        Public Function Estado() As JObject Implements IDescargaHistorica.Estado
             SyncLock _bloqueo
                 Return CType(_estado.DeepClone(), JObject)
             End SyncLock
         End Function
 
-        Public Sub Detener()
+        Public Sub Detener() Implements IDescargaHistorica.Detener
             _cts?.Cancel()
         End Sub
 
@@ -69,7 +92,7 @@ Namespace WpfDerivClientVB
 
         ''' <summary>Valida y lanza la descarga en segundo plano. Se sigue con Estado().</summary>
         Public Function Iniciar(simbolos As IList(Of String), temporalidades As IList(Of String),
-                                desde As Date, hasta As Date) As JObject
+                                desde As Date, hasta As Date) As JObject Implements IDescargaHistorica.Iniciar
             Dim tfs = If(temporalidades Is Nothing OrElse temporalidades.Count = 0, TF_POR_DEFECTO.ToList(), temporalidades.ToList())
             Dim malos = tfs.Where(Function(t) DukascopyFormato.SegundosTf(t) = 0).ToList()
             If malos.Count > 0 Then Return Err("Temporalidades no soportadas: " & String.Join(", ", malos) & " (use 1m, 5m, 15m, 30m, 1h, 4h, 1d)")
@@ -330,7 +353,7 @@ Namespace WpfDerivClientVB
         ''' Actualizacion nocturna: cada serie de Dukascopy ya guardada se completa desde su
         ''' ultima vela (menos un dia) hasta ayer. Si no hay ninguna, no hace nada.
         ''' </summary>
-        Public Async Function ActualizarTodoAsync(Optional ct As CancellationToken = Nothing) As Task(Of JObject)
+        Public Async Function ActualizarTodoAsync(Optional ct As CancellationToken = Nothing) As Task(Of JObject) Implements IDescargaHistorica.ActualizarTodoAsync
             Dim repo As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
             Dim series = Await repo.ListarSeriesAsync(FuentesVelas.DUKASCOPY)
             If series.Count = 0 Then Return New JObject From {{"ok", True}, {"series", 0}, {"mensaje", "Sin historico externo guardado."}}
@@ -355,17 +378,19 @@ Namespace WpfDerivClientVB
         ''' Compara Dukascopy con Deriv en las velas que coinciden en hora: cuanto se parecen
         ''' los precios y si las velas van en la misma direccion (lo que decide un CALL/PUT).
         ''' </summary>
-        Public Shared Async Function CompararAsync(symbol As String, timeframe As String) As Task(Of JObject)
+        Public Shared Async Function CompararAsync(symbol As String, timeframe As String,
+                                                   Optional fuente As String = FuentesVelas.DUKASCOPY) As Task(Of JObject)
             Dim repo As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
             Dim ahora = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             Dim deriv = Await repo.GetCandlesRangoAsync(FuentesVelas.DERIV, symbol, timeframe, 0, ahora)
-            Dim duka = Await repo.GetCandlesRangoAsync(FuentesVelas.DUKASCOPY, symbol, timeframe, 0, ahora)
-            Return Comparar(deriv, duka, symbol, timeframe)
+            Dim duka = Await repo.GetCandlesRangoAsync(fuente, symbol, timeframe, 0, ahora)
+            Return Comparar(deriv, duka, symbol, timeframe, fuente)
         End Function
 
         ''' <summary>Comparacion pura (probada en pruebas).</summary>
         Public Shared Function Comparar(deriv As List(Of CandleModel), duka As List(Of CandleModel),
-                                        symbol As String, timeframe As String) As JObject
+                                        symbol As String, timeframe As String,
+                                        Optional fuente As String = FuentesVelas.DUKASCOPY) As JObject
             Dim mapa = duka.GroupBy(Function(v) v.Epoch).ToDictionary(Function(g) g.Key, Function(g) g.First())
             Dim n = 0, mismaDir = 0, ambasMovidas = 0
             Dim sumaDif As Double = 0
@@ -386,7 +411,7 @@ Namespace WpfDerivClientVB
             Dim fecha = Function(ep As Long) If(ep = 0, "", DateTimeOffset.FromUnixTimeSeconds(ep).UtcDateTime.ToString("yyyy-MM-dd"))
             Return New JObject From {
                 {"ok", True}, {"symbol", symbol}, {"timeframe", timeframe},
-                {"velas_deriv", deriv.Count}, {"velas_dukascopy", duka.Count},
+                {"fuente", fuente}, {"velas_deriv", deriv.Count}, {"velas_" & fuente.ToLowerInvariant(), duka.Count},
                 {"velas_comparadas", n}, {"desde", fecha(primero)}, {"hasta", fecha(ultimo)},
                 {"diferencia_media_cierre_pct", If(n > 0, Math.Round(sumaDif / n * 100, 4), 0.0)},
                 {"misma_direccion_pct", If(ambasMovidas > 0, Math.Round(mismaDir / CDbl(ambasMovidas) * 100, 2), 0.0)}

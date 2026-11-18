@@ -69,6 +69,7 @@ Partial Public Class HeavyStrategyTesterWindow
         ' Chips estaticos: timeframes, capitales
         RenderChipsTimeframes()
         RenderChipsCapitales()
+        CargarFuentes()
 
         ' Bindings cola
         lstJobs.ItemsSource = _queue.Jobs
@@ -375,7 +376,77 @@ Partial Public Class HeavyStrategyTesterWindow
         Dim segs = total * 3 / conc
         Dim min = segs / 60
         lblEstTime.Text = If(segs < 60, segs & " s", min & " min")
+        ActualizarCoberturaFuente()
     End Sub
+
+    ' -- FUENTE DE VELAS ----------------------------------------------
+
+    ' Cobertura por fuente: "symbol|tf" -> (velas, primer epoch, ultimo epoch). Una consulta por fuente.
+    Private ReadOnly _cobertura As New Dictionary(Of String, Dictionary(Of String, Tuple(Of Long, Long, Long)))()
+    Private _versionCobertura As Integer
+
+    Private Sub CargarFuentes()
+        cmbFuente.Items.Clear()
+        For Each f In FuentesVelas.Todas
+            cmbFuente.Items.Add(f)
+        Next
+        cmbFuente.SelectedIndex = 0
+    End Sub
+
+    Private Function FuenteSeleccionada() As String
+        Dim f = cmbFuente?.SelectedItem?.ToString()
+        Return If(String.IsNullOrEmpty(f), FuentesVelas.DERIV, f)
+    End Function
+
+    Private Sub cmbFuente_SelectionChanged(sender As Object, e As SelectionChangedEventArgs)
+        ActualizarCoberturaFuente()
+    End Sub
+
+    ''' <summary>
+    ''' Muestra que tiene la fuente elegida y, para cada activo y temporalidad seleccionados,
+    ''' cuantas velas hay y de que fechas. Avisa si alguna combinacion no tiene velas.
+    ''' </summary>
+    Private Async Sub ActualizarCoberturaFuente()
+        If cmbFuente Is Nothing OrElse lblCoberturaFuente Is Nothing Then Return
+        Dim fuente = FuenteSeleccionada()
+        _versionCobertura += 1
+        Dim version = _versionCobertura
+        Dim mapa As Dictionary(Of String, Tuple(Of Long, Long, Long)) = Nothing
+        If Not _cobertura.TryGetValue(fuente, mapa) Then
+            lblCoberturaFuente.Text = FuentesVelas.Descripcion(fuente) & " Consultando cobertura..."
+            Try
+                Dim repo As New CandleRepository(ConfigManager.LoadDbConfig().GetConnectionString())
+                Dim filas = Await repo.CoberturaAsync(fuente)
+                mapa = filas.ToDictionary(Function(c) c.Item1 & "|" & c.Item2, Function(c) Tuple.Create(c.Item3, c.Item4, c.Item5))
+                _cobertura(fuente) = mapa
+            Catch ex As Exception
+                If version = _versionCobertura Then lblCoberturaFuente.Text = FuentesVelas.Descripcion(fuente) & " (no se pudo leer la cobertura: " & ex.Message & ")"
+                Return
+            End Try
+        End If
+        If version <> _versionCobertura Then Return
+        lblCoberturaFuente.Text = TextoCobertura(fuente, mapa, _selAssets, _selTfs)
+    End Sub
+
+    ''' <summary>Texto de cobertura (funcion pura para poder probarla).</summary>
+    Friend Shared Function TextoCobertura(fuente As String, mapa As Dictionary(Of String, Tuple(Of Long, Long, Long)),
+                                          activos As IEnumerable(Of String), tfs As IEnumerable(Of String)) As String
+        Dim fecha = Function(ep As Long) DateTimeOffset.FromUnixTimeSeconds(ep).UtcDateTime.ToString("yyyy-MM-dd")
+        Dim lineas As New List(Of String) From {FuentesVelas.Descripcion(fuente)}
+        Dim pares = (From a In activos.OrderBy(Function(x) x) From t In tfs.OrderBy(Function(x) x) Select Activo = a, Tf = t).ToList()
+        Dim sinVelas = 0
+        For Each p In pares
+            Dim c As Tuple(Of Long, Long, Long) = Nothing
+            Dim hay = mapa.TryGetValue(p.Activo & "|" & p.Tf, c)
+            If Not hay Then sinVelas += 1
+            If lineas.Count > 8 Then Continue For
+            lineas.Add(If(hay, String.Format("{0} {1}: {2:N0} velas, {3} a {4}", p.Activo, p.Tf, c.Item1, fecha(c.Item2), fecha(c.Item3)),
+                                String.Format("{0} {1}: sin velas en {2}", p.Activo, p.Tf, fuente)))
+        Next
+        If pares.Count > 8 Then lineas.Add(String.Format("... y {0} combinaciones mas.", pares.Count - 8))
+        If sinVelas > 0 Then lineas.Add(String.Format("AVISO: {0} combinacion(es) sin velas en {1}: esas pruebas no tendran datos.", sinVelas, fuente))
+        Return String.Join(Environment.NewLine, lineas)
+    End Function
 
     Private Function ConstruirSeleccion() As HeavySelection
         Dim sel As New HeavySelection With {
@@ -391,7 +462,7 @@ Partial Public Class HeavyStrategyTesterWindow
         ' Payout real: cada job toma el medido; el rango solo aporta el valor de respaldo
         sel.UsarPayoutReal = chkPayoutReal.IsChecked.GetValueOrDefault()
         If sel.UsarPayoutReal AndAlso sel.Payouts.Count > 1 Then sel.Payouts = New List(Of Decimal) From {sel.Payouts(0)}
-        sel.Fuente = If(chkHistoricoLargo.IsChecked.GetValueOrDefault(), FuentesVelas.DUKASCOPY, FuentesVelas.DERIV)
+        sel.Fuente = FuenteSeleccionada()
         sel.Duraciones = ParseRange(txtDurMin.Text, txtDurMax.Text, txtDurStep.Text).Select(Function(d) CInt(d)).ToList()
         ' Fechas — DatePicker retorna DateTime con Kind=Local. Forzamos UTC con la
         ' fecha tal cual (medianoche UTC) para construir un DateTimeOffset valido.

@@ -1,5 +1,8 @@
 """Carga historico largo extra en la tabla candles (PostgreSQL de la app, contenedor traiding_postgres).
 
+Desde 2026-11-18 la app hace lo mismo sola (API 8766 historico-externo con fuente Bitstamp, Binance o Yahoo,
+selector "Fuente de velas" del simulador y mantenimiento nocturno). Este script queda para cargas sin la app.
+
 Series (cada fuente con su propio valor de platform; nunca se mezclan con Deriv):
   dax     platform=Dukascopy  symbol=OTC_GDAXI  1h/4h/1d  (DEUIDXEUR; mismo formato que DukascopyDescarga.vb,
                                                           asi el mantenimiento nocturno de la app la sigue al dia)

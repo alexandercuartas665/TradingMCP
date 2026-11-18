@@ -408,7 +408,8 @@ Namespace WpfDerivClientVB
                             Dim limD As Integer = 100
                             Integer.TryParse(qs("limit"), limD)
                             limD = Math.Max(1, Math.Min(limD, 1000))
-                            Dim candles = Await DescargaService.ConsultarDatosAsync(symD, tfD, limD)
+                            Dim fuenteD = FuentesVelas.Normalizar(qs("fuente"))
+                            Dim candles = Await DescargaService.ConsultarDatosAsync(symD, tfD, limD, fuenteD)
                             Dim arr As New JArray()
                             For Each c In candles
                                 arr.Add(New JObject From {
@@ -418,7 +419,7 @@ Namespace WpfDerivClientVB
                                 })
                             Next
                             result = New JObject From {
-                                {"ok", True}, {"symbol", symD}, {"timeframe", tfD},
+                                {"ok", True}, {"fuente", fuenteD}, {"symbol", symD}, {"timeframe", tfD},
                                 {"total", candles.Count}, {"candles", arr}
                             }
                         End If
@@ -430,9 +431,10 @@ Namespace WpfDerivClientVB
                         Else
                             Dim symC = If(qs("symbol"), "R_100")
                             Dim tfC = If(qs("timeframe"), "1h")
-                            Dim cnt = Await DescargaService.ContarRegistrosAsync(symC, tfC)
+                            Dim fuenteC = FuentesVelas.Normalizar(qs("fuente"))
+                            Dim cnt = Await DescargaService.ContarRegistrosAsync(symC, tfC, fuenteC)
                             result = New JObject From {
-                                {"ok", True}, {"symbol", symC}, {"timeframe", tfC}, {"total_registros", cnt}
+                                {"ok", True}, {"fuente", fuenteC}, {"symbol", symC}, {"timeframe", tfC}, {"total_registros", cnt}
                             }
                         End If
 
@@ -626,6 +628,7 @@ Namespace WpfDerivClientVB
                                     ' (evita el error de 0 velas cuando los datos son mas antiguos que 30 dias)
 
                                     Dim configBt As New BacktestConfig With {
+                                        .Platform           = FuentesVelas.Normalizar(qs("fuente")),
                                         .Symbol             = symBt,
                                         .Timeframe          = tfBt,
                                         .DesdeEpoch         = desdeBt,
@@ -1271,15 +1274,15 @@ Namespace WpfDerivClientVB
             ' ── Historial
             ep("GET  /api/historico/descargar") = "Iniciar descarga. Params: ?symbol=R_100&timeframe=1h&desde=2024-01-01&hasta=2024-12-31"
             ep("GET  /api/historico/estado") = "Estado del job de descarga actual"
-            ep("GET  /api/historico/datos") = "Velas de BD. Params: ?symbol=R_100&timeframe=1h&limit=100"
-            ep("GET  /api/historico/contar") = "Total de registros. Params: ?symbol=R_100&timeframe=1h"
+            ep("GET  /api/historico/datos") = "Velas de BD. Params: ?symbol=R_100&timeframe=1h&limit=100[&fuente=Deriv|Dukascopy|Bitstamp|Binance|Yahoo]"
+            ep("GET  /api/historico/contar") = "Total de registros. Params: ?symbol=R_100&timeframe=1h[&fuente=...]"
             ep("GET  /api/historico/detener") = "Cancelar descarga en curso"
             ' ── Estrategias dinamicas
             ep("GET  /api/dinamicas/listar") = "Catalogo de estrategias JSON disponibles"
             ep("GET  /api/dinamicas/leer") = "Leer JSON de estrategia. Params: ?nombre=EmaRsiCruce"
             ep("POST /api/dinamicas/guardar") = "Crear/actualizar JSON. Body: {nombre, contenido}"
             ep("POST /api/dinamicas/eliminar") = "Eliminar JSON. Body: {nombre}"
-            ep("GET  /api/dinamicas/backtest") = "Ejecutar backtest. Params: ?nombre=EmaRsiCruce&symbol=R_100&timeframe=1h&desde_epoch=...&hasta_epoch=...&duracion_velas=5&payout=85&min_confianza=55&monto=10"
+            ep("GET  /api/dinamicas/backtest") = "Ejecutar backtest. Params: ?nombre=EmaRsiCruce&symbol=R_100&timeframe=1h&desde_epoch=...&hasta_epoch=...&duracion_velas=5&payout=85&min_confianza=55&monto=10[&fuente=Deriv|Dukascopy|Bitstamp|Binance|Yahoo]"
             ep("GET  /api/dinamicas/sesiones") = "Listar sesiones. Params: ?limite=20"
             ep("GET  /api/dinamicas/operaciones") = "Operaciones de sesion. Params: ?sesion_id=1"
             ep("GET  /api/dinamicas/perdidas") = "Perdidas con contexto. Params: ?sesion_id=1"

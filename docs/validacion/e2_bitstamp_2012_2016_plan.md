@@ -44,3 +44,23 @@ La regla E2 (tendencia con control de volatilidad) se diseno y valido con velas 
 - No valida la cartera de 9 monedas ni el forward en papel; solo si la idea de tendencia con control
   de volatilidad se sostiene en otra epoca del mismo mercado.
 - Bitstamp 2012-2013 tiene poco volumen y horas sin operaciones: precios mas ruidosos que hoy.
+
+## Resultado (2026-11-18)
+
+Script: `scripts/ml/e2_bitstamp.py`; salida completa en `docs/validacion/e2_bitstamp_2026-11-18.txt` y `.json`.
+
+| 2012-2016 (BTC, Bitstamp) | Anual | Sharpe | Caida maxima | Alfa anual (t) |
+|---|---|---|---|---|
+| E2 | 145,0% | 2,36 | 31,7% | 49,7% (t 3,37) |
+| H1 (solo media de 50) | 151,2% | 1,63 | 70,2% | 21,3% (t 1,00) |
+| Comprar y mantener | 191,3% | 1,64 | 84,9% | - |
+
+**Veredicto (criterio principal): E2 FUNCIONA fuera de muestra** (alfa > 0 con t 3,37 >= 1,645).
+
+- Gana menos que comprar y mantener en un periodo en que BTC multiplico por ~200, pero con la cuarta
+  parte del riesgo: en 2014 (BTC -56%) E2 termino +5,9% con caida de 14,9%.
+- El resultado no depende del costo (t 3,46 con 0,05% y 3,29 con 0,20% por lado).
+- Control de la fuente: en 2017-11 a 2026-11 E2 calculado con Bitstamp y con Binance da casi lo mismo
+  (correlacion diaria 0,997; 44,9% vs 44,8% anual).
+- Limites: un solo activo y una epoca de crecimiento extremo; no valida la cartera de 9 monedas ni el
+  forward en papel, que siguen siendo la prueba que decide.

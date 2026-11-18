@@ -298,19 +298,30 @@ Namespace WpfDerivClientVB.Servidor
 
         ''' <summary>Carpeta de copias (config RespaldosCarpeta o %LOCALAPPDATA%\WpfDerivClientVB\respaldos).</summary>
         ''' <summary>
-        ''' Completa el historico externo (Dukascopy) hasta ayer. Si el servidor de Dukascopy
-        ''' falla no se alerta por WhatsApp (son datos de investigacion, se reintentan la noche
-        ''' siguiente); queda en el log y en el resumen del mantenimiento.
+        ''' Completa hasta ayer el historico externo de todas las fuentes (Dukascopy, Bitstamp,
+        ''' Binance, Yahoo) que tengan series guardadas. Si una fuente falla no se alerta por
+        ''' WhatsApp (son datos de investigacion, se reintentan la noche siguiente); queda en el
+        ''' log y en el resumen del mantenimiento.
         ''' </summary>
         Private Async Function ActualizarHistoricoExternoAsync() As Task(Of JObject)
-            Try
-                Dim r = Await DukascopyDescarga.Instancia.ActualizarTodoAsync()
-                If r("ok") IsNot Nothing AndAlso Not CBool(r("ok")) Then AppLogger.Warn("[Autonomo] Historico externo incompleto: " & r.ToString(Newtonsoft.Json.Formatting.None))
-                Return r
-            Catch ex As Exception
-                AppLogger.Warn("[Autonomo] Historico externo: " & ex.Message)
-                Return New JObject From {{"ok", False}, {"error", ex.Message}}
-            End Try
+            Dim res As New JObject()
+            Dim todoOk = True
+            For Each d In DescargasHistoricas.Todas()
+                Try
+                    Dim r = Await d.ActualizarTodoAsync()
+                    If r("ok") IsNot Nothing AndAlso Not CBool(r("ok")) Then
+                        todoOk = False
+                        AppLogger.Warn("[Autonomo] Historico externo " & d.Fuente & " incompleto: " & r.ToString(Newtonsoft.Json.Formatting.None))
+                    End If
+                    res(d.Fuente.ToLowerInvariant()) = r
+                Catch ex As Exception
+                    todoOk = False
+                    AppLogger.Warn("[Autonomo] Historico externo " & d.Fuente & ": " & ex.Message)
+                    res(d.Fuente.ToLowerInvariant()) = New JObject From {{"ok", False}, {"error", ex.Message}}
+                End Try
+            Next
+            res("ok") = todoOk
+            Return res
         End Function
 
         Public Function CarpetaRespaldos() As String

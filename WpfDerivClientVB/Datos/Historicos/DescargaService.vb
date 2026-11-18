@@ -133,14 +133,16 @@ Namespace WpfDerivClientVB
         ''' <summary>Devuelve las últimas N velas almacenadas en BD.</summary>
         Public Async Function ConsultarDatosAsync(symbol    As String,
                                                    timeframe As String,
-                                                   Optional limit As Integer = 100) As Task(Of List(Of CandleModel))
-            Return Await _repo.GetCandlesAsync(PLATFORM, symbol, timeframe, limit:=limit)
+                                                   Optional limit As Integer = 100,
+                                                   Optional fuente As String = Nothing) As Task(Of List(Of CandleModel))
+            Return Await _repo.GetCandlesAsync(If(String.IsNullOrEmpty(fuente), PLATFORM, fuente), symbol, timeframe, limit:=limit)
         End Function
 
         ''' <summary>Cuenta cuántas velas hay en BD para symbol+timeframe.</summary>
         Public Async Function ContarRegistrosAsync(symbol    As String,
-                                                    timeframe As String) As Task(Of Long)
-            Return Await _repo.CountAsync(PLATFORM, symbol, timeframe)
+                                                    timeframe As String,
+                                                    Optional fuente As String = Nothing) As Task(Of Long)
+            Return Await _repo.CountAsync(If(String.IsNullOrEmpty(fuente), PLATFORM, fuente), symbol, timeframe)
         End Function
 
     End Class

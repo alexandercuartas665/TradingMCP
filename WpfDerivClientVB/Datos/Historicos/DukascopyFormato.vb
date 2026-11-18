@@ -5,25 +5,6 @@ Imports System.Linq
 Namespace WpfDerivClientVB
 
     ''' <summary>
-    ''' Origen de las velas guardadas en la tabla candles (columna platform). Las velas de
-    ''' Deriv y las de fuentes externas NUNCA se mezclan: cada backtest elige su fuente.
-    ''' </summary>
-    Public Module FuentesVelas
-        Public Const DERIV As String = "Deriv"
-        Public Const DUKASCOPY As String = "Dukascopy"
-
-        ''' <summary>"deriv"/"dukascopy" (sin importar mayusculas) o vacio -> nombre canonico. Otro valor: error.</summary>
-        Public Function Normalizar(fuente As String) As String
-            If String.IsNullOrWhiteSpace(fuente) Then Return DERIV
-            Select Case fuente.Trim().ToLowerInvariant()
-                Case "deriv" : Return DERIV
-                Case "dukascopy" : Return DUKASCOPY
-            End Select
-            Throw New ArgumentException("Fuente de velas desconocida: " & fuente & " (use Deriv o Dukascopy)")
-        End Function
-    End Module
-
-    ''' <summary>
     ''' Formato de los archivos historicos publicos de Dukascopy (datafeed.dukascopy.com).
     ''' Cada archivo .bi5 es LZMA ("alone"); dentro, registros de 24 bytes big-endian:
     ''' segundos desde el inicio del archivo, apertura, cierre, minimo, maximo (enteros en
