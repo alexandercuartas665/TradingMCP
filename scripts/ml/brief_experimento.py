@@ -5,7 +5,7 @@ Plan pre-registrado: docs/validacion/brief_modelo_filtro_plan.md (commit 3646261
 Datos: D:\\traiding_ml\\brief\\<SIMBOLO>_<ANO>.csv.gz (scripts/ml/brief_datos.py).
 
 Version H1 (enmienda 1 del plan): velas H1 bid de la base + spread fijo por activo y ano medido en junio
-(D:	raiding_mlrief\spread_h1.json). Version M15: el plan original con minutos bid/ask.
+(D:\traiding_ml\brief\spread_h1.json). Version M15: el plan original con minutos bid/ask.
 
 Uso (entorno de D:):
   D:/traiding_ml/venv/Scripts/python.exe -I scripts/ml/brief_experimento.py h1 docs/validacion/brief_modelo_filtro_h1_2026-11-18
