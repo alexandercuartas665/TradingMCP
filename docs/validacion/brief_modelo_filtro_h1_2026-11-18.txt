@@ -1,0 +1,39 @@
+EXPERIMENTO DEL BRIEF: MODELO-FILTRO EN H1 (enmienda 1) - plan pre-registrado en docs/validacion/brief_modelo_filtro_plan.md
+Triple barrera (stop 1,5 ATR, objetivo 1,5 R, 4 velas = 4 h), entrada ask/bid + deslizamiento 0,5 spread por lado.
+Veredicto: EVIDENCIA solo si pasa los 7 criterios del brief y el azar al percentil 98,3 (3 activos).
+
+== Oro (XAUUSD, desde 2003-05-05, caminado desde 2006; spread mediano 0.378)
+  SISTEMA (base + filtro)    NO HAY EVIDENCIA DE VENTAJA | R medio -0.0607 | 6 anos 0/6 | estres -6.82 | azar pct 95.6 (p95 -18.9) | costo x2 -58.5 | 291 ops | IS/OOS -0.0558 -> -0.1722 falla
+  base sin filtro            NO HAY EVIDENCIA DE VENTAJA | R medio -0.1222 | 6 anos 1/6 | estres -11.11 | azar pct 84.1 (p95 -48.8) | costo x2 -134.9 | 487 ops
+    A_ruptura_dia    base {'ops': 487, 'r_medio': -0.1222, 'suma_r': -59.53, 'acierto': 0.4025} | sistema {'ops': 291, 'r_medio': -0.0607, 'suma_r': -17.66, 'acierto': 0.4192}
+    compras          base {'ops': 268, 'r_medio': -0.1955, 'suma_r': -52.4, 'acierto': 0.3657} | sistema {'ops': 149, 'r_medio': -0.1343, 'suma_r': -20.01, 'acierto': 0.3691}
+    ventas           base {'ops': 219, 'r_medio': -0.0325, 'suma_r': -7.13, 'acierto': 0.4475} | sistema {'ops': 142, 'r_medio': 0.0165, 'suma_r': 2.35, 'acierto': 0.4718}
+    por ano (sistema): 2008 -0.0, 2009 +7.3, 2010 -8.8, 2011 +1.4, 2012 +4.2, 2013 -0.0, 2014 +2.0, 2015 -2.7, 2016 -1.7, 2017 +0.3, 2018 -4.3, 2019 +2.5, 2020 -3.3, 2021 -5.1, 2022 -3.5, 2023 -4.0, 2024 -3.2, 2025 -0.7, 2026 +1.8
+    sensibilidad stop 2 ATR / objetivo 2R: sistema {'ops': 287, 'r_medio': 0.0403, 'suma_r': 11.56, 'acierto': 0.4634} | base {'ops': 487, 'r_medio': -0.0611, 'suma_r': -29.77, 'acierto': 0.4189}
+
+== Nasdaq (USATECHIDXUSD, desde 2011-09-18, caminado desde 2015; spread mediano 3.062)
+  SISTEMA (base + filtro)    NO HAY EVIDENCIA DE VENTAJA | R medio -0.0246 | 6 anos 4/6 | estres 31.65 | azar pct 100.0 (p95 -166.9) | costo x2 -300.3 | 2460 ops | IS/OOS -0.0519 -> -0.0197 falla
+  base sin filtro            NO HAY EVIDENCIA DE VENTAJA | R medio -0.0718 | 6 anos 2/6 | estres 18.75 | azar pct 99.5 (p95 -344.5) | costo x2 -738.9 | 3979 ops
+    B_ema_adx        base {'ops': 51, 'r_medio': 0.0318, 'suma_r': 1.62, 'acierto': 0.549} | sistema {'ops': 40, 'r_medio': 0.0804, 'suma_r': 3.22, 'acierto': 0.575}
+    A_canal10        base {'ops': 3928, 'r_medio': -0.0732, 'suma_r': -287.46, 'acierto': 0.4348} | sistema {'ops': 2420, 'r_medio': -0.0264, 'suma_r': -63.85, 'acierto': 0.4624}
+    compras          base {'ops': 2199, 'r_medio': -0.0552, 'suma_r': -121.46, 'acierto': 0.4638} | sistema {'ops': 1548, 'r_medio': -0.0363, 'suma_r': -56.24, 'acierto': 0.4761}
+    ventas           base {'ops': 1780, 'r_medio': -0.0923, 'suma_r': -164.37, 'acierto': 0.4022} | sistema {'ops': 912, 'r_medio': -0.0048, 'suma_r': -4.4, 'acierto': 0.4441}
+    por ano (sistema): 2015 -12.8, 2016 -12.6, 2017 +1.8, 2018 +3.2, 2019 -38.7, 2020 +16.1, 2021 +0.8, 2022 +15.5, 2023 +9.0, 2024 -12.1, 2025 -20.6, 2026 -10.2
+    sensibilidad stop 2 ATR / objetivo 2R: sistema {'ops': 2270, 'r_medio': -0.0054, 'suma_r': -12.3, 'acierto': 0.4793} | base {'ops': 3672, 'r_medio': -0.0385, 'suma_r': -141.45, 'acierto': 0.4578}
+
+== USDJPY (USDJPY, desde 2003-05-04, caminado desde 2006; spread mediano 0.005)
+  SISTEMA (base + filtro)    NO HAY EVIDENCIA DE VENTAJA | R medio -0.0247 | 6 anos 5/6 | estres 13.31 | azar pct 99.6 (p95 -242.8) | costo x2 -572.1 | 7374 ops | IS/OOS -0.037 -> -0.0102 falla
+  base sin filtro            NO HAY EVIDENCIA DE VENTAJA | R medio -0.0454 | 6 anos 2/6 | estres -37.07 | azar pct 87.6 (p95 -532.4) | costo x2 -1258.8 | 12647 ops
+    A_sar            base {'ops': 9072, 'r_medio': -0.0366, 'suma_r': -331.94, 'acierto': 0.4448} | sistema {'ops': 5258, 'r_medio': -0.0094, 'suma_r': -49.59, 'acierto': 0.4593}
+    C_bollinger      base {'ops': 3575, 'r_medio': -0.0678, 'suma_r': -242.24, 'acierto': 0.4476} | sistema {'ops': 2116, 'r_medio': -0.0625, 'suma_r': -132.18, 'acierto': 0.4537}
+    compras          base {'ops': 6700, 'r_medio': -0.0324, 'suma_r': -217.37, 'acierto': 0.4613} | sistema {'ops': 4159, 'r_medio': -0.0042, 'suma_r': -17.32, 'acierto': 0.4749}
+    ventas           base {'ops': 5947, 'r_medio': -0.06, 'suma_r': -356.81, 'acierto': 0.4278} | sistema {'ops': 3215, 'r_medio': -0.0512, 'suma_r': -164.45, 'acierto': 0.4355}
+    por ano (sistema): 2006 -33.9, 2007 +2.9, 2008 -3.3, 2009 -5.0, 2010 -31.9, 2011 -33.1, 2012 -20.7, 2013 -5.6, 2014 -24.4, 2015 +8.8, 2016 +1.6, 2017 -16.6, 2018 -14.0, 2019 -1.1, 2020 +3.6, 2021 +17.7, 2022 +13.0, 2023 -23.6, 2024 +10.0, 2025 +1.6, 2026 -27.9
+    sensibilidad stop 2 ATR / objetivo 2R: sistema {'ops': 6816, 'r_medio': -0.0093, 'suma_r': -63.23, 'acierto': 0.4645} | base {'ops': 11997, 'r_medio': -0.0279, 'suma_r': -334.22, 'acierto': 0.4532}
+
+== VEREDICTOS
+  Oro     NO HAY EVIDENCIA DE VENTAJA  (falla: 1_expectativa, 2_caminata_6_anos, 3_estres, 5_costo_doble, 6_is_oos)
+  Nasdaq  NO HAY EVIDENCIA DE VENTAJA  (falla: 1_expectativa, 2_caminata_6_anos, 5_costo_doble, 6_is_oos)
+  USDJPY  NO HAY EVIDENCIA DE VENTAJA  (falla: 1_expectativa, 5_costo_doble, 6_is_oos)
+
+Tiempo total: 1.1 min
