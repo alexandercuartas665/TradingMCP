@@ -118,3 +118,36 @@ costos, 20 variables, modelo, caminata, 7 criterios y percentil 98,3):
   la base. El ask de cada vela = bid + ese spread. Deslizamiento 0,5 x spread por lado, igual.
 - Percentiles "de 100 dias" = 2.400 velas H1; volatilidad realizada de 1 dia = 24 velas H1.
 - Una entrada solo si la vela siguiente llega dentro de 2 horas.
+
+## Resultado version H1 (2026-11-19)
+
+Archivos: `brief_modelo_filtro_h1_2026-11-18.txt` y `.json` (esta carpeta).
+
+| Activo | Ops sistema | R medio | Anos 2020-25 > 0 | Estres | Azar (pct) | Costo x2 | IS -> OOS | Veredicto |
+|---|---|---|---|---|---|---|---|---|
+| Oro | 291 | -0,061 | 0/6 | -6,8 | 95,6 | -58,5 | -0,056 -> -0,172 | NO HAY EVIDENCIA DE VENTAJA |
+| Nasdaq | 2.460 | -0,025 | 4/6 | +31,7 | 100,0 | -300,3 | -0,052 -> -0,020 | NO HAY EVIDENCIA DE VENTAJA |
+| USDJPY | 7.374 | -0,025 | 5/6 | +13,3 | 99,6 | -572,1 | -0,037 -> -0,010 | NO HAY EVIDENCIA DE VENTAJA |
+
+Los tres activos fallan la expectativa (criterio 1), los costos al doble (5) y el IS/OOS (6).
+
+Lectura:
+- El filtro si discrimina: en los tres activos sube el R medio frente a la base sin filtro
+  (oro -0,122 -> -0,061; Nasdaq -0,072 -> -0,025; USDJPY -0,045 -> -0,025) y en Nasdaq y USDJPY
+  queda por encima del percentil 98,3 de las entradas al azar. Pero parte de estrategias base que
+  pierden despues de costos, y no alcanza para volverlas positivas.
+- Informativo (no cambia el veredicto): con stop 2 ATR / objetivo 2 R el oro filtrado da +11,6 R en
+  287 ops (R medio +0,040). Es una variante vista despues de los resultados: solo serviria como
+  hipotesis nueva con su propio plan, no como rescate.
+
+Notas de ejecucion:
+- Oro D (pullback) no dio ninguna senal en H1 (RSI < 40 con cierre > EMA21 casi no ocurre en H1);
+  se dejo como estaba pre-registrado.
+- Spread: 63 de 64 activo-ano medidos. Nasdaq 2011 no tiene datos suficientes (34 velas H1 en la
+  base) y usa el del ano mas cercano (2012). Nasdaq 2012 mide 0 (ask = bid en esos datos de
+  Dukascopy). Ambos anos son solo entrenamiento (Nasdaq se camina desde 2015).
+- La primera corrida tomo el primer ano caminado como "primer ano de datos + 3" (Nasdaq 2014) en vez
+  de los anos fijados en el plan (Nasdaq 2015). Se corrigio el script y se volvio a correr; los
+  veredictos son los mismos. Los archivos son los de la corrida corregida.
+
+Pendiente: la version M15 del plan original, cuando termine la descarga de minutos (Dukascopy limita).

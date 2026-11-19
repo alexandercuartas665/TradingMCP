@@ -25,6 +25,7 @@ import pandas as pd
 
 CARPETA = r'D:\traiding_ml\brief'
 ACTIVOS = [('Oro', 'XAUUSD'), ('Nasdaq', 'USATECHIDXUSD'), ('USDJPY', 'USDJPY')]
+PRIMER_ANO = {'Oro': 2006, 'Nasdaq': 2015, 'USDJPY': 2006}   # fijados en el plan (seccion Modelo)
 ESTRES = (2008, 2020, 2022)
 ULTIMOS = range(2020, 2026)
 N_AZAR = 1000
@@ -422,11 +423,11 @@ def main(modo, salida):
         df = preparar(sym)
         R = resultados(df)
         t = operaciones(df, activo, R)
-        primer = int(df['anio'].min()) + 3
+        primer = PRIMER_ANO[activo]
         sis_todo = caminar(t, primer)
         sis = sis_todo[sis_todo['toma']]
         base = t[t['anio'] >= primer]
-        log('%s: %d velas M15, %d senales base, %d tomadas por el filtro' % (activo, len(df), len(base), len(sis)))
+        log('%s: %d velas, %d senales base, %d tomadas por el filtro' % (activo, len(df), len(base), len(sis)))
         io = is_oos(t)
         cs = criterios(sis, df, R, rng, io)
         cb = criterios(base, df, R, rng)

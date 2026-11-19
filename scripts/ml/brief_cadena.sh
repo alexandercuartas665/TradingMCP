@@ -13,9 +13,13 @@ for intento in $(seq 1 60); do
   until [ "$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$PRUEBA")" = 200 ]; do sleep 1200; done
   echo "$(date -u +%FT%TZ) Dukascopy responde; spread (intento $intento)" >> "$LOG"
   "$P" -I scripts/ml/brief_datos.py spread >> D:/traiding_ml/brief_spread.log 2>&1
-  echo "$(date -u +%FT%TZ) spread medido: $(n_spread) de 64" >> "$LOG"
+  ok=$?
+  echo "$(date -u +%FT%TZ) spread medido: $(n_spread) de 64 (codigo $ok)" >> "$LOG"
+  # Corrida completa sin errores: lo que falta no tiene datos (Nasdaq 2011: 34 velas H1 en la base);
+  # el experimento usa el spread del ano mas cercano.
+  [ "$ok" = 0 ] && break
 done
-if [ "$(n_spread)" -ge 64 ]; then
+if [ "$(n_spread)" -ge 60 ]; then
   echo "$(date -u +%FT%TZ) corriendo version H1" >> "$LOG"
   "$P" -I scripts/ml/brief_experimento.py h1 docs/validacion/brief_modelo_filtro_h1_2026-11-18 > D:/traiding_ml/brief_h1.log 2>&1
   echo "$(date -u +%FT%TZ) H1 terminada (codigo $?)" >> "$LOG"
