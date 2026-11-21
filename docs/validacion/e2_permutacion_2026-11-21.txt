@@ -1,0 +1,36 @@
+E2 CONTRA PERMUTACIONES (4 portones) - plan pre-registrado en docs/validacion/e2_permutacion_plan.md
+Binance 9 monedas 2017-08-17 a 2026-11-16; 80 combinaciones; costo 0,125% por lado; semilla 1.
+
+== CONTROL: con datos reales E2 t 2.491 (lote 2: 2,49), H1 t 2.634 (lote 2: 2,64)
+  rejilla real en diseno: maximo t 2.942 (N20 V30 obj0.3)
+
+== PORTON 2: permutacion en diseno (2019-01-01 a 2025-06-01) con optimizacion, 1000 permutaciones
+  t maximo real 2.942 | permutaciones: mediana 0.37 p95 2.17 p99 3.00 | p = 0.0130 -> FALLA
+  informativo: E2 (t 2.491) contra los maximos de las permutaciones: p = 0.0290
+
+== PORTON 3: caminata con reoptimizacion cada 30 dias, 2021-08-17 a 2026-11-16 (64 reoptimizaciones)
+  caminata   alfa anual    5.29% t  0.59 | anual    6.26% sharpe  0.36 caida  50.0% -> PASA
+  E2 fijo    alfa anual   10.50% t  1.23 | anual   12.38% sharpe  0.58 caida  34.9% (informativo)
+  comprar y mantener                       | anual   -4.86% sharpe  0.25 caida  78.7%
+  combinaciones elegidas: N20 sin vol x22, N20 V30 obj0.3 x16, N50 V60 obj0.3 x8, N150 V60 obj0.3 x8, N20 V30 obj0.8 x4, N50 sin vol x4, N20 V60 obj0.5 x2
+
+== PORTON 4: permutacion de la caminata (datos desde 2021-08-17 barajados), 200 permutaciones
+  t real 0.589 | permutaciones: mediana -0.50 p95 1.21 p99 1.77 | p = 0.1443 -> FALLA
+
+== PORTON 4b: E2 fijo en BTC con Bitstamp 2012-2016, 1000 permutaciones
+  t real 3.373 | permutaciones: mediana -0.20 p95 1.50 p99 2.02 | p = 0.0010 -> PASA
+
+== VEREDICTO: E2 NO PASA (falla porton 2, 4)
+
+== INFORMATIVO: t en diseno de las 80 combinaciones (filas N; columnas sin vol y V/objetivo)
+  N      sin vol   V20/0.3   V20/0.5   V20/0.8   V30/0.3   V30/0.5   V30/0.8   V60/0.3   V60/0.5   V60/0.8
+  20        2.81      2.67      2.61      2.70      2.94      2.84      2.84      2.93      2.86      2.79
+  30        2.50      2.48      2.40      2.47      2.72      2.56      2.54      2.78      2.65      2.51
+  40        2.46      2.31      2.26      2.38      2.61      2.47      2.50      2.71      2.58      2.42
+  50        2.63      2.43      2.37      2.53      2.67      2.49      2.52      2.82      2.68      2.46
+  75        1.49      1.22      1.14      1.25      1.50      1.28      1.25      1.72      1.55      1.26
+  100       1.12      0.75      0.68      0.87      1.01      0.83      0.90      1.40      1.26      0.99
+  150       1.13      1.28      1.20      1.16      1.56      1.39      1.24      1.82      1.70      1.32
+  200       0.58      0.55      0.52      0.56      0.98      0.86      0.75      1.16      1.09      0.78
+
+Tiempo total: 12.9 min

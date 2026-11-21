@@ -87,3 +87,35 @@ que significa; no se ajusta nada para rescatarlo.
 
 `scripts/ml/e2_permutacion.py` (entorno de D:). Resultado en
 `docs/validacion/e2_permutacion_<fecha>.txt` / `.json`.
+
+## Resultado (2026-11-21)
+
+Script `scripts/ml/e2_permutacion.py`; detalle en `e2_permutacion_2026-11-21.txt` y `.json` (12,9 min).
+Control: con datos reales la rejilla reproduce el lote 2 (E2 t 2,491; H1 t 2,634).
+
+| Porton | Real | Permutaciones (p95 / p99) | p | Resultado |
+|---|---|---|---|---|
+| 2. Diseno con optimizacion (1.000) | t max 2,94 (N20 V30 obj 0,3) | 2,17 / 3,00 | 0,013 | FALLA (por poco) |
+| 3. Caminata 2021-08 a 2026-11 | alfa 5,3% anual, t 0,59 | - | - | PASA (alfa > 0) |
+| 4. Caminata permutada (200) | t 0,59 | 1,21 / 1,77 | 0,144 | FALLA |
+| 4b. Bitstamp 2012-2016 (1.000) | t 3,37 | 1,50 / 2,02 | 0,001 | PASA |
+
+**Veredicto: E2 NO PASA los portones (falla 2 y 4).**
+
+Lectura:
+- Porton 2: despues de descontar la busqueda entre 80 combinaciones, el resultado de diseno queda en
+  p 1,3% (E2 exacto, 2,9%): pasaria al 5% pero no al 1% exigido. La ventaja de diseno es probable,
+  no concluyente.
+- Portones 3 y 4: desde agosto de 2021 la caminata gana algo (5,3% anual de alfa, caida 50% frente a
+  79% de comprar y mantener), pero no se distingue de datos barajados (p 14%). E2 fijo lo hizo
+  mejor en el mismo tramo (alfa 10,5%, t 1,23, caida 35%), sin prueba de permutacion propia.
+- Porton 4b: en 2012-2016 la tendencia era clara: el t real supera las 1.000 permutaciones.
+- Conjunto: la tendencia en cripto fue real (2012-2016 y diseno 2019-2021), pero en el tramo
+  reciente no hay evidencia de que siga ahi. Coincide con el estudio cripto (ventaja casi toda en
+  2019-2021, desde 2022 no significativa).
+- Meseta (informativo): N de 20 a 50 dias da t 2,3-2,9 con cualquier control de volatilidad; desde
+  75 dias cae a 0,5-1,8. E2 (N50) no es un pico aislado. La caminata elige sobre todo N20.
+
+Consecuencia (fijada en el plan): el forward en papel de E2 sigue igual. Cualquier decision de
+dinero real exige mas tiempo de forward; los resultados de diseno de la familia de tendencia se leen
+como posibles hallazgos de la optimizacion.
