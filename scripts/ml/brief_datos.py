@@ -2,13 +2,15 @@
 
 Plan: docs/validacion/brief_modelo_filtro_plan.md. Un archivo por activo y ano en D:\\traiding_ml\\brief:
 <SIMBOLO>_<ANO>.csv.gz con epoch, bid o/h/l/c, ask o/h/l/c y volumen (minutos con volumen).
-Lo ya bajado no se repite: un ano solo se escribe si todos sus dias respondieron.
+Lo ya bajado no se repite: cada archivo diario queda en D:\\traiding_ml\\brief\\crudo y un ano solo se
+escribe cuando todos sus dias respondieron. Con --repetir hace pasadas hasta completar todo.
 
-Dukascopy limita las peticiones (429): por defecto 1 hilo, pausa entre archivos y esperas largas.
+Dukascopy limita las peticiones (429): por defecto 1 hilo, pausa entre archivos y esperas largas
+(~77 s por archivo en noviembre de 2026: la descarga completa toma alrededor de un mes).
 
 Uso (entorno de D:):
   D:/traiding_ml/venv/Scripts/python.exe -I scripts/ml/brief_datos.py spread     (enmienda 1: spread de junio por ano)
-  D:/traiding_ml/venv/Scripts/python.exe -I scripts/ml/brief_datos.py minutos [--hilos 1]
+  D:/traiding_ml/venv/Scripts/python.exe -I scripts/ml/brief_datos.py minutos [--hilos 1] [--repetir] [--log ARCHIVO]
 """
 import argparse
 import concurrent.futures as cf
@@ -33,10 +35,17 @@ URL = 'https://datafeed.dukascopy.com/datafeed/%s/%04d/%02d/%02d/%s_candles_min_
 URL_H = 'https://datafeed.dukascopy.com/datafeed/%s/%04d/%02d/%s_candles_hour_1.bi5'
 SIMBOLO_BD = {'XAUUSD': 'frxXAUUSD', 'USDJPY': 'frxUSDJPY', 'USATECHIDXUSD': 'OTC_NDX'}
 PAUSA = 1.5
+INTENTOS = 6                          # por archivo y pasada; lo que falle se reintenta en la pasada siguiente
+LOG = None                            # --log: escribe a archivo (pythonw no tiene consola)
 
 
 def log(msg):
-    print(time.strftime('%H:%M:%S'), msg, flush=True)
+    linea = '%s %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), msg)
+    if LOG:
+        with open(LOG, 'a') as f:
+            f.write(linea + '\n')
+    else:
+        print(linea, flush=True)
 
 
 def bajar(url, intentos=12):
@@ -74,11 +83,33 @@ def minutos(datos, epoch0):
     return np.column_stack([epoch0 + s[ok], o[ok] / DIVISOR, h[ok] / DIVISOR, l[ok] / DIVISOR, c[ok] / DIVISOR, vol[ok]])
 
 
+def crudo(sym, d, lado):
+    """Bytes del archivo de minutos de un dia, guardado en disco (b'' si no existe; None si no respondio).
+    Lo bajado no se repite: si el PC se apaga o Dukascopy corta, se retoma en el dia que falto."""
+    ruta = os.path.join(CARPETA, 'crudo', sym, str(d.year), '%02d%02d_%s.bi5' % (d.month, d.day, lado))
+    if os.path.exists(ruta):
+        with open(ruta, 'rb') as f:
+            return f.read()
+    try:
+        datos = bajar(URL % (sym, d.year, d.month - 1, d.day, lado), intentos=INTENTOS)
+    except RuntimeError:
+        return None
+    os.makedirs(os.path.dirname(ruta), exist_ok=True)
+    with open(ruta + '.tmp', 'wb') as f:
+        f.write(datos)
+    os.replace(ruta + '.tmp', ruta)
+    return datos
+
+
 def dia(sym, d):
+    """Minutos bid y ask de un dia, o None si algun archivo no respondio (se reintenta en otra pasada)."""
     epoch0 = int(dt.datetime(d.year, d.month, d.day, tzinfo=dt.timezone.utc).timestamp())
     res = {}
     for lado in ('BID', 'ASK'):
-        res[lado] = minutos(bajar(URL % (sym, d.year, d.month - 1, d.day, lado)), epoch0)
+        datos = crudo(sym, d, lado)
+        if datos is None:
+            return None
+        res[lado] = minutos(datos, epoch0)
     return res
 
 
@@ -99,11 +130,16 @@ def anio(sym, a, hilos):
     dias = [d for d in dias if d.year == a and d < HASTA and d.weekday() != 5]
     if not dias:
         return 'sin dias'
-    bid, ask = [], []
+    bid, ask, faltan = [], [], 0
     with cf.ThreadPoolExecutor(hilos) as ex:
         for r in ex.map(lambda d: dia(sym, d), dias):
+            if r is None:
+                faltan += 1
+                continue
             bid.append(r['BID'])
             ask.append(r['ASK'])
+    if faltan:
+        return 'incompleto: faltan %d de %d dias (quedan guardados los demas)' % (faltan, len(dias))
     b = a_m15(np.vstack(bid), 'b')
     k = a_m15(np.vstack(ask), 'a').drop(columns='vol')
     df = b.merge(k, on='epoch', how='inner').sort_values('epoch')
@@ -151,18 +187,33 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('accion', choices=['spread', 'minutos'])
     ap.add_argument('--hilos', type=int, default=1)
+    ap.add_argument('--repetir', action='store_true', help='pasadas hasta completar todos los anos')
+    ap.add_argument('--log', help='archivo de registro en vez de la consola')
     a = ap.parse_args()
+    global LOG
+    LOG = a.log
     os.makedirs(CARPETA, exist_ok=True)
     if a.accion == 'spread':
         return spread_junio()
-    for sym, desde in ACTIVOS.items():
-        for an in range(desde, HASTA.year + 1):
-            t0 = time.time()
-            try:
-                r = anio(sym, an, a.hilos)
-            except Exception as e:  # se reintenta al volver a correr
-                r = 'ERROR %s' % e
-            log('%s %d: %s (%.0f s)' % (sym, an, r, time.time() - t0))
+    pasada = 0
+    while True:
+        pasada += 1
+        pendientes = 0
+        for sym, desde in ACTIVOS.items():
+            for an in range(desde, HASTA.year + 1):
+                t0 = time.time()
+                try:
+                    r = anio(sym, an, a.hilos)
+                except Exception as e:  # se reintenta en la pasada siguiente
+                    r = 'ERROR %s' % e
+                if r.startswith(('incompleto', 'ERROR')):
+                    pendientes += 1
+                if r != 'ya estaba':
+                    log('pasada %d %s %d: %s (%.0f s)' % (pasada, sym, an, r, time.time() - t0))
+        log('pasada %d terminada: %d anos pendientes' % (pasada, pendientes))
+        if not pendientes or not a.repetir:
+            break
+        time.sleep(1800)
     log('listo')
 
 
