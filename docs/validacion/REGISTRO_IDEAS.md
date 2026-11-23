@@ -1,5 +1,9 @@
 # Registro de ideas probadas
 
+**Objetivo (decision del usuario, 2026-11-22):** seguir investigando en papel, sin dinero real y sin
+prisa, para construir un metodo validado y, si aparece, una estrategia con evidencia para cuando haya mas
+capital. Capital declarado hoy: USD 100.
+
 Una fila por idea. Rutas relativas a `docs/validacion/` salvo que se diga otra cosa.
 Columna "Plan": **previo** = plan en un commit anterior al resultado; **mismo commit** = plan y
 resultado en el mismo commit (git no prueba el orden: se trata como exploratorio); **no** = sin
@@ -14,6 +18,9 @@ archivo de plan. "Sin archivo" = la cifra no esta en ningun archivo del repo.
   Bonferroni al 5%: z >= 3,65 una cola, 3,82 dos colas.
 - Hipotesis nueva: ademas, prueba de permutacion con la busqueda de parametros incluida (como E2).
 - Ninguna cifra de memoria: si no hay archivo, se escribe "sin archivo".
+- **Operable con USD 100** (capital declarado por el usuario el 2026-11-22): sin comision minima por
+  orden, tamano minimo de orden de pocos dolares y pocos instrumentos a la vez. Un plan que no lo
+  cumpla puede correrse como investigacion, pero no se le presenta al usuario como operable.
 
 ## Tabla
 
@@ -50,6 +57,14 @@ archivo de plan. "Sin archivo" = la cifra no esta en ningun archivo del repo.
 | 29 | 11-18 | E2 en BTC fuera de muestra | Bitstamp 2012-2016 | FUNCIONA | alfa 49,71% t 3,37 | `e2_bitstamp_2026-11-18.txt` | previo (`e2_bitstamp_2012_2016_plan.md`, 2 min antes) |
 | 30 | 11-19 | Brief: modelo-filtro LightGBM sobre estrategias base, triple barrera | Oro/Nasdaq/USDJPY H1 | NO HAY EVIDENCIA (los 3) | R medio -0,0607 / -0,0246 / -0,0247 | `brief_modelo_filtro_h1_2026-11-18.txt` | previo (`brief_modelo_filtro_plan.md`). M15 pendiente de datos |
 | 31 | 11-21 | E2 contra permutaciones (4 portones) | Binance + Bitstamp | NO PASA (falla 2 y 4) | p 0,013 / 0,144; Bitstamp p 0,001 | `e2_permutacion_2026-11-21.txt` | previo (`e2_permutacion_plan.md`, 17 min antes) |
+
+## Cola de hipotesis (sin datos mirados)
+
+| Orden | Idea | Estado | Nota |
+|---|---|---|---|
+| 1 | TSMOM diversificado con tamano por volatilidad (P&L) | plan `tsmom_plan.md` (e453f72), enmienda 1 en curso | universo B cerrado hasta visto bueno del lider |
+| - | Carry de base en cripto (spot contra perpetuo, neutral) | **APARCADA por rendimiento esperado insuficiente frente al riesgo, sin backtest** (2026-11-22) | Operable en tamano con USD 100 en Binance (minimos de 5 USDT; exchangeInfo 2026-11-22), pero el rendimiento publico esperado (BIS WP 1087 "Crypto carry": mas de 10% anual sobre la pata corta; arXiv 2510.14435: ~8%) da 4-5,5% anual sobre el capital total antes de los costos de entrada y salida del dinero, al nivel de la tasa libre de riesgo en USD (IBKR paga 3,38% en USD, 2026-11-22), con riesgos de cola que esa tasa no tiene (exchange, USDT, liquidacion). Ya visto: tasas de financiamiento de Binance de 9 monedas desde 2020, usadas como senal en E6. Se reabre solo si el usuario lo pide o si el financiamiento publico vuelve a niveles claramente superiores. Si se reabre, el plan declara desde el principio el capital minimo operable |
+| 3 | Carry de divisas G10 con filtro de crisis | pendiente | depende de donde quiera operar el usuario |
 
 ## Forward tests en papel
 
