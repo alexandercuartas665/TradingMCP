@@ -1,0 +1,229 @@
+PRIMERA PARTE: informe de datos de B con el script de la enmienda 1 (antes de la enmienda 2)
+
+INFORME DE DATOS, universo B (sin correr la cartera)
+mercados esperados 54, con datos 54, sin datos: ninguno
+avisos de datos del script: {'USDZAR': ['18 retornos diarios > 50%'], 'XLEUSUSD': ['1 retornos diarios > 50%']}
+errores de carga: ninguno
+
+mercado        clase     plan       primero    ultimo     cierres hueco>7d  mayor_d entra (312)
+AUDCAD         divisas   2006-01-03 2006-01-03 2026-11-20   5444        0        4 2007-03-15
+AUDCHF         divisas   2006-03-01 2006-03-01 2026-11-20   5403        0        4 2007-05-11
+AUDJPY         divisas   2003-11-30 2003-12-01 2026-11-20   5993        0        4 2005-02-08
+AUDNZD         divisas   2006-12-12 2006-12-12 2026-11-20   5196        0        7 2008-02-20
+AUDUSD         divisas   2003-08-03 2003-08-04 2026-11-20   6075        0        4 2004-10-12
+CADCHF         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+CADJPY         divisas   2004-10-25 2004-10-25 2026-11-20   5754        0        4 2006-01-03
+EURAUD         divisas   2005-10-07 2005-10-07 2026-11-20   5404        7       55 2007-05-10
+EURCAD         divisas   2004-10-25 2004-10-25 2026-11-20   5752        0        4 2006-01-05
+EURMXN         divisas   2007-03-13 2007-03-13 2026-11-20   3053        1     2917 2008-05-21
+EURNOK         divisas   2004-10-25 2004-10-25 2026-11-20   5755        0        4 2006-01-03
+EURNZD         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+EURPLN         divisas   2007-03-13 2007-03-13 2026-11-20   5137        0        4 2008-05-21
+EURSEK         divisas   2004-10-27 2004-10-27 2026-11-20   5754        0        4 2006-01-05
+EURZAR         divisas   2007-03-13 2007-03-13 2026-11-20   2961        5     2917 2008-05-21
+GBPAUD         divisas   2006-03-22 2006-03-22 2026-11-20   5387        0        4 2007-06-04
+GBPCAD         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+GBPNZD         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+NZDCAD         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+NZDCHF         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+NZDJPY         divisas   2006-01-02 2006-01-02 2026-11-20   5444        0        4 2007-03-15
+NZDUSD         divisas   2003-08-03 2003-08-04 2026-11-20   6078        0        4 2004-10-12
+USDCAD         divisas   2003-08-03 2003-08-04 2026-11-20   6078        0        4 2004-10-12
+USDCNH         divisas   2012-06-26 2012-06-27 2026-11-20   3753        0        4 2013-09-05
+USDMXN         divisas   2007-03-13 2007-03-13 2026-11-20   5133        0        4 2008-05-21
+USDNOK         divisas   2003-08-03 2003-08-04 2026-11-20   6076        0        4 2004-10-12
+USDPLN         divisas   2007-03-13 2007-03-13 2026-11-20   5137        0        4 2008-05-21
+USDSEK         divisas   2003-08-03 2003-08-04 2026-11-20   6076        0        4 2004-10-12
+USDTHB         divisas   2017-02-13 2017-02-13 2026-11-20   2539        0        4 2018-04-26
+USDZAR         divisas   2003-08-03 2003-08-04 2026-11-20   5926        2      185 2005-05-10
+BRENTCMDUSD    materias  2010-12-02 2010-12-02 2026-11-20   4037        3       73 2012-02-16
+COPPERCMDUSD   materias  2012-03-02 2012-03-05 2026-11-20   3811        0        5 2013-05-21
+COCOACMDUSD    materias  2017-10-20 2017-10-20 2026-11-20   2274        0        4 2019-01-25
+COTTONCMDUSX   materias  2017-10-20 2017-10-20 2026-11-20   2279        0        5 2019-01-18
+AUSIDXAUD      acciones  2014-06-01 2014-06-02 2026-11-20   3215        0        5 2015-08-18
+EUSIDXEUR      acciones  2014-06-01 2014-06-02 2026-11-20   3188        0        6 2015-08-20
+FRAIDXEUR      acciones  2011-09-18 2012-04-06 2026-11-20   3556        2      238 2014-03-26
+DEUIDXEUR      acciones  2013-09-30 2013-09-30 2026-11-20   3389        0        6 2014-12-10
+HKGIDXHKD      acciones  2013-06-03 2013-06-03 2026-11-20   3334        0        6 2014-08-25
+JPNIDXJPY      acciones  2011-09-18 2011-09-19 2026-11-20   3494        8      179 2014-08-12
+NLDIDXEUR      acciones  2017-12-01 2017-12-01 2026-11-20   2294        0        5 2019-02-22
+ESPIDXEUR      acciones  2014-06-01 2014-06-02 2026-11-20   3194        0        5 2015-08-18
+CHEIDXCHF      acciones  2011-09-18 2012-04-06 2026-11-20   3394        6      145 2014-08-18
+GBRIDXGBP      acciones  2011-09-18 2012-04-06 2026-11-20   3468        5      142 2014-08-15
+EEMUSUSD       acciones  2017-01-26 2017-01-26 2026-11-20   2470        0        4 2018-04-23
+EFAUSUSD       acciones  2017-01-26 2017-01-26 2026-11-20   2470        0        4 2018-04-23
+GDXUSUSD       acciones  2017-01-26 2017-01-26 2026-11-20   2470        0        4 2018-04-23
+IJRUSUSD       acciones  2017-05-11 2017-05-11 2026-11-20   2397        0        4 2018-08-06
+IWMUSUSD       acciones  2017-01-26 2017-01-26 2026-11-20   2470        0        4 2018-04-23
+VEAUSUSD       acciones  2017-11-15 2017-11-15 2026-11-20   2266        0        4 2019-02-13
+VNQUSUSD       acciones  2017-11-15 2017-11-15 2026-11-20   2266        0        4 2019-02-13
+XLEUSUSD       acciones  2017-11-15 2017-11-15 2026-11-20   2266        0        4 2019-02-13
+XLFUSUSD       acciones  2017-01-26 2017-01-26 2026-11-20   2470        0        4 2018-04-23
+XLKUSUSD       acciones  2017-11-15 2017-11-15 2026-11-20   2266        0        4 2019-02-13
+
+huecos mayores de 7 dias calendario (39):
+  EURAUD: 28 dias hasta 2006-11-03
+  EURAUD: 55 dias hasta 2006-12-28
+  EURAUD: 19 dias hasta 2007-01-16
+  EURAUD: 8 dias hasta 2007-02-01
+  EURAUD: 20 dias hasta 2007-02-21
+  EURAUD: 8 dias hasta 2007-03-01
+  EURAUD: 12 dias hasta 2007-03-13
+  EURMXN: 2917 dias hasta 2024-05-15
+  EURZAR: 39 dias hasta 2015-02-24
+  EURZAR: 23 dias hasta 2015-03-19
+  EURZAR: 35 dias hasta 2015-04-23
+  EURZAR: 33 dias hasta 2015-05-26
+  EURZAR: 2917 dias hasta 2024-05-15
+  USDZAR: 21 dias hasta 2003-12-03
+  USDZAR: 185 dias hasta 2004-06-21
+  BRENTCMDUSD: 11 dias hasta 2013-02-01
+  BRENTCMDUSD: 19 dias hasta 2013-03-11
+  BRENTCMDUSD: 73 dias hasta 2013-05-23
+  FRAIDXEUR: 22 dias hasta 2012-05-01
+  FRAIDXEUR: 238 dias hasta 2012-12-25
+  JPNIDXJPY: 179 dias hasta 2012-03-20
+  JPNIDXJPY: 41 dias hasta 2012-04-30
+  JPNIDXJPY: 157 dias hasta 2012-10-08
+  JPNIDXJPY: 46 dias hasta 2012-11-23
+  JPNIDXJPY: 31 dias hasta 2012-12-24
+  JPNIDXJPY: 11 dias hasta 2013-01-14
+  JPNIDXJPY: 28 dias hasta 2013-02-11
+  JPNIDXJPY: 99 dias hasta 2013-05-21
+  CHEIDXCHF: 22 dias hasta 2012-05-01
+  CHEIDXCHF: 16 dias hasta 2012-05-17
+  CHEIDXCHF: 11 dias hasta 2012-05-28
+  CHEIDXCHF: 65 dias hasta 2012-08-01
+  CHEIDXCHF: 145 dias hasta 2012-12-24
+  CHEIDXCHF: 139 dias hasta 2013-05-21
+  GBRIDXGBP: 28 dias hasta 2012-05-07
+  GBRIDXGBP: 28 dias hasta 2012-06-04
+  GBRIDXGBP: 83 dias hasta 2012-08-27
+  GBRIDXGBP: 120 dias hasta 2012-12-25
+  GBRIDXGBP: 142 dias hasta 2013-05-23
+
+factor de escala de ETF (regla de la enmienda 1) y ultimo cierre crudo / escalado:
+  EEMUSUSD   factor 1        ultimo 53.8260 -> 53.83 USD
+  EFAUSUSD   factor 1        ultimo 96.1260 -> 96.13 USD
+  GDXUSUSD   factor 1        ultimo 68.3360 -> 68.34 USD
+  IJRUSUSD   factor 1        ultimo 131.1970 -> 131.20 USD
+  IWMUSUSD   factor 1        ultimo 256.7170 -> 256.72 USD
+  VEAUSUSD   factor 1        ultimo 63.6060 -> 63.61 USD
+  VNQUSUSD   factor 1        ultimo 92.5660 -> 92.57 USD
+  XLEUSUSD   factor 1        ultimo 60.5690 -> 60.57 USD
+  XLFUSUSD   factor 1        ultimo 54.5970 -> 54.60 USD
+  XLKUSUSD   factor 1        ultimo 149.0560 -> 149.06 USD
+
+mercados cuyo ultimo cierre es > 7 dias antes de FIN (2026-11-20): ninguno
+
+SEGUNDA PARTE
+
+INFORME DE DATOS DE B CON LA ENMIENDA 2 (codigo 2e4c40a; sin retornos de cartera)
+mercados cargados 54; principal (sin .CMD) 50
+avisos de datos (tramos que pueden activarse), todo B: ninguno
+avisos en tramos que nunca se activan: {'USDZAR': ['tramo 2003-08-04 a 2003-12-19 (80 cierres, nunca activo): 18 retornos diarios > 50%']}
+inicio de la evaluacion (primer dia con >= 12 activos en el principal): 2007-03-15
+
+splits ajustados:
+  XLEUSUSD 2025-12-05 retorno crudo -0.5022 -> k 2
+  XLKUSUSD 2025-12-05 retorno crudo -0.4964 -> k 2
+cortes (ultimo cierre antes del hueco -> vuelve, dias):
+  EURAUD       2006-11-03 -> 2006-12-28 (55)
+  EURMXN       2016-05-20 -> 2024-05-15 (2917)
+  EURZAR       2015-01-16 -> 2015-02-24 (39)
+  EURZAR       2015-03-19 -> 2015-04-23 (35)
+  EURZAR       2015-04-23 -> 2015-05-26 (33)
+  EURZAR       2016-05-20 -> 2024-05-15 (2917)
+  USDZAR       2003-12-19 -> 2004-06-21 (185)
+  BRENTCMDUSD  2013-03-11 -> 2013-05-23 (73)
+  FRAIDXEUR    2012-05-01 -> 2012-12-25 (238)
+  JPNIDXJPY    2011-09-23 -> 2012-03-20 (179)
+  JPNIDXJPY    2012-03-20 -> 2012-04-30 (41)
+  JPNIDXJPY    2012-05-04 -> 2012-10-08 (157)
+  JPNIDXJPY    2012-10-08 -> 2012-11-23 (46)
+  JPNIDXJPY    2012-11-23 -> 2012-12-24 (31)
+  JPNIDXJPY    2013-02-11 -> 2013-05-21 (99)
+  CHEIDXCHF    2012-05-28 -> 2012-08-01 (65)
+  CHEIDXCHF    2012-08-01 -> 2012-12-24 (145)
+  CHEIDXCHF    2013-01-02 -> 2013-05-21 (139)
+  GBRIDXGBP    2012-06-05 -> 2012-08-27 (83)
+  GBRIDXGBP    2012-08-27 -> 2012-12-25 (120)
+  GBRIDXGBP    2013-01-01 -> 2013-05-23 (142)
+
+mercado        clase     primero    ultimo     entra (y reentradas)
+AUDCAD         divisas   2006-01-03 2026-11-20 2007-03-15
+AUDCHF         divisas   2006-03-01 2026-11-20 2007-05-11
+AUDJPY         divisas   2003-12-01 2026-11-20 2005-02-08
+AUDNZD         divisas   2006-12-12 2026-11-20 2008-02-20
+AUDUSD         divisas   2003-08-04 2026-11-20 2004-10-12
+CADCHF         divisas   2006-01-02 2026-11-20 2007-03-15
+CADJPY         divisas   2004-10-25 2026-11-20 2006-01-03
+EURAUD         divisas   2005-10-07 2026-11-20 2008-05-12
+EURCAD         divisas   2004-10-25 2026-11-20 2006-01-05
+EURMXN         divisas   2007-03-13 2026-11-20 2008-05-21, 2025-07-24
+EURNOK         divisas   2004-10-25 2026-11-20 2006-01-03
+EURNZD         divisas   2006-01-02 2026-11-20 2007-03-15
+EURPLN         divisas   2007-03-13 2026-11-20 2008-05-21
+EURSEK         divisas   2004-10-27 2026-11-20 2006-01-05
+EURZAR         divisas   2007-03-13 2026-11-20 2008-05-21, 2025-07-25
+GBPAUD         divisas   2006-03-22 2026-11-20 2007-06-04
+GBPCAD         divisas   2006-01-02 2026-11-20 2007-03-15
+GBPNZD         divisas   2006-01-02 2026-11-20 2007-03-15
+NZDCAD         divisas   2006-01-02 2026-11-20 2007-03-15
+NZDCHF         divisas   2006-01-02 2026-11-20 2007-03-15
+NZDJPY         divisas   2006-01-02 2026-11-20 2007-03-15
+NZDUSD         divisas   2003-08-04 2026-11-20 2004-10-12
+USDCAD         divisas   2003-08-04 2026-11-20 2004-10-12
+USDCNH         divisas   2012-06-27 2026-11-20 2013-09-05
+USDMXN         divisas   2007-03-13 2026-11-20 2008-05-21
+USDNOK         divisas   2003-08-04 2026-11-20 2004-10-12
+USDPLN         divisas   2007-03-13 2026-11-20 2008-05-21
+USDSEK         divisas   2003-08-04 2026-11-20 2004-10-12
+USDTHB         divisas   2017-02-13 2026-11-20 2018-04-26
+USDZAR         divisas   2003-08-04 2026-11-20 2005-08-30
+BRENTCMDUSD    materias  2010-12-02 2026-11-20 2012-02-16, 2014-08-07  (.CMD, fuera del principal)
+COPPERCMDUSD   materias  2012-03-05 2026-11-20 2013-05-21  (.CMD, fuera del principal)
+COCOACMDUSD    materias  2017-10-20 2026-11-20 2019-01-25  (.CMD, fuera del principal)
+COTTONCMDUSX   materias  2017-10-20 2026-11-20 2019-01-18  (.CMD, fuera del principal)
+AUSIDXAUD      acciones  2014-06-02 2026-11-20 2015-08-18
+EUSIDXEUR      acciones  2014-06-02 2026-11-20 2015-08-20
+FRAIDXEUR      acciones  2012-04-06 2026-11-20 2014-03-31
+DEUIDXEUR      acciones  2013-09-30 2026-11-20 2014-12-10
+HKGIDXHKD      acciones  2013-06-03 2026-11-20 2014-08-25
+JPNIDXJPY      acciones  2011-09-19 2026-11-20 2014-09-02
+NLDIDXEUR      acciones  2017-12-01 2026-11-20 2019-02-22
+ESPIDXEUR      acciones  2014-06-02 2026-11-20 2015-08-18
+CHEIDXCHF      acciones  2012-04-06 2026-11-20 2014-09-03
+GBRIDXGBP      acciones  2012-04-06 2026-11-20 2014-08-28
+EEMUSUSD       acciones  2017-01-26 2026-11-20 2018-04-23
+EFAUSUSD       acciones  2017-01-26 2026-11-20 2018-04-23
+GDXUSUSD       acciones  2017-01-26 2026-11-20 2018-04-23
+IJRUSUSD       acciones  2017-05-11 2026-11-20 2018-08-06
+IWMUSUSD       acciones  2017-01-26 2026-11-20 2018-04-23
+VEAUSUSD       acciones  2017-11-15 2026-11-20 2019-02-13
+VNQUSUSD       acciones  2017-11-15 2026-11-20 2019-02-13
+XLEUSUSD       acciones  2017-11-15 2026-11-20 2019-02-13
+XLFUSUSD       acciones  2017-01-26 2026-11-20 2018-04-23
+XLKUSUSD       acciones  2017-11-15 2026-11-20 2019-02-13
+
+mercados activos en el principal (media por ano, desde el inicio de la evaluacion; min - max):
+  2007: media 20.5 (min 19, max 21); mediana por clase {'divisas': 21, 'acciones': 0, 'materias': 0}
+  2008: media 25.6 (min 21, max 28); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2009: media 28.0 (min 28, max 28); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2010: media 28.0 (min 28, max 28); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2011: media 28.0 (min 28, max 28); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2012: media 28.0 (min 28, max 28); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2013: media 28.3 (min 28, max 29); mediana por clase {'divisas': 28, 'acciones': 0, 'materias': 0}
+  2014: media 31.2 (min 29, max 35); mediana por clase {'divisas': 29, 'acciones': 1, 'materias': 0}
+  2015: media 35.2 (min 34, max 37); mediana por clase {'divisas': 28, 'acciones': 6, 'materias': 0}
+  2016: media 36.4 (min 36, max 37); mediana por clase {'divisas': 27, 'acciones': 9, 'materias': 0}
+  2017: media 36.0 (min 36, max 36); mediana por clase {'divisas': 27, 'acciones': 9, 'materias': 0}
+  2018: media 40.6 (min 36, max 43); mediana por clase {'divisas': 28, 'acciones': 14, 'materias': 0}
+  2019: media 47.4 (min 43, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2020: media 48.0 (min 48, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2021: media 48.0 (min 48, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2022: media 48.0 (min 48, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2023: media 48.0 (min 48, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2024: media 48.0 (min 48, max 48); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2025: media 48.9 (min 48, max 50); mediana por clase {'divisas': 28, 'acciones': 20, 'materias': 0}
+  2026: media 50.0 (min 50, max 50); mediana por clase {'divisas': 30, 'acciones': 20, 'materias': 0}
