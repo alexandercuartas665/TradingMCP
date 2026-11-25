@@ -2,7 +2,8 @@
 
 Plan pre-registrado: docs/validacion/tsmom_plan.md (commit e453f72). Universo A (ya visto) solo para
 desarrollar y depurar; universo B (59 instrumentos nunca vistos) solo despues de la enmienda 1 del plan
-(hash de este script en main) y del visto bueno del lider.
+(hash de este script en main) y del visto bueno del lider. Enmienda 2 (2026-11-25): splits de ETF ajustados
+en la serie de precios y corte de la serie en huecos de mas de 30 dias calendario.
 
 Uso (entorno de D:):
     python -I scripts/ml/tsmom.py bajar A
@@ -41,6 +42,9 @@ BANDA = 0.25                       # enmienda 1: solo se opera si cambia el sign
 CAPITAL = 100000.0                 # enmienda 1: capital de referencia (USD) para comisiones minimas
 N_VOL = 60
 CALENT = 252 + N_VOL               # cierres validos para entrar
+CORTE_DIAS = 30                    # enmienda 2: un hueco de mas de 30 dias calendario corta la serie
+SPLIT_K = (2, 3, 4)                # enmienda 2: splits de ETF k:1 y sus inversos
+SPLIT_TOL = 0.02                   # enmienda 2: tolerancia (2 puntos) alrededor de 1/k - 1 o k - 1
 DURACIONES = (63, 126, 252)
 PRINCIPAL = 252
 RECARGO = 0.02                     # Deriv CFD (secundario): recargo anual sobre el nocional bruto
@@ -312,13 +316,77 @@ def serie_bd(cod, desde):
 FUENTE_BD = False
 
 
-def cargar(nombre):
+def es_etf(cod):
+    return cod.endswith('USUSD')
+
+
+def ajustar_splits(c):
+    """Enmienda 2: en ETF, un retorno diario a menos de SPLIT_TOL de 1/k - 1 (split k:1) o de k - 1 (inverso),
+    k en SPLIT_K, se toma como split: los precios anteriores se dividen por k (o se multiplican). El retorno
+    de ese dia queda (1 + r) x k - 1 (o (1 + r) / k - 1). Devuelve (serie ajustada, lista de splits)."""
+    v = c.values.astype(float)
+    factor = np.ones(len(v))
+    hechos = []
+    for i in range(1, len(v)):
+        r = v[i] / v[i - 1] - 1.0
+        for k in SPLIT_K:
+            if abs(r - (1.0 / k - 1.0)) < SPLIT_TOL:
+                factor[:i] /= k
+                hechos.append({'fecha': str(c.index[i].date()), 'retorno': r, 'k': k})
+                break
+            if abs(r - (k - 1.0)) < SPLIT_TOL:
+                factor[:i] *= k
+                hechos.append({'fecha': str(c.index[i].date()), 'retorno': r, 'k': 1.0 / k})
+                break
+    if not hechos:
+        return c, hechos
+    return pd.Series(v * factor, index=c.index, name=c.name), hechos
+
+
+def tramos(c):
+    """Enmienda 2: numero de tramo de cada cierre; un hueco de mas de CORTE_DIAS dias calendario entre dos
+    cierres validos abre un tramo nuevo."""
+    d = c.index.to_series().diff().dt.days.fillna(0)
+    return (d > CORTE_DIAS).cumsum().values
+
+
+def avisos_serie(c):
+    """Retornos diarios > 50% dentro de cada tramo. Los tramos con menos de CALENT cierres nunca se activan
+    (ni alimentan a otro tramo): sus avisos se informan aparte."""
+    t = tramos(c)
+    usados, descartados = 0, []
+    for s in np.unique(t):
+        sub = c[t == s]
+        n = int((sub.pct_change().abs() > 0.5).sum())
+        if len(sub) >= CALENT:
+            usados += n
+        elif n:
+            descartados.append('tramo %s a %s (%d cierres, nunca activo): %d retornos diarios > 50%%'
+                               % (sub.index[0].date(), sub.index[-1].date(), len(sub), n))
+    return usados, descartados
+
+
+def cargar(nombre, info=None):
+    """info (dict opcional) recibe por mercado los splits ajustados, los cortes y los avisos de tramos
+    que nunca se activan (enmienda 2)."""
     cierres, clases, avisos = {}, {}, {}
     for cod, clase, desde, _ in UNIVERSOS[nombre]:
         c, av = serie_bd(cod, desde) if (FUENTE_BD and nombre == 'A') else serie(cod, desde)
+        splits = []
+        if es_etf(cod):
+            c, splits = ajustar_splits(c)
+        av = [a for a in av if 'retornos diarios' not in a]
+        usados, descartados = avisos_serie(c)
+        if usados:
+            av.append('%d retornos diarios > 50%%' % usados)
+        t = tramos(c)
+        cortes = [{'ultimo': str(c.index[i - 1].date()), 'vuelve': str(c.index[i].date()),
+                   'dias': int((c.index[i] - c.index[i - 1]).days)} for i in np.nonzero(np.diff(t))[0] + 1]
         cierres[cod], clases[cod] = c, clase
         if av:
             avisos[cod] = av
+        if info is not None and (splits or cortes or descartados):
+            info[cod] = {'splits': splits, 'cortes': cortes, 'avisos_tramos_inactivos': descartados}
     return cierres, clases, avisos
 
 
@@ -381,14 +449,30 @@ def objetivos(cierres, clases, duracion):
     redistribuye. Apalancamiento por mercado = min(0,10/vol, 3)."""
     precios = panel(cierres)
     idx = precios.index
-    senal, vol, activo = {}, {}, {}
+    senal, vol, activo, cierre = {}, {}, {}, {}
     for k, c in cierres.items():
-        r = c.pct_change()
-        senal[k] = np.sign(c / c.shift(duracion) - 1.0).reindex(idx).ffill()
-        vol[k] = (r.rolling(N_VOL).std() * np.sqrt(252)).reindex(idx).ffill()
-        n = pd.Series(np.arange(1, len(c) + 1), index=c.index).reindex(idx).ffill().fillna(0)
+        # enmienda 2: senal, vol y conteo de cierres se calculan dentro de cada tramo; en el ultimo cierre
+        # valido antes de un corte el mercado sale (conteo 0 hasta CALENT cierres del tramo nuevo)
+        t = tramos(c)
+        partes_s, partes_v, partes_n = [], [], []
+        for s in np.unique(t):
+            sub = c[t == s]
+            r = sub.pct_change()
+            partes_s.append(np.sign(sub / sub.shift(duracion) - 1.0))
+            partes_v.append(r.rolling(N_VOL).std() * np.sqrt(252))
+            n_s = pd.Series(np.arange(1, len(sub) + 1), index=sub.index)
+            if s != t[-1]:
+                n_s.iloc[-1] = 0
+            partes_n.append(n_s)
+        una = len(partes_s) == 1
+        senal[k] = (partes_s[0] if una else pd.concat(partes_s)).reindex(idx).ffill()
+        vol[k] = (partes_v[0] if una else pd.concat(partes_v)).reindex(idx).ffill()
+        n = (partes_n[0] if una else pd.concat(partes_n)).reindex(idx).ffill().fillna(0)
         activo[k] = (n >= CALENT)
+        ultimos = c.index[np.r_[np.diff(t) > 0, False]]
+        cierre[k] = pd.Series(idx.isin(ultimos), index=idx)
     senal, vol, activo = pd.DataFrame(senal), pd.DataFrame(vol), pd.DataFrame(activo)
+    cierre = pd.DataFrame(cierre)
     activo &= vol.gt(0) & senal.notna()
     cls = pd.Series(clases)
     n_clase = pd.DataFrame({c: activo[cls.index[cls == c]].sum(axis=1) for c in cls.unique()})
@@ -398,7 +482,7 @@ def objetivos(cierres, clases, duracion):
         parte = np.minimum(1.0 / (clases_activas * n_clase[clases[k]].replace(0, np.nan)), TOPE_RIESGO)
         apal = np.minimum(VOL_OBJ / vol[k], TOPE_APAL)
         w[k] = np.where(activo[k], senal[k] * apal * parte, 0.0)
-    return w.fillna(0.0), activo, precios
+    return w.fillna(0.0), activo, precios, cierre
 
 
 # ---------------------------------------------------------------- tamanos minimos (enmienda 1, pregunta 2)
@@ -487,14 +571,16 @@ def redondear(o, vu_fila, minimo, capital):
     return np.sign(o) * unidades * vu_fila / capital
 
 
-def rebalanceo(w_obj, banda=BANDA, minimo=None, vu=None, capital=CAPITAL):
+def rebalanceo(w_obj, banda=BANDA, minimo=None, vu=None, capital=CAPITAL, cierre=None):
     """Pesos mantenidos: se revisan el ultimo dia habil de cada semana; un mercado solo se opera si cambia
     el signo, si el objetivo es 0 o si |objetivo - actual| > banda x |objetivo|. Con tamanos minimos, la
-    posicion nueva se redondea hacia abajo a multiplos del minimo (0 si no alcanza)."""
+    posicion nueva se redondea hacia abajo a multiplos del minimo (0 si no alcanza). cierre (enmienda 2):
+    en el ultimo cierre valido antes de un corte la posicion se cierra ese mismo dia, sea o no fin de semana."""
     semana = w_obj.index.to_period('W-SUN')
     es_ultimo = (pd.Series(w_obj.index, index=w_obj.index).groupby(semana).transform('max') == w_obj.index).values
     obj = w_obj.values
     cols = list(w_obj.columns)
+    forzar = cierre.reindex(index=w_obj.index, columns=cols).fillna(False).values.astype(bool) if cierre is not None else None
     out = np.zeros_like(obj)
     actual = np.zeros(obj.shape[1])
     meta = np.zeros(obj.shape[1])          # objetivo vigente (para la banda)
@@ -508,6 +594,9 @@ def rebalanceo(w_obj, banda=BANDA, minimo=None, vu=None, capital=CAPITAL):
                     actual[j] = redondear(o[j], vu.iat[i, j], minimo[cols[j]], capital)
                 else:
                     actual[j] = o[j]
+        if forzar is not None and forzar[i].any():
+            actual[forzar[i]] = 0.0
+            meta[forzar[i]] = 0.0
         out[i] = actual
     return pd.DataFrame(out, index=w_obj.index, columns=w_obj.columns)
 
@@ -524,12 +613,12 @@ def _spread_tasa_ib(m, tiene, T):
 
 
 def resultado(w_obj, precios, costos, retraso=1, x_costo=1.0, banda=BANDA, capital=CAPITAL, minimo=None, vu=None,
-              a_escala=False):
+              a_escala=False, cierre=None):
     """Retornos diarios de la cartera por escenario. retraso=1: el peso decidido al cierre t gana el
     retorno de t a t+1 (como E2). 2 = un dia extra; 0 = trampa (mira el futuro)."""
     medio, swaps, ib = costos['medio'], costos['swaps'], costos['ib']
     r = precios.pct_change().fillna(0.0)
-    w = rebalanceo(w_obj, banda, minimo, vu, capital).shift(retraso).fillna(0.0)
+    w = rebalanceo(w_obj, banda, minimo, vu, capital, cierre).shift(retraso).fillna(0.0)
     idx = w.index
     dias = pd.Series(idx, index=idx).diff().dt.days.fillna(1).clip(lower=1)
     f = dias / 365.0
@@ -636,13 +725,13 @@ def extra_conversion(cierres):
 def correr_cartera(cierres, clases, costos, nombre, duracion=PRINCIPAL, retraso=1, x_costo=1.0, inicio=None,
                    capital=CAPITAL, modo=None, extra=None, a_escala=False):
     """modo: None (sin tamanos minimos), 'ibkr' o 'deriv' (aplica los minimos de ese broker con el capital dado)."""
-    w, activo, precios = objetivos(cierres, clases, duracion)
+    w, activo, precios, cierre = objetivos(cierres, clases, duracion)
     mn = vu = None
     if modo is not None:
         mn = minimos(nombre, modo)
         vu = valor_unidad(precios, extra if extra is not None else extra_conversion(cierres))
     res = resultado(w, precios, costos, retraso=retraso, x_costo=x_costo, capital=capital, minimo=mn, vu=vu,
-                    a_escala=a_escala)
+                    a_escala=a_escala, cierre=cierre if cierre.values.any() else None)
     ini = inicio if inicio is not None else ventana(activo, nombre)
     corte = {k: (v[v.index >= ini] if isinstance(v, (pd.Series, pd.DataFrame)) else v) for k, v in res.items()}
     return corte, ini, activo
@@ -655,19 +744,25 @@ def permutar(cierres, rng):
     fechas = pd.DatetimeIndex(sorted(set().union(*[set(c.index) for c in cierres.values()])))
     clave = pd.Series(rng.random(len(fechas)), index=fechas)
     nuevo = {}
-    for k, c in cierres.items():
-        r = c.pct_change().values
-        if len(c) <= CALENT + 1:
-            nuevo[k] = c
-            continue
-        cola = np.arange(CALENT, len(c))
-        orden = cola[np.argsort(clave.reindex(c.index[cola]).values, kind='stable')]
-        r2 = r.copy()
-        r2[cola] = r[orden]
-        p = np.empty(len(c))
-        p[:CALENT] = c.values[:CALENT]
-        p[CALENT - 1:] = c.values[CALENT - 1] * np.cumprod(np.r_[1.0, 1.0 + r2[CALENT:]])
-        nuevo[k] = pd.Series(p, index=c.index)
+    for k, c_todo in cierres.items():
+        # enmienda 2: se baraja dentro de cada tramo (despues de su propio calentamiento)
+        t = tramos(c_todo)
+        partes = []
+        for s in np.unique(t):
+            c = c_todo[t == s] if t[-1] > 0 else c_todo
+            r = c.pct_change().values
+            if len(c) <= CALENT + 1:
+                partes.append(c)
+                continue
+            cola = np.arange(CALENT, len(c))
+            orden = cola[np.argsort(clave.reindex(c.index[cola]).values, kind='stable')]
+            r2 = r.copy()
+            r2[cola] = r[orden]
+            p = np.empty(len(c))
+            p[:CALENT] = c.values[:CALENT]
+            p[CALENT - 1:] = c.values[CALENT - 1] * np.cumprod(np.r_[1.0, 1.0 + r2[CALENT:]])
+            partes.append(pd.Series(p, index=c.index))
+        nuevo[k] = partes[0] if len(partes) == 1 else pd.concat(partes)
     return nuevo
 
 
@@ -747,7 +842,8 @@ def cmd_correr(args):
     exigir_b(args.universo, args)
     t0 = time.time()
     nombre = args.universo
-    todos, clases_t, avisos = cargar(nombre)
+    info = {}
+    todos, clases_t, avisos = cargar(nombre, info)
     costos_t = costos_por_mercado(nombre)
     cierres, clases, costos = sin_cmd(todos, clases_t, costos_t)
     extra = extra_conversion(todos)
@@ -755,12 +851,17 @@ def cmd_correr(args):
     res, ini, activo = correr_cartera(cierres, clases, costos, nombre, modo='ibkr', extra=extra)
     # escenarios secundarios (sin tamanos minimos: miden la prima, no la cuenta)
     sec, _, _ = correr_cartera(cierres, clases, costos, nombre, inicio=ini)
-    out = {'universo': nombre, 'inicio': str(ini.date()), 'fin': FIN, 'avisos_datos': avisos,
+    out = {'universo': nombre, 'inicio': str(ini.date()), 'fin': FIN, 'avisos_datos': avisos, 'enmienda2': info,
            'mercados': {k: {'desde': str(c.index[0].date()), 'cierres': int(len(c)), 'clase': clases[k]}
                         for k, c in cierres.items()}}
     lineas = ['TSMOM DIVERSIFICADO - plan pre-registrado en docs/validacion/tsmom_plan.md (con enmienda 1)',
               'Universo %s principal: %d mercados (sin .CMD); evaluacion %s a %s (desde el primer dia con >= %d activos).'
-              % (nombre, len(cierres), ini.date(), FIN, MIN_ACTIVOS[nombre]), '']
+              % (nombre, len(cierres), ini.date(), FIN, MIN_ACTIVOS[nombre])]
+    lineas.append('Enmienda 2: splits de ETF ajustados: %s' % (
+        {k: [(x['fecha'], x['k']) for x in v['splits']] for k, v in info.items() if v['splits']} or 'ninguno'))
+    lineas.append('Enmienda 2: cortes por hueco de mas de %d dias (ultimo cierre -> vuelve): %s' % (CORTE_DIAS, {
+        k: ['%s->%s' % (x['ultimo'], x['vuelve']) for x in v['cortes']] for k, v in info.items() if v['cortes']} or 'ninguno'))
+    lineas.append('')
     escen = {}
 
     def linea(clave, etiqueta, serie_ret):
@@ -857,7 +958,10 @@ def cmd_correr(args):
                '== PREGUNTA 2 (USD 100): IBKR %s; Deriv %s' % (n2['ibkr_100'], n2['deriv_100']),
                '== VEREDICTO PARA EL USUARIO: %s' % usuario,
                '   (solo vale para el universo B; en A es informativo)', '',
-               'Avisos de datos: %s' % (avisos or 'ninguno'), 'Tiempo: %.1f min' % ((time.time() - t0) / 60)]
+               'Avisos de datos: %s' % (avisos or 'ninguno'),
+               'Avisos en tramos que nunca se activan (sin efecto): %s' % (
+                   {k: v['avisos_tramos_inactivos'] for k, v in info.items() if v['avisos_tramos_inactivos']} or 'ninguno'),
+               'Tiempo: %.1f min' % ((time.time() - t0) / 60)]
     texto = '\n'.join(lineas)
     print(texto)
     if args.salida:
