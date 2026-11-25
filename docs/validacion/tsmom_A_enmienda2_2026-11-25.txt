@@ -1,0 +1,33 @@
+TSMOM DIVERSIFICADO - plan pre-registrado en docs/validacion/tsmom_plan.md (con enmienda 1)
+Universo A principal: 10 mercados (sin .CMD); evaluacion 2004-07-13 a 2026-11-20 (desde el primer dia con >= 5 activos).
+Enmienda 2: splits de ETF ajustados: ninguno
+Enmienda 2: cortes por hueco de mas de 30 dias (ultimo cierre -> vuelve): {'USATECHIDXUSD': ['2012-04-06->2012-10-30', '2012-11-22->2012-12-25', '2013-02-22->2013-05-22'], 'USA500IDXUSD': ['2013-02-22->2013-05-22']}
+
+PREGUNTA 1 (existe la prima neta a escala):
+  IBKR Pro USD 100.000 (veredicto)         t   0.15 | sharpe  0.03 | anual   0.11% | vol  3.28% | caida   9.6%
+  IBKR USD 100.000, costos x2              t  -1.53 | sharpe -0.32 | anual  -1.06% | vol  3.28% | caida  25.7%
+  IBKR a escala (informativo, sin minimos) t   0.53 | sharpe  0.11 | anual   0.42% | vol  3.80% | caida  12.8%
+PREGUNTA 2 (la puede capturar la cuenta del usuario, USD 100):
+  IBKR Pro USD 100                         t -21.25 | sharpe -4.04 | anual -56.38% | vol 13.94% | caida 100.0%
+  Deriv CFD USD 100                        t   1.82 | sharpe  0.38 | anual   0.54% | vol  1.43% | caida   5.3%
+    ibkr_100: mercados con alguna posicion distinta de 0 en todo el periodo: 7 de 10; posiciones teoricas que el minimo deja en 0: 19%
+    deriv_100: mercados con alguna posicion distinta de 0 en todo el periodo: 2 de 10; posiciones teoricas que el minimo deja en 0: 77%
+INFORMATIVO (USD 10.000):
+  IBKR Pro USD 10.000                      t  -0.77 | sharpe -0.16 | anual  -0.51% | vol  3.17% | caida  18.3%
+  Deriv CFD USD 10.000                     t   0.28 | sharpe  0.06 | anual   0.18% | vol  3.12% | caida   9.1%
+SECUNDARIOS (informativos, sin tamanos minimos):
+  Deriv CFD, recargo 2%                    t   0.49 | sharpe  0.10 | anual   0.39% | vol  3.80% | caida  12.9%
+  tabla de swaps Deriv (sin carry BIS)     t   0.71 | sharpe  0.15 | anual   0.57% | vol  3.80% | caida  13.4%
+  bruto (spread + carry)                   t   2.04 | sharpe  0.42 | anual   1.61% | vol  3.80% | caida   9.7%
+  solo precio                              t   2.04 | sharpe  0.43 | anual   1.62% | vol  3.80% | caida  10.0%
+  carry medio anual 0.02%; operaciones por semana 0.9; nocional bruto medio 0.56; posiciones en 0 por minimo: IBKR 100k 12%, IBKR 10k 19%, Deriv 10k 12% de las semanas-mercado activas
+  P&L (precio + carry) del principal por mercado: mayor XAUUSD = 35.1% del total
+
+== PREGUNTA 1 (regla 252, IBKR USD 100.000): SIN EVIDENCIA
+== PREGUNTA 2 (USD 100): IBKR SIN EVIDENCIA; Deriv NO OPERABLE (2 mercados)
+== VEREDICTO PARA EL USUARIO: SIN EVIDENCIA
+   (solo vale para el universo B; en A es informativo)
+
+Avisos de datos: ninguno
+Avisos en tramos que nunca se activan (sin efecto): ninguno
+Tiempo: 0.2 min

@@ -432,3 +432,127 @@ datos.
 - Prestamo de ETF en corto sin cifra publicada (2% supuesto).
 - CNH con la tasa de China.
 - Dividendos sin ajustar en indices y ETF.
+
+## Enmienda 2 (2026-11-25, despues de bajar B y antes de correr su cartera)
+
+Escrita despues del informe de datos de B y antes de calcular un solo retorno de cartera de B. La
+sesion TRADING.lider aprobo las reglas a) y b) con precisiones y rechazo la alternativa c) (sacar
+mercados a mano). Lo que esta enmienda no cambia sigue como arriba y en la enmienda 1.
+
+### Script
+
+- `scripts/ml/tsmom.py` del commit `2e4c40a`:
+  - blob git `0cc137609ecec1f0f046a044a536eb0cb323b9a3`;
+  - SHA-256 (LF) `2f1626f5f6b86dfdf078ef0014c6a4513c4c4b903ea69e7b0fba82f7ef059699`.
+- Reemplaza al script de la enmienda 1 (blob `5a60963c`). La descarga no cambia.
+
+### Por que
+
+El informe de datos de B (`docs/validacion/tsmom_B_datos_2026-11-25.txt`, primera parte) encontro tres
+problemas que las reglas de arriba no resolvian:
+1. XLE y XLK caen 50,2% y 49,6% el 2025-12-05: Dukascopy no ajusta los splits.
+2. EURMXN y EURZAR no tienen datos entre el 2016-05-20 y el 2024-05-15 (2.917 dias). Con "dia faltante
+   = retorno 0" habrian mantenido una posicion congelada 8 anos y tomado un salto de un dia al volver.
+3. USDZAR tiene datos basura de agosto a diciembre de 2003 (18 retornos diarios de mas de 50%) y despues
+   un hueco de 185 dias.
+
+### a) Splits de ETF
+
+- Solo ETF (codigos `...USUSD`).
+- Si un retorno diario esta a menos de 2 puntos de 1/k - 1 o de k - 1, con k = 2, 3 o 4, se toma como
+  split.
+- Se ajusta la SERIE DE PRECIOS antes de calcular nada: los precios anteriores se dividen por k (o se
+  multiplican por k si es inverso). El retorno de ese dia queda (1 + r) x k - 1.
+  - No se anula solo el retorno del dia: la senal de 252 veria el precio a la mitad durante un ano y la
+    vol de 60 dias quedaria inflada.
+- Aplicado en B: XLE y XLK el 2025-12-05, k = 2 en los dos. Ningun otro dia cumple la regla.
+- Fuente publica: comunicado de State Street Investment Management del 2025-11-20 en Business Wire,
+  "State Street Investment Management Announces Share Splits for Five Select Sector SPDR ETFs"
+  (https://www.businesswire.com/news/home/20251120957218/en/). Dice:
+  - split 2 por 1 de XLK, XLE, XLY, XLU y XLB;
+  - registro al cierre del 2025-12-02, entrega despues del cierre del 2025-12-04;
+  - cotizan con el precio despues del split desde el 2025-12-05.
+  - Aviso a participantes autorizados del emisor:
+    https://www.ssga.com/library-content/products/fund-docs/etfs/us/information-schedules/ap-notice/notice-to-aps-stock-splits-11-21-25.pdf
+
+### b) Huecos de mas de 30 dias calendario cortan la serie
+
+- Si entre dos cierres validos de un mercado pasan mas de 30 dias calendario, la serie se corta.
+- La posicion se cierra en el ultimo cierre valido antes del hueco, sea o no fin de semana, y se cobra
+  el costo de cerrar. Al volver se cobra el de abrir. No hay retorno a traves del hueco.
+- El tramo anterior al corte no alimenta ni la senal ni la vol del tramo nuevo. El mercado vuelve a
+  entrar despues de 312 cierres validos contados desde el reinicio.
+- La permutacion baraja dentro de cada tramo, despues de su propio calentamiento.
+- Se aplica igual a todos los mercados, tambien a A.
+- Declaraciones:
+  - el umbral de 30 dias se fijo despues de ver la lista de huecos de B, pero sin ver ningun retorno de
+    cartera ni ninguna senal;
+  - salir antes del hueco usa informacion futura sobre el proveedor de datos (que va a dejar de
+    publicar), no sobre el precio.
+- Cortes aplicados en B (ultimo cierre -> vuelve):
+  - EURAUD 2006-11-03 -> 2006-12-28;
+  - EURMXN 2016-05-20 -> 2024-05-15 (vuelve a estar activo el 2025-07-24);
+  - EURZAR 2015-01-16 -> 2015-02-24, 2015-03-19 -> 2015-04-23, 2015-04-23 -> 2015-05-26 y
+    2016-05-20 -> 2024-05-15 (fuera desde el 2015-01-16; vuelve el 2025-07-25);
+  - USDZAR 2003-12-19 -> 2004-06-21 (entra el 2005-08-30);
+  - indices en el calentamiento: FRA (1), JPN (6), CHE (3) y GBR (3) en 2011-2013;
+  - Brent 2013 (fuera del principal).
+
+### Avisos de datos
+
+- Los retornos diarios de mas de 50% se cuentan dentro de cada tramo que puede activarse (312 cierres o
+  mas).
+- Los de tramos que nunca llegan a 312 cierres no tocan la cartera y se informan aparte.
+- En B: 0 avisos en el principal y en todo B. Aparte: USDZAR, tramo 2003-08-04 a 2003-12-19 (80
+  cierres, nunca activo), 18 retornos de mas de 50%.
+
+### c) Rechazada
+
+Sacar EURMXN y EURZAR y empezar USDZAR el 2004-06-21 a mano: rechazado por el lider.
+
+### Regresion en A con el codigo nuevo
+
+- Con los cortes desactivados (umbral infinito) el resultado de A es identico, linea por linea, al de
+  la enmienda 1 (t 0,19 principal, 2,07 bruto). A no tiene ETF.
+- Con la regla b), A cambia un poco, porque A tiene huecos de mas de 30 dias en el calentamiento:
+  - USATECH: 2012-04-06 -> 2012-10-30, 2012-11-22 -> 2012-12-25 y 2013-02-22 -> 2013-05-22;
+  - USA500: 2013-02-22 -> 2013-05-22.
+  - Con 312 cierres desde el reinicio, USATECH entra el 2014-08-06 en vez del 2014-06-10, y USA500 el
+    2014-08-12 en vez del 2014-06-24. Nada mas cambia: los otros 8 mercados tienen la misma actividad
+    dia por dia.
+- Resultado de A con la enmienda 2 (`docs/validacion/tsmom_A_enmienda2_2026-11-25.txt`):
+
+| Escenario | t enmienda 1 | t enmienda 2 |
+|---|---|---|
+| Principal IBKR USD 100.000 | 0,19 | 0,15 |
+| Costos x2 | -1,49 | -1,53 |
+| IBKR a escala | 0,56 | 0,53 |
+| IBKR USD 100 | -21,19 | -21,25 |
+| Deriv USD 100 (NO OPERABLE) | 1,82 | 1,82 |
+| IBKR USD 10.000 | -0,73 | -0,77 |
+| Deriv USD 10.000 | 0,32 | 0,28 |
+| Deriv CFD 2% | 0,53 | 0,49 |
+| Tabla de swaps de Deriv | 0,75 | 0,71 |
+| Bruto | 2,07 | 2,04 |
+| Solo precio | 2,07 | 2,04 |
+
+### Datos de B con las reglas nuevas
+
+`docs/validacion/tsmom_B_datos_2026-11-25.txt`, segunda parte:
+- inicio de la evaluacion (primer dia con 12 o mas activos en el principal): 2007-03-15;
+- activos en el principal: unos 20 en 2007, 28 de 2009 a 2013 (solo divisas), 36 en 2016-2017, 48 desde
+  2019 y 50 en 2026;
+- fecha de entrada y reentradas por mercado en el archivo.
+
+### Limites agregados
+
+- Financiacion de CFD de indices y metales en IBKR: el largo paga referencia + 1,5%, pero el script
+  cobra solo el 1,5% (se omite la tasa de referencia).
+  - En indices lo compensan en parte los dividendos omitidos.
+  - En oro no hay compensacion.
+- Antes de esta enmienda se vieron precios de dias sueltos de B:
+  - XLE y XLK alrededor del 2025-12-05;
+  - EURMXN y EURZAR alrededor del hueco 2016-2024;
+  - la basura de USDZAR en 2003, Brent el 2020-03-09 y JPN el 2013-05-21.
+- En la prueba del cierre forzado se vio un peso de cartera de B: EURMXN el 2016-05-19 (largo, 0,9% del
+  capital). No se vio ningun retorno de cartera de B.
