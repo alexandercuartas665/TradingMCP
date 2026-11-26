@@ -1,0 +1,36 @@
+TSMOM DIVERSIFICADO - plan pre-registrado en docs/validacion/tsmom_plan.md (con enmienda 1)
+Universo B principal: 50 mercados (sin .CMD); evaluacion 2007-03-15 a 2026-11-20 (desde el primer dia con >= 12 activos).
+Enmienda 2: splits de ETF ajustados: {'XLEUSUSD': [('2025-12-05', 2)], 'XLKUSUSD': [('2025-12-05', 2)]}
+Enmienda 2: cortes por hueco de mas de 30 dias (ultimo cierre -> vuelve): {'EURAUD': ['2006-11-03->2006-12-28'], 'EURMXN': ['2016-05-20->2024-05-15'], 'EURZAR': ['2015-01-16->2015-02-24', '2015-03-19->2015-04-23', '2015-04-23->2015-05-26', '2016-05-20->2024-05-15'], 'USDZAR': ['2003-12-19->2004-06-21'], 'BRENTCMDUSD': ['2013-03-11->2013-05-23'], 'FRAIDXEUR': ['2012-05-01->2012-12-25'], 'JPNIDXJPY': ['2011-09-23->2012-03-20', '2012-03-20->2012-04-30', '2012-05-04->2012-10-08', '2012-10-08->2012-11-23', '2012-11-23->2012-12-24', '2013-02-11->2013-05-21'], 'CHEIDXCHF': ['2012-05-28->2012-08-01', '2012-08-01->2012-12-24', '2013-01-02->2013-05-21'], 'GBRIDXGBP': ['2012-06-05->2012-08-27', '2012-08-27->2012-12-25', '2013-01-01->2013-05-23']}
+
+PREGUNTA 1 (existe la prima neta a escala):
+  IBKR Pro USD 100.000 (veredicto)         t    nan | sharpe -2.27 | anual  -7.21% | vol  3.17% | caida  52.2%
+  IBKR USD 100.000, costos x2              t    nan | sharpe -3.05 | anual  -9.72% | vol  3.19% | caida  63.0%
+  IBKR a escala (informativo, sin minimos) t    nan | sharpe -1.72 | anual  -7.45% | vol  4.34% | caida  54.9%
+    factor de escala aplicado a cada ETF: {'EEMUSUSD': 1.0, 'EFAUSUSD': 1.0, 'GDXUSUSD': 1.0, 'IJRUSUSD': 1.0, 'IWMUSUSD': 1.0, 'VEAUSUSD': 1.0, 'VNQUSUSD': 1.0, 'XLEUSUSD': 1.0, 'XLFUSUSD': 1.0, 'XLKUSUSD': 1.0}
+PREGUNTA 2 (la puede capturar la cuenta del usuario, USD 100):
+  IBKR Pro USD 100                         t    nan | sharpe -6.21 | anual -316.10% | vol 50.89% | caida 100.0%
+  Deriv CFD USD 100                        t    nan | sharpe   nan | anual   0.00% | vol  0.00% | caida   0.0%
+    ibkr_100: mercados con alguna posicion distinta de 0 en todo el periodo: 40 de 50; posiciones teoricas que el minimo deja en 0: 15%
+    deriv_100: mercados con alguna posicion distinta de 0 en todo el periodo: 0 de 50; posiciones teoricas que el minimo deja en 0: 100%
+INFORMATIVO (USD 10.000):
+  IBKR Pro USD 10.000                      t    nan | sharpe -3.47 | anual -10.45% | vol  3.01% | caida  65.5%
+  Deriv CFD USD 10.000                     t  -2.17 | sharpe -0.49 | anual  -0.80% | vol  1.65% | caida  18.0%
+SECUNDARIOS (informativos, sin tamanos minimos):
+  Deriv CFD, recargo 2%                    t  -2.69 | sharpe -0.59 | anual  -2.69% | vol  4.53% | caida  46.4%
+  tabla de swaps Deriv (sin carry BIS)     t    nan | sharpe -1.59 | anual  -6.93% | vol  4.34% | caida  52.7%
+  bruto (spread + carry)                   t  -0.86 | sharpe -0.19 | anual  -0.85% | vol  4.53% | caida  25.9%
+  solo precio                              t  -0.80 | sharpe -0.18 | anual  -0.80% | vol  4.53% | caida  24.8%
+  IBKR CON materias .CMD (SESGADO)         t    nan | sharpe -1.41 | anual  -4.44% | vol  3.14% | caida  37.1%
+  carry medio anual 0.12%; operaciones por semana 3.8; nocional bruto medio 0.84; posiciones en 0 por minimo: IBKR 100k 12%, IBKR 10k 15%, Deriv 10k 63% de las semanas-mercado activas
+  P&L (precio + carry) del principal por mercado: mayor AUDCAD = 49.0% del total
+  permutacion (1000): t real nan | maximos p95 nan p99 nan | p = 0.0010
+
+== PREGUNTA 1 (regla 252, IBKR USD 100.000): SIN EVIDENCIA
+== PREGUNTA 2 (USD 100): IBKR SIN EVIDENCIA; Deriv NO OPERABLE (0 mercados)
+== VEREDICTO PARA EL USUARIO: SIN EVIDENCIA
+   (solo vale para el universo B; en A es informativo)
+
+Avisos de datos: ninguno
+Avisos en tramos que nunca se activan (sin efecto): {'USDZAR': ['tramo 2003-08-04 a 2003-12-19 (80 cierres, nunca activo): 18 retornos diarios > 50%']}
+Tiempo: 363.8 min
