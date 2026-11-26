@@ -1,0 +1,14 @@
+INFORMATIVO - escala del precio de USDTHB en los datos de B (no cambia el veredicto).
+USDTHB 2017-02-13 a 2026-11-20: min 297.2740 max 382.9440
+Ultimo cierre de cada ano:
+  2017 325.468
+  2018 323.032
+  2019 297.274
+  2020 299.764
+  2021 331.984
+  2022 346.144
+  2023 344.015
+  2024 343.215
+  2025 315.125
+  2026 339.550
+Fila de la tabla de Deriv: swap_largo_pts -2018.5, swap_corto_pts -1578.5, spread_minimo 0.013, tamano_contrato 100000.0
