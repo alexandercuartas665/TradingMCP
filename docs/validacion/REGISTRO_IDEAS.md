@@ -13,14 +13,17 @@ archivo de plan. "Sin archivo" = la cifra no esta en ningun archivo del repo.
 
 - El plan va en un commit propio, subido ANTES de leer los datos del experimento. Lo que no cumpla
   eso es exploratorio, no evidencia.
-- Conteo de pruebas para corregir: **N = 380** (cuenta alta; el "150 previas" de
+- Conteo de pruebas para corregir: **N = 383** desde 2026-11-26 (380 + 3 de TSMOM; cuenta alta; el "150 previas" de
   `WpfDerivClientVB/Infraestructura/ConfigManager.vb:60` es un valor fijo, no medido).
-  Bonferroni al 5%: z >= 3,65 una cola, 3,82 dos colas.
+  Bonferroni al 5%: z >= 3,65 una cola, 3,83 dos colas.
 - Hipotesis nueva: ademas, prueba de permutacion con la busqueda de parametros incluida (como E2).
 - Ninguna cifra de memoria: si no hay archivo, se escribe "sin archivo".
 - **Operable con USD 100** (capital declarado por el usuario el 2026-11-22): sin comision minima por
   orden, tamano minimo de orden de pocos dolares y pocos instrumentos a la vez. Un plan que no lo
   cumpla puede correrse como investigacion, pero no se le presenta al usuario como operable.
+- **Unidades de costos (leccion de TSMOM, 2026-11-26):** antes de congelar un script, tabla de costo
+  anual por mercado en % del nocional (swaps, financiacion, comisiones). Cualquier valor fuera de 0-15%
+  se revisa antes de congelar. Hacerlo sobre el universo que se va a correr, no solo el de desarrollo.
 
 ## Tabla
 
@@ -57,12 +60,13 @@ archivo de plan. "Sin archivo" = la cifra no esta en ningun archivo del repo.
 | 29 | 11-18 | E2 en BTC fuera de muestra | Bitstamp 2012-2016 | FUNCIONA | alfa 49,71% t 3,37 | `e2_bitstamp_2026-11-18.txt` | previo (`e2_bitstamp_2012_2016_plan.md`, 2 min antes) |
 | 30 | 11-19 | Brief: modelo-filtro LightGBM sobre estrategias base, triple barrera | Oro/Nasdaq/USDJPY H1 | NO HAY EVIDENCIA (los 3) | R medio -0,0607 / -0,0246 / -0,0247 | `brief_modelo_filtro_h1_2026-11-18.txt` | previo (`brief_modelo_filtro_plan.md`). M15 pendiente de datos |
 | 31 | 11-21 | E2 contra permutaciones (4 portones) | Binance + Bitstamp | NO PASA (falla 2 y 4) | p 0,013 / 0,144; Bitstamp p 0,001 | `e2_permutacion_2026-11-21.txt` | previo (`e2_permutacion_plan.md`, 17 min antes) |
+| 32 | 11-25 | TSMOM diversificado: momentum de serie 252 dias, tamano por volatilidad (Moskowitz-Ooi-Pedersen) | universo B: 50 mercados nunca vistos (divisas, indices, ETF) 2007-26, IBKR Pro USD 100.000 | SIN EVIDENCIA (pregunta 1 y 2); Deriv USD 100 NO OPERABLE; familia de tendencia cerrada en estos mercados | bruto t -0,86 (-0,85%/ano), solo precio t -0,80; principal t -6,44 con ERRATA (USDTHB, ver nota) | `tsmom_B_corrida2_2026-11-25.txt`, `tsmom_B_informe_2026-11-26.md` | previo (`tsmom_plan.md` e453f72; enmiendas 1 c835d3d, 2 2bf62c4, 3 85f560a) |
 
 ## Cola de hipotesis (sin datos mirados)
 
 | Orden | Idea | Estado | Nota |
 |---|---|---|---|
-| 1 | TSMOM diversificado con tamano por volatilidad (P&L) | plan `tsmom_plan.md` (e453f72), enmienda 1 en curso | universo B cerrado hasta visto bueno del lider |
+| - | TSMOM diversificado con tamano por volatilidad (P&L) | **CERRADA 2026-11-26: SIN EVIDENCIA** (fila 32) | no se reabre con variantes |
 | - | Carry de base en cripto (spot contra perpetuo, neutral) | **APARCADA por rendimiento esperado insuficiente frente al riesgo, sin backtest** (2026-11-22) | Operable en tamano con USD 100 en Binance (minimos de 5 USDT; exchangeInfo 2026-11-22), pero el rendimiento publico esperado (BIS WP 1087 "Crypto carry": mas de 10% anual sobre la pata corta; arXiv 2510.14435: ~8%) da 4-5,5% anual sobre el capital total antes de los costos de entrada y salida del dinero, al nivel de la tasa libre de riesgo en USD (IBKR paga 3,38% en USD, 2026-11-22), con riesgos de cola que esa tasa no tiene (exchange, USDT, liquidacion). Ya visto: tasas de financiamiento de Binance de 9 monedas desde 2020, usadas como senal en E6. Se reabre solo si el usuario lo pide o si el financiamiento publico vuelve a niveles claramente superiores. Si se reabre, el plan declara desde el principio el capital minimo operable |
 | 3 | Carry de divisas G10 con filtro de crisis | pendiente | depende de donde quiera operar el usuario |
 
@@ -83,11 +87,27 @@ archivo de plan. "Sin archivo" = la cifra no esta en ningun archivo del repo.
 - **Duda 4 (filas 14 y 16):** el placebo B1 (fila 28) mostro z inflados ~2x por monedas
   correlacionadas a la misma hora. Lo mismo deberia aplicar al ML de forex (7 mercados
   correlacionados frente al USD). No medido.
+- **Fila 32 (TSMOM), dos corridas y errata:**
+  - La primera corrida de B (d505141) dio t nan: el swap de USDTHB/USDCNH era NaN antes de su primer
+    cierre aunque el peso fuera 0. La enmienda 3 lo corrigio (swap 0 sin posicion, guarda contra NaN).
+  - La segunda corrida (bb47f3d) se lanzo despues de ver las cifras validas de la primera. El bruto
+    (t -0,86) no cambio.
+  - ERRATA: el principal (t -6,44; -5,40%/ano), costos x2, a escala, IBKR 10k/100 y la tabla de swaps
+    estan contaminados por un error de unidades en el swap de USDTHB: -217%/ano del nocional. Cuesta
+    unos 2,4 puntos al ano de media, 4 a 8 desde 2018.
+  - Ademas, el precio de USDTHB de Dukascopy viene 10 veces arriba.
+  - Sin ese ajuste el principal rondaria -3,0%/ano (informativo, sin permutacion).
+  - No se detecto antes porque A no tiene USDTHB y no se revisaron las unidades por mercado antes de
+    congelar.
+  - Sin enmienda 4 ni tercera corrida: el veredicto sale del bruto.
 - Las binarias tempranas (filas 1-10) suponian payout 85%; el real es 72-79%: el sesgo favorece a
   las estrategias, asi que "sin ventaja" se sostiene.
 
 ## Conteo
 
 Unas 70 ideas distintas; unas 290 pruebas con veredicto propio si las 88 de multimercado estan
-dentro de las 150 previas, unas 380 si no. Se usa N = 380. Combinaciones de parametros exploradas:
+dentro de las 150 previas, unas 380 si no. Se usa N = 380 hasta la fila 31.
+TSMOM (fila 32) agrega 3 pruebas: A informativo, B pregunta 1 y B pregunta 2.
+Las 3 duraciones van dentro de la permutacion con maximo t. **N = 383 desde 2026-11-26.** Bonferroni al 5%:
+z >= 3,65 una cola y 3,83 dos colas (con 380 eran 3,65 y 3,82). Combinaciones de parametros exploradas:
 mas de 600 (63 x 4 multiplicadores, rejilla de 80 de E2, Heavy Tester).
