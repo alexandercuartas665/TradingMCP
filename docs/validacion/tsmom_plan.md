@@ -556,3 +556,71 @@ Sacar EURMXN y EURZAR y empezar USDZAR el 2004-06-21 a mano: rechazado por el li
   - la basura de USDZAR en 2003, Brent el 2020-03-09 y JPN el 2013-05-21.
 - En la prueba del cierre forzado se vio un peso de cartera de B: EURMXN el 2016-05-19 (largo, 0,9% del
   capital). No se vio ningun retorno de cartera de B.
+
+## Enmienda 3 (2026-11-25, despues de la primera corrida de B)
+
+Escrita despues de ver la salida de la primera corrida de B. La sesion TRADING.lider la aprobo. Lo
+que esta enmienda no cambia sigue como arriba y en las enmiendas 1 y 2.
+
+### Primera corrida de B (se queda en el repo sin tocar)
+
+- Comando: `python -I scripts/ml/tsmom.py correr B --perm 1000 --enmienda1-aprobada`, script de la
+  enmienda 2 (blob `0cc13760`), semilla 1. Lanzada el 2026-11-25 a las 11:49 y terminada a las 17:52.
+- Resultado en el commit `d505141` (PR #33):
+  - `docs/validacion/tsmom_B_2026-11-25.txt`: blob `b3d4820d`, SHA-256 con LF (como esta en git)
+    `e512aac1443b3b74e28bffc1f4693be6fccdbdea858edf058de1bf7322d22a7e`, SHA-256 con CRLF (archivo original en D:)
+    `b785695f6ab5693b337b427369b1fb6fc262ae375b64f995378eb730cdbbc454`;
+  - `docs/validacion/tsmom_B_2026-11-25.json`: blob `c28673fc`, SHA-256 con LF
+    `1bbd70220f85d16c481501ff105d42ed852e21bd0580b8d6a1a9a4718958aa33`, SHA-256 del original en D:
+    `210aa0e3b4bc27993cc5de5ce67c26031e10934055672ba808a80368dcf356c0`.
+- El t de Newey-West salio nan en el principal, costos x2, a escala, IBKR USD 100, IBKR USD 10.000
+  y la tabla de swaps. La permutacion tambien (t real y maximos nan; el p = 0,0010 impreso no
+  significa nada). El veredicto impreso ("SIN EVIDENCIA") salio por descarte y no por la regla.
+
+### Causa
+
+- En `resultado()`, el swap de la tabla de Deriv por mercado es -|w| x swap / precio x dias.
+- Antes del primer cierre de un mercado el precio del panel es NaN, asi que el swap daba NaN aunque el
+  peso fuera 0.
+- Entraba al principal por el ajuste de USDTHB (IBKR no lista THB y se usan los costos de Deriv) y a
+  la tabla de swaps por USDTHB y USDCNH.
+- El principal tenia 2.586 de 5.135 dias en NaN, del 2007-03-15 al 2017-02-10 (USDTHB empieza el
+  2017-02-13). El Sharpe y el anual impresos de esos escenarios se calcularon solo sobre los dias sin
+  NaN.
+- En A no aparecia: todos los mercados con swap empiezan antes del inicio de la evaluacion.
+
+### Cambios
+
+1. Unico cambio de calculo: swap = 0 donde el peso es 0 (`s_k.where(wk != 0, 0)`). Donde hay posicion
+   siempre hay precio, asi que no cambia ningun dia con posicion. No se usa un relleno general porque
+   taparia un NaN con posicion.
+2. Guarda: si una serie de escenario tiene NaN dentro de la evaluacion (tambien en cada permutacion),
+   el script aborta con error y no imprime veredicto. No cambia ningun numero.
+
+### Script
+
+- `scripts/ml/tsmom.py` del commit `2ebde5b`:
+  - blob git `8070791ec1dfff447154339c396a8cbb815ccb73`;
+  - SHA-256 (LF) `9906758573ac9e6ae19bd9c0708c6393f00af705a905e0840bd81c63a9faf836`.
+- Regresion en A: identica linea por linea a `docs/validacion/tsmom_A_enmienda2_2026-11-25.txt`
+  (salvo la linea de tiempo).
+
+### Segunda corrida de B
+
+- Mismo comando, misma semilla, `--perm 1000`, con otro nombre de archivo:
+  `docs/validacion/tsmom_B_corrida2_2026-11-25.txt` y `.json`.
+- Se hace despues de ver la salida con NaN y estas cifras validas de la primera corrida (sin NaN, del
+  2007-03-15 al 2026-11-20):
+  - bruto (spread + carry): t -0,86;
+  - solo precio: t -0,80;
+  - Deriv CFD 2%: t -2,69;
+  - Deriv USD 10.000: t -2,17;
+  - Deriv USD 100: 0 de 50 mercados operables;
+  - mayor mercado del P&L del principal: AUDCAD, 49,0%.
+
+### Lo que ya se sabe del veredicto
+
+- El bruto es valido, cubre 2007-2026 y da t -0,86.
+- El principal es el bruto menos comisiones y financiacion, asi que no puede llegar a t 2,0.
+- El veredicto de la pregunta 1 va a ser SIN EVIDENCIA. La segunda corrida solo pone el numero
+  correcto. No es un resultado abierto.
