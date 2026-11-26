@@ -3,7 +3,8 @@
 Plan pre-registrado: docs/validacion/tsmom_plan.md (commit e453f72). Universo A (ya visto) solo para
 desarrollar y depurar; universo B (59 instrumentos nunca vistos) solo despues de la enmienda 1 del plan
 (hash de este script en main) y del visto bueno del lider. Enmienda 2 (2026-11-25): splits de ETF ajustados
-en la serie de precios y corte de la serie en huecos de mas de 30 dias calendario.
+en la serie de precios y corte de la serie en huecos de mas de 30 dias calendario. Enmienda 3 (2026-11-25):
+swap 0 sin posicion y guarda contra NaN en los escenarios.
 
 Uso (entorno de D:):
     python -I scripts/ml/tsmom.py bajar A
@@ -641,6 +642,7 @@ def resultado(w_obj, precios, costos, retraso=1, x_costo=1.0, banda=BANDA, capit
         else:
             largo, corto = swaps[k]
             s_k = -wk.abs() * (np.where(wk > 0, largo, corto) / precios[k]) * dias
+        s_k = s_k.where(wk != 0, 0.0)          # enmienda 3: sin posicion no hay swap (precio NaN antes del primer cierre)
         swap_deriv += s_k
         if ib[k] == 'fx':
             b, q = monedas(k)
@@ -679,6 +681,15 @@ def resultado(w_obj, precios, costos, retraso=1, x_costo=1.0, banda=BANDA, capit
         'operaciones': (giro > 0).sum(axis=1),
         'pesos': w,
     }
+
+
+def exigir_sin_nan(x, nombre):
+    """Enmienda 3: guarda. Una serie de escenario con NaN dentro de la evaluacion aborta la corrida."""
+    x = pd.Series(x)
+    if x.isna().any():
+        malos = x.index[x.isna()]
+        sys.exit('ERROR: el escenario %s tiene %d dias NaN dentro de la evaluacion (%s a %s); no se imprime veredicto.'
+                 % (nombre, len(malos), malos[0], malos[-1]))
 
 
 def t_nw(x, rezagos=NW_REZAGOS):
@@ -777,6 +788,7 @@ def t_max(cierres, clases, costos, nombre, inicio, extra=None):
     ts = {}
     for d in DURACIONES:
         res, _, _ = correr_cartera(cierres, clases, costos, nombre, duracion=d, inicio=inicio, modo='ibkr', extra=extra)
+        exigir_sin_nan(res['principal'], 'principal regla %d' % d)
         ts[d] = t_nw(res['principal'])
     return max(ts.values()), ts
 
@@ -830,6 +842,7 @@ def cmd_fuga(args):
     print('FUGA DE FUTURO, universo %s, regla %d, escenario principal (IBKR), desde %s' % (args.universo, PRINCIPAL, ini.date()))
     for nombre, ret in (('normal (retraso 1)', 1), ('un dia extra (retraso 2)', 2), ('trampa (retraso 0)', 0)):
         res, _, _ = correr_cartera(cierres, clases, costos, args.universo, retraso=ret, inicio=ini, modo='ibkr', extra=extra)
+        exigir_sin_nan(res['principal'], 'principal (%s)' % nombre)
         m = metricas(res['principal'])
         print('  %-26s t %6.2f  sharpe %5.2f  anual %6.2f%%' % (nombre, m['t_nw'], m['sharpe'], 100 * m['anual']))
 
@@ -865,6 +878,7 @@ def cmd_correr(args):
     escen = {}
 
     def linea(clave, etiqueta, serie_ret):
+        exigir_sin_nan(serie_ret, clave)
         escen[clave] = m = metricas(serie_ret)
         lineas.append('  %-40s t %6.2f | sharpe %5.2f | anual %6.2f%% | vol %5.2f%% | caida %5.1f%%'
                       % (etiqueta, m['t_nw'], m['sharpe'], 100 * m['anual'], 100 * m['vol'], 100 * m['caida_max']))
