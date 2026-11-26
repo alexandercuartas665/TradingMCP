@@ -1,0 +1,41 @@
+INFORMATIVO - no cambia el veredicto. Universo B, escenario principal (IBKR Pro USD 100.000, regla 252).
+
+Comprobacion: la suma de los componentes reproduce el principal (diferencia maxima diaria 1.73e-18).
+
+Desglose anual del principal (% del capital; suma de retornos diarios):
+  ano        precio       carry      spread  comisiones financiacio ajuste_usdt     total
+  2007        -0.95        1.10       -0.16       -0.39       -2.17        0.00     -2.56
+  2008         2.81       -0.45       -0.12       -0.57       -1.91        0.00     -0.24
+  2009        -3.02       -0.15       -0.08       -0.36       -1.52        0.00     -5.14
+  2010         1.48        1.49       -0.11       -0.37       -2.40        0.00      0.09
+  2011        -4.58        0.81       -0.17       -0.52       -2.36        0.00     -6.82
+  2012        -2.60        0.28       -0.26       -0.61       -3.14        0.00     -6.34
+  2013        -0.96        0.06       -0.29       -0.62       -3.33        0.00     -5.13
+  2014        -2.55       -0.51       -0.19       -0.60       -2.51        0.00     -6.36
+  2015         2.02       -0.50       -0.06       -0.31       -1.37        0.00     -0.22
+  2016        -2.76       -0.33       -0.11       -0.45       -1.47        0.00     -5.10
+  2017         1.83        0.25       -0.13       -0.43       -1.96        0.00     -0.44
+  2018        -1.85       -0.24       -0.20       -0.41       -1.82       -4.29     -8.82
+  2019        -1.23       -0.15       -0.27       -0.51       -2.06       -7.98    -12.20
+  2020         0.74       -0.15       -0.21       -0.62       -1.62       -7.85     -9.72
+  2021         0.83        0.29       -0.11       -0.34       -2.17       -7.24     -8.75
+  2022        -0.04       -0.04       -0.12       -0.40       -1.62       -5.35     -7.56
+  2023        -1.31        0.13       -0.21       -0.43       -1.67       -3.76     -7.25
+  2024        -0.13        0.23       -0.26       -0.65       -2.10       -4.37     -7.29
+  2025         1.96       -0.21       -0.21       -0.54       -1.92       -3.85     -4.77
+  2026         0.66        0.61       -0.14       -0.41       -2.11       -4.09     -5.48
+  media       -0.47        0.12       -0.17       -0.47       -2.02       -2.39     -5.40
+
+Swap de la tabla de Deriv como % anual del nocional (swap por unidad de precio x 365 / precio):
+  USDTHB: puntos largo -2018.5 corto -1578.5; punto = 0.001; a ultimo cierre 339.5500 -> largo -216.98%, corto -169.68% (negativo = paga)
+  USDTHB: puntos largo -2018.5 corto -1578.5; punto = 0.001; a mediana del periodo 329.4150 -> largo -223.65%, corto -174.90% (negativo = paga)
+  USDCNH: puntos largo 2.23 corto -8.57; punto = 1e-05; a ultimo cierre 6.6738 -> largo 0.12%, corto -0.47% (negativo = paga)
+  USDCNH: puntos largo 2.23 corto -8.57; punto = 1e-05; a mediana del periodo 6.7141 -> largo 0.12%, corto -0.47% (negativo = paga)
+
+Bruto y principal por mitades:
+  2007-03-15 a 2016-12-31  bruto        t  -1.02 | sharpe -0.31 | anual  -1.47% | vol  4.72%
+  2007-03-15 a 2016-12-31  solo precio  t  -1.03 | sharpe -0.31 | anual  -1.48% | vol  4.72%
+  2007-03-15 a 2016-12-31  principal    t  -2.77 | sharpe -0.85 | anual  -3.73% | vol  4.38%
+  2017-01-01 a 2026-11-20  bruto        t  -0.18 | sharpe -0.06 | anual  -0.25% | vol  4.33%
+  2017-01-01 a 2026-11-20  solo precio  t  -0.08 | sharpe -0.03 | anual  -0.12% | vol  4.33%
+  2017-01-01 a 2026-11-20  principal    t  -7.05 | sharpe -2.23 | anual  -7.06% | vol  3.17%
